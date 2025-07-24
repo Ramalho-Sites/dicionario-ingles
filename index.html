@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MY DICTIONARY</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      .text-custom-blue {
+        color: rgb(92, 130, 255);
+      }
+      .bg-custom-blue {
+        background-color: rgb(92, 130, 255);
+      }
+      .hover\:bg-custom-blue:hover {
+        background-color: rgb(92, 130, 255);
+      }
+      .focus\:ring-custom-blue:focus {
+        --tw-ring-color: rgb(92, 130, 255);
+      }
+      .focus\:border-custom-blue:focus {
+        border-color: rgb(92, 130, 255);
+      }
+
+      /* Botão Hamburger personalizado */
+      #checkbox {
+        display: none;
+      }
+
+      .toggle {
+        position: relative;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 10px;
+        transition-duration: .5s;
+      }
+
+      .bars {
+        width: 100%;
+        height: 4px;
+        background-color: rgb(92, 130, 255);
+        border-radius: 4px;
+      }
+
+      #bar2 {
+        transition-duration: .8s;
+      }
+
+      #bar1 {
+        width: 50%;
+      }
+
+      #bar2 {
+        width: 75%;
+      }
+
+      #checkbox:checked + .toggle .bars {
+        position: absolute;
+        transition-duration: .5s;
+      }
+
+      #checkbox:checked + .toggle #bar2 {
+        transform: scaleX(0);
+        transition-duration: .1s;
+      }
+
+      #checkbox:checked + .toggle #bar1 {
+        width: 100%;
+        transform: rotate(45deg);
+        transition-duration: .5s;
+      }
+
+      #checkbox:checked + .toggle #bar3 {
+        width: 100%;
+        transform: rotate(-45deg);
+        transition-duration: .5s;
+      }
+
+      #checkbox:checked + .toggle {
+        transition-duration: .5s;
+        transform: rotate(180deg);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-900 text-gray-300 min-h-screen flex flex-col">
+    <div id="app" class="flex-1 flex flex-col">
+      <!-- Header com botão hamburger customizado -->
+      <header class="flex items-center justify-between bg-gray-800 px-4 py-3 shadow-md">
+        <div id="btn-hamburger">
+          <input id="checkbox" type="checkbox">
+          <label class="toggle" for="checkbox">
+            <div id="bar1" class="bars"></div>
+            <div id="bar2" class="bars"></div>
+            <div id="bar3" class="bars"></div>
+          </label>
+        </div>
+        <h1 class="text-xl font-bold select-none text-gray-300">Meu Dicionário</h1>
+        <div class="w-6"></div>
+      </header>
+
+    <div class="flex flex-1 overflow-hidden">
+      <!-- Sidebar / Menu -->
+      <nav
+        id="sidebar"
+        class="fixed inset-y-0 left-0 z-30 w-64 bg-gray-800 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:shadow-none"
+        aria-label="Menu principal"
+      >
+        <div class="h-full flex flex-col">
+          <div class="px-6 py-6 border-b border-gray-700 flex items-center justify-between">
+            <h2 class="text-2xl italic font-extrabold text-custom-blue select-none tracking-wide drop-shadow-lg">
+              Menu
+            </h2>
+            <button
+              id="btn-close-sidebar"
+              aria-label="Fechar menu"
+              class="text-gray-400 hover:text-custom-blue md:hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue rounded"
+            >
+              <i class="fas fa-times fa-lg"></i>
+            </button>
+          </div>
+          <ul class="flex flex-col px-4 py-2 space-y-1 overflow-y-auto flex-1">
+            <li>
+             <button
+                data-page="home"
+               class="w-full text-left px-3 py-2 rounded-md hover:bg-[rgb(92,130,255)] hover:text-white focus:outline-none focus:bg-[rgb(92,130,255)] font-semibold text-custom-blue"
+              >
+                Tela Inicial
+              </button>
+            </li>
+            <li>
+              <button
+                data-page="learned"
+                 class="w-full text-left px-3 py-2 rounded-md hover:bg-[rgb(92,130,255)] hover:text-white focus:outline-none focus:bg-[rgb(92,130,255)] font-semibold text-custom-blue"
+              >
+                Palavras Aprendidas
+              </button>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- Overlay for mobile sidebar -->
+      <div
+        id="overlay"
+        class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"
+        tabindex="-1"
+        aria-hidden="true"
+      ></div>
+
+      <!-- Main content -->
+      <main
+        id="main-content"
+        class="flex-1 overflow-y-auto p-6 md:ml-64 flex flex-col items-center justify-center"
+        tabindex="0"
+        aria-live="polite"
+      >
+        <!-- Home Page -->
+        <section id="page-home" class="w-full max-w-3xl">
+          <div class="flex flex-col items-center space-y-6">
+            <button
+              id="btn-show-form"
+              class="bg-gray-700 hover:bg-gray-600 text-[rgb(92,130,255)] font-semibold rounded-md px-8 py-3 focus:outline-none focus:ring-2 focus:ring-custom-blue transition-colors"
+              aria-expanded="false"
+              aria-controls="form-add-word"
+            >
+              Adicionar nova palavra
+            </button>
+          </div>
+
+          <form
+            id="form-add-word"
+            class="space-y-6 bg-gray-800 p-6 rounded-lg shadow-lg mt-10 hidden"
+            novalidate
+            aria-hidden="true"
+          >
+            <h2 class="text-3xl font-bold text-custom-blue mb-4 select-none text-center">
+              Adicionar uma nova palavra
+            </h2>
+            <div>
+              <label for="input-word" class="block mb-1 font-semibold text-gray-400"
+                >Palavra</label
+              >
+              <input
+                type="text"
+                id="input-word"
+                name="word"
+                placeholder="Digite a palavra"
+                required
+                class="w-full rounded-md bg-gray-700 border border-gray-600 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-custom-blue px-3 py-2"
+                autocomplete="off"
+                aria-describedby="word-error"
+              />
+              <p id="word-error" class="text-red-500 text-sm mt-1 hidden">
+                Por favor, insira uma palavra.
+              </p>
+            </div>
+
+            <div>
+              <label for="input-context" class="block mb-1 font-semibold text-gray-400"
+                >Contexto / Exemplo</label
+              >
+              <textarea
+                id="input-context"
+                name="context"
+                rows="3"
+                placeholder="Exemplo ou contexto da palavra"
+                class="w-full rounded-md bg-gray-700 border border-gray-600 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-custom-blue px-3 py-2 resize-none"
+                autocomplete="off"
+              ></textarea>
+            </div>
+
+            <div>
+              <label for="input-meaning" class="block mb-1 font-semibold text-gray-400"
+                >Significado</label
+              >
+              <textarea
+                id="input-meaning"
+                name="meaning"
+                rows="3"
+                placeholder="Significado da palavra"
+                class="w-full rounded-md bg-gray-700 border border-gray-600 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-custom-blue px-3 py-2 resize-none"
+                autocomplete="off"
+                required
+                aria-describedby="meaning-error"
+              ></textarea>
+              <p id="meaning-error" class="text-red-500 text-sm mt-1 hidden">
+                Por favor, insira o significado.
+              </p>
+            </div>
+
+            <div>
+              <label for="input-image" class="block mb-1 font-semibold text-gray-400"
+                >Imagem (URL)</label
+              >
+              <input
+                type="url"
+                id="input-image"
+                name="image"
+                placeholder="Cole a URL da imagem"
+                class="w-full rounded-md bg-gray-700 border border-gray-600 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-custom-blue px-3 py-2"
+                autocomplete="off"
+                aria-describedby="image-error"
+              />
+              <p id="image-error" class="text-red-500 text-sm mt-1 hidden">
+                Por favor, insira uma URL válida.
+              </p>
+            </div>
+
+            <div>
+              <label class="block mb-1 font-semibold text-gray-400">Categoria</label>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="text"
+                  id="input-category-search"
+                  placeholder="Pesquisar ou selecionar categoria"
+                  class="flex-1 rounded-md bg-gray-700 border border-gray-600 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-custom-blue px-3 py-2"
+                  autocomplete="off"
+                  aria-autocomplete="list"
+                  aria-controls="category-listbox"
+                  aria-expanded="false"
+                  role="combobox"
+                  aria-haspopup="listbox"
+                />
+                <button
+                  type="button"
+                  id="btn-create-category"
+                  class="bg-[rgb(92,130,255)] hover:bg-[rgb(72,110,230)] text-white font-semibold rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-custom-blue"
+                >
+                  Criar Categoria
+                </button>
+              </div>
+              <ul
+                id="category-listbox"
+                role="listbox"
+                class="max-h-40 overflow-y-auto mt-1 bg-gray-700 rounded-md border border-gray-600 text-gray-300 hidden"
+              ></ul>
+            </div>
+
+            <div class="flex space-x-4 justify-end">
+              <button
+                type="submit"
+                class="bg-[rgb(92,130,255)] hover:bg-[rgb(72,110,230)] text-white font-semibold rounded-md px-6 py-2 focus:outline-none focus:ring-2 focus:ring-custom-blue"
+              >
+                Adicionar Palavra
+              </button>
+              <button
+                type="reset"
+                id="btn-discard"
+                class="bg-gray-700 hover:bg-gray-600 text-gray-400 font-semibold rounded-md px-6 py-2 focus:outline-none focus:ring-2 focus:ring-custom-blue"
+              >
+                Descartar
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Learned Words Page -->
+        <section id="page-learned" class="max-w-4xl mx-auto space-y-8 hidden">
+          <h2 class="text-3xl font-bold text-custom-blue mb-2 select-none">
+            Palavras Aprendidas
+          </h2>
+          <div id="learned-words-container" class="space-y-10">
+            <!-- Categories and words will be dynamically inserted here -->
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal for Word Details -->
+  <div
+    id="modal-word-details"
+    class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-40 hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modal-word-title"
+  >
+    <div
+      class="bg-gray-800 rounded-lg max-w-lg w-full p-6 relative shadow-lg max-h-[90vh] overflow-y-auto"
+    >
+      <button
+        id="btn-close-modal"
+        aria-label="Fechar detalhes da palavra"
+        class="absolute top-4 right-4 text-gray-400 hover:text-[rgb(92,130,255)] focus:outline-none focus:ring-2 focus:ring-custom-blue rounded"
+      >
+        <i class="fas fa-times fa-lg"></i>
+      </button>
+      <h3 id="modal-word-title" class="text-2xl font-bold text-custom-blue mb-4"></h3>
+      <div id="modal-word-content" class="space-y-4 text-gray-300">
+        <!-- Word details inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      // Elements
+      const btnHamburger = document.getElementById('btn-hamburger');
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('overlay');
+      const btnCloseSidebar = document.getElementById('btn-close-sidebar');
+      const pageHome = document.getElementById('page-home');
+      const pageLearned = document.getElementById('page-learned');
+      const navButtons = sidebar.querySelectorAll('button[data-page]');
+      const formAddWord = document.getElementById('form-add-word');
+      const inputWord = document.getElementById('input-word');
+      const inputContext = document.getElementById('input-context');
+      const inputMeaning = document.getElementById('input-meaning');
+      const inputImage = document.getElementById('input-image');
+      const inputCategorySearch = document.getElementById('input-category-search');
+      const btnCreateCategory = document.getElementById('btn-create-category');
+      const categoryListbox = document.getElementById('category-listbox');
+      const btnDiscard = document.getElementById('btn-discard');
+      const learnedWordsContainer = document.getElementById('learned-words-container');
+      const modalWordDetails = document.getElementById('modal-word-details');
+      const btnCloseModal = document.getElementById('btn-close-modal');
+      const modalWordTitle = document.getElementById('modal-word-title');
+      const modalWordContent = document.getElementById('modal-word-content');
+      const btnShowForm = document.getElementById('btn-show-form');
+
+      // Data storage keys
+      const STORAGE_WORDS_KEY = 'app_palavras';
+      const STORAGE_CATEGORIES_KEY = 'app_categorias';
+
+      // State
+      let words = [];
+      let categories = [];
+
+      // Load from localStorage
+      function loadData() {
+        const wordsLS = localStorage.getItem(STORAGE_WORDS_KEY);
+        const categoriesLS = localStorage.getItem(STORAGE_CATEGORIES_KEY);
+        words = wordsLS ? JSON.parse(wordsLS) : [];
+        categories = categoriesLS ? JSON.parse(categoriesLS) : [];
+      }
+
+      // Save to localStorage
+      function saveData() {
+        localStorage.setItem(STORAGE_WORDS_KEY, JSON.stringify(words));
+        localStorage.setItem(STORAGE_CATEGORIES_KEY, JSON.stringify(categories));
+      }
+
+      // Toggle sidebar mobile
+      function openSidebar() {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+        inputCategorySearch.setAttribute('aria-expanded', 'false');
+      }
+      function closeSidebar() {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+        inputCategorySearch.setAttribute('aria-expanded', 'false');
+      }
+
+      btnHamburger.addEventListener('click', openSidebar);
+      btnCloseSidebar.addEventListener('click', closeSidebar);
+      overlay.addEventListener('click', closeSidebar);
+
+      // Navigation
+      function showPage(page) {
+        if (page === 'home') {
+          pageHome.classList.remove('hidden');
+          pageLearned.classList.add('hidden');
+        } else if (page === 'learned') {
+          pageHome.classList.add('hidden');
+          pageLearned.classList.remove('hidden');
+          renderLearnedWords();
+        }
+        closeSidebar();
+      }
+
+      navButtons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          showPage(btn.dataset.page);
+        });
+      });
+
+      // Category autocomplete & selection
+      function filterCategories(query) {
+        if (!query) return categories;
+        return categories.filter((cat) =>
+          cat.toLowerCase().includes(query.toLowerCase())
+        );
+      }
+
+      function renderCategoryListbox(filteredCats) {
+        if (filteredCats.length === 0) {
+          categoryListbox.innerHTML =
+            '<li class="px-3 py-2 text-gray-400 select-none">Nenhuma categoria encontrada</li>';
+          categoryListbox.classList.remove('hidden');
+          return;
+        }
+        categoryListbox.innerHTML = filteredCats
+          .map(
+            (cat, i) =>
+              `<li role="option" tabindex="0" class="px-3 py-2 cursor-pointer hover:bg-[rgb(92,130,255)] focus:bg-[rgb(92,130,255)] rounded select-none" data-index="${i}">${cat}</li>`
+          )
+          .join('');
+        categoryListbox.classList.remove('hidden');
+      }
+
+      inputCategorySearch.addEventListener('input', () => {
+        const val = inputCategorySearch.value.trim();
+        if (val.length === 0) {
+          categoryListbox.classList.add('hidden');
+          inputCategorySearch.setAttribute('aria-expanded', 'false');
+          return;
+        }
+        const filtered = filterCategories(val);
+        renderCategoryListbox(filtered);
+        inputCategorySearch.setAttribute('aria-expanded', 'true');
+      });
+
+      inputCategorySearch.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          const firstOption = categoryListbox.querySelector('li[role="option"]');
+          if (firstOption) firstOption.focus();
+        } else if (e.key === 'Escape') {
+          categoryListbox.classList.add('hidden');
+          inputCategorySearch.setAttribute('aria-expanded', 'false');
+        }
+      });
+
+      categoryListbox.addEventListener('click', (e) => {
+        if (e.target && e.target.matches('li[role="option"]')) {
+          inputCategorySearch.value = e.target.textContent;
+          categoryListbox.classList.add('hidden');
+          inputCategorySearch.setAttribute('aria-expanded', 'false');
+          inputCategorySearch.focus();
+        }
+      });
+
+      categoryListbox.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (e.target && e.target.matches('li[role="option"]')) {
+            inputCategorySearch.value = e.target.textContent;
+            categoryListbox.classList.add('hidden');
+            inputCategorySearch.setAttribute('aria-expanded', 'false');
+            inputCategorySearch.focus();
+          }
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (e.target.nextElementSibling) e.target.nextElementSibling.focus();
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (e.target.previousElementSibling) e.target.previousElementSibling.focus();
+          else inputCategorySearch.focus();
+        } else if (e.key === 'Escape') {
+          categoryListbox.classList.add('hidden');
+          inputCategorySearch.setAttribute('aria-expanded', 'false');
+          inputCategorySearch.focus();
+        }
+      });
+
+      // Create category button
+      btnCreateCategory.addEventListener('click', () => {
+        const newCat = inputCategorySearch.value.trim();
+        if (!newCat) {
+          alert('Digite o nome da categoria para criar.');
+          inputCategorySearch.focus();
+          return;
+        }
+        if (categories.some((c) => c.toLowerCase() === newCat.toLowerCase())) {
+          alert('Categoria já existe.');
+          inputCategorySearch.focus();
+          return;
+        }
+        categories.push(newCat);
+        categories.sort((a, b) => a.localeCompare(b));
+        saveData();
+        alert(`Categoria "${newCat}" criada com sucesso.`);
+        inputCategorySearch.value = newCat;
+        categoryListbox.classList.add('hidden');
+        inputCategorySearch.setAttribute('aria-expanded', 'false');
+        inputCategorySearch.focus();
+      });
+
+      // Validate URL (simple)
+      function isValidUrl(string) {
+        try {
+          new URL(string);
+          return true;
+        } catch (_) {
+          return false;
+        }
+      }
+
+      // Form submit
+      formAddWord.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        // Reset errors
+        document.getElementById('word-error').classList.add('hidden');
+        document.getElementById('meaning-error').classList.add('hidden');
+        document.getElementById('image-error').classList.add('hidden');
+
+        const wordVal = inputWord.value.trim();
+        const meaningVal = inputMeaning.value.trim();
+        const contextVal = inputContext.value.trim();
+        const imageVal = inputImage.value.trim();
+        const categoryVal = inputCategorySearch.value.trim();
+
+        let hasError = false;
+
+        if (!wordVal) {
+          document.getElementById('word-error').classList.remove('hidden');
+          hasError = true;
+        }
+        if (!meaningVal) {
+          document.getElementById('meaning-error').classList.remove('hidden');
+          hasError = true;
+        }
+        if (imageVal && !isValidUrl(imageVal)) {
+          document.getElementById('image-error').classList.remove('hidden');
+          hasError = true;
+        }
+        if (!categoryVal) {
+          alert('Por favor, selecione ou crie uma categoria para a palavra.');
+          inputCategorySearch.focus();
+          hasError = true;
+        }
+
+        if (hasError) return;
+
+        // Add category if not exists
+        if (!categories.some((c) => c.toLowerCase() === categoryVal.toLowerCase())) {
+          categories.push(categoryVal);
+          categories.sort((a, b) => a.localeCompare(b));
+        }
+
+        // Add word
+        const newWord = {
+          id: Date.now().toString(),
+          word: wordVal,
+          meaning: meaningVal,
+          context: contextVal,
+          image: imageVal,
+          category: categoryVal,
+        };
+        words.push(newWord);
+        words.sort((a, b) => a.word.localeCompare(b.word));
+        saveData();
+
+        alert(`Palavra "${wordVal}" adicionada com sucesso!`);
+
+        formAddWord.reset();
+        inputCategorySearch.value = '';
+        hideForm();
+      });
+
+      // Discard button resets form and errors
+      btnDiscard.addEventListener('click', () => {
+        formAddWord.reset();
+        inputCategorySearch.value = '';
+        document.getElementById('word-error').classList.add('hidden');
+        document.getElementById('meaning-error').classList.add('hidden');
+        document.getElementById('image-error').classList.add('hidden');
+        hideForm();
+      });
+
+      // Show/hide form with button
+      function showForm() {
+        formAddWord.classList.remove('hidden');
+        formAddWord.setAttribute('aria-hidden', 'false');
+        btnShowForm.setAttribute('aria-expanded', 'true');
+        btnShowForm.classList.add('hidden');
+        // Scroll form into view and focus first input
+        formAddWord.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        inputWord.focus();
+      }
+      function hideForm() {
+        formAddWord.classList.add('hidden');
+        formAddWord.setAttribute('aria-hidden', 'true');
+        btnShowForm.setAttribute('aria-expanded', 'false');
+        btnShowForm.classList.remove('hidden');
+        btnShowForm.focus();
+      }
+
+      btnShowForm.addEventListener('click', () => {
+        showForm();
+      });
+
+      // Render learned words grouped by category
+      function renderLearnedWords() {
+        if (words.length === 0) {
+          learnedWordsContainer.innerHTML =
+            '<p class="text-gray-500 italic select-none">Nenhuma palavra adicionada ainda.</p>';
+          return;
+        }
+        // Group words by category
+        const grouped = {};
+        for (const w of words) {
+          const cat = w.category || 'Sem Categoria';
+          if (!grouped[cat]) grouped[cat] = [];
+          grouped[cat].push(w);
+        }
+
+        // Sort categories alphabetically
+        const sortedCats = Object.keys(grouped).sort((a, b) =>
+          a.localeCompare(b)
+        );
+
+        learnedWordsContainer.innerHTML = '';
+
+        for (const cat of sortedCats) {
+          const catWords = grouped[cat];
+          const catDiv = document.createElement('div');
+          catDiv.className = 'space-y-3';
+
+          const catTitle = document.createElement('h3');
+          catTitle.className =
+            'text-xl font-extrabold text-custom-blue select-none';
+          catTitle.textContent = cat;
+          catDiv.appendChild(catTitle);
+
+          const ul = document.createElement('ul');
+          ul.className = 'space-y-1';
+
+          for (const w of catWords) {
+            const li = document.createElement('li');
+            li.className =
+              'cursor-pointer rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:bg-[rgb(92,130,255)] focus:outline-none select-none';
+            li.tabIndex = 0;
+            li.textContent = w.word;
+            li.dataset.wordId = w.id;
+
+            li.addEventListener('click', () => openModalWordDetails(w.id));
+            li.addEventListener('keydown', (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openModalWordDetails(w.id);
+              }
+            });
+
+            ul.appendChild(li);
+          }
+
+          catDiv.appendChild(ul);
+          learnedWordsContainer.appendChild(catDiv);
+        }
+      }
+
+      // Open modal with word details
+      function openModalWordDetails(wordId) {
+        const w = words.find((x) => x.id === wordId);
+        if (!w) return;
+
+        modalWordTitle.textContent = w.word;
+
+        modalWordContent.innerHTML = `
+          <div>
+            <h4 class="font-semibold text-[rgb(92,130,255)] mb-1">Significado:</h4>
+            <p class="whitespace-pre-wrap">${escapeHtml(w.meaning)}</p>
+          </div>
+          <div>
+            <h4 class="font-semibold text-[rgb(92,130,255)] mb-1">Contexto / Exemplo:</h4>
+            <p class="whitespace-pre-wrap">${
+              w.context
+                ? escapeHtml(w.context)
+                : '<span class="italic text-gray-500">Nenhum contexto fornecido.</span>'
+            }</p>
+          </div>
+          <div>
+            <h4 class="font-semibold text-[rgb(92,130,255)] mb-1">Categoria:</h4>
+            <p>${escapeHtml(w.category)}</p>
+          </div>
+          <div>
+            <h4 class="font-semibold text-[rgb(92,130,255)] mb-1">Imagem:</h4>
+            ${
+              w.image
+                ? `<img src="${escapeAttribute(
+                    w.image
+                  )}" alt="Imagem ilustrativa para a palavra ${escapeAttribute(
+                    w.word
+                  )}" class="max-w-full rounded-md border border-gray-600 shadow-md" />`
+                : '<span class="italic text-gray-500">Nenhuma imagem fornecida.</span>'
+            }
+          </div>
+        `;
+
+        modalWordDetails.classList.remove('hidden');
+        modalWordDetails.focus();
+      }
+
+      // Close modal
+      btnCloseModal.addEventListener('click', () => {
+        modalWordDetails.classList.add('hidden');
+      });
+
+      modalWordDetails.addEventListener('click', (e) => {
+        if (e.target === modalWordDetails) {
+          modalWordDetails.classList.add('hidden');
+        }
+      });
+
+      // Escape HTML to prevent injection
+      function escapeHtml(text) {
+        if (!text) return '';
+        return text
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+      function escapeAttribute(text) {
+        if (!text) return '';
+        return text.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+      }
+
+      // Initialize
+      loadData();
+      showPage('home');
+    })();
+    
+  </script>
+</body>
+</html>            
