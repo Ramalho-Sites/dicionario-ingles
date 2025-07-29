@@ -416,9 +416,18 @@
           pageLearned.classList.remove('hidden');
           renderLearnedWords();
         }
-        closeSidebar();
-      }
 
+      // Atualiza destaque no menu lateral
+      navButtons.forEach((btn) => {
+        if (btn.dataset.page === page) {
+           btn.classList.add('active-menu-button');
+       } else {
+         btn.classList.remove('active-menu-button');
+       }
+      });
+
+      closeSidebar();
+    }
       navButtons.forEach((btn) => {
         btn.addEventListener('click', () => {
           showPage(btn.dataset.page);
