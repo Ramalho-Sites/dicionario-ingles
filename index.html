@@ -76,20 +76,33 @@
         <label for="email" class="block text-gray-400">Email</label>
         <input type="email" id="email" class="w-full bg-gray-700 rounded px-3 py-2 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-custom-blue" required>
       </div>
-      <div>
-        <label for="password" class="block text-gray-400">Senha</label>
-        <input type="password" id="password" class="w-full bg-gray-700 rounded px-3 py-2 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-custom-blue" required>
-      </div>
+     <div>
+  <label for="password" class="block text-gray-400">Senha</label>
+  <div class="relative">
+    <input type="password" id="password" class="w-full bg-gray-700 rounded px-3 py-2 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-custom-blue pr-10" required>
+    <button type="button" id="toggle-password" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white focus:outline-none">
+      <i class="fas fa-eye"></i>
+    </button>
+  </div>
+</div>
       <div class="flex gap-2">
   <button id="login-button" type="submit" class="flex-1 bg-custom-blue text-white font-bold py-2 rounded">Entrar</button>
   <button id="register-button" type="button" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded">Criar Conta</button>
 </div>
     </form>
-    <p id="auth-error" class="text-red-500 text-center mt-4 hidden"></p>
+  <p id="auth-feedback" class="text-center mt-4 hidden"></p>
   </div>
 </div>
-<div class="fixed top-3 right-4 z-40">
-    <button id="logout-button" class="hidden bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md text-sm">Sair</button>
+<div class="fixed top-3 right-4 z-40 flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-full px-4 py-2 shadow-md">
+  <i class="fas fa-user-circle text-custom-blue text-xl"></i>
+  <span id="user-email" class="text-sm font-medium text-gray-200 hidden"></span>
+  <button
+    id="logout-button"
+    class="hidden text-sm bg-red-600 hover:bg-red-700 text-white font-semibold py-1 px-3 rounded-full"
+    title="Sair da conta"
+  >
+    <i class="fas fa-sign-out-alt mr-1"></i> Sair
+  </button>
 </div>
     <div id="app" class="flex-1 flex flex-col hidden">
       <!-- Header com botão hamburger customizado -->
@@ -309,6 +322,42 @@
         <section id="page-learned" class="max-w-4xl mx-auto space-y-8 hidden">
           <h2 class="text-3xl font-bold text-custom-blue mb-2 select-none">
             Palavras Aprendidas
+            <!-- 🔄 Seletor de ordenação + campo de pesquisa -->
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+  
+  <!-- Campo de busca -->
+  <div class="relative flex-1">
+    <input
+      type="text"
+      id="search-learned"
+      placeholder="🔍 Pesquisar palavras..."
+      class="w-full pl-4 pr-10 py-2 rounded-md bg-gray-700 border border-gray-600 text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-custom-blue"
+      autocomplete="off"
+    />
+    <button
+      type="button"
+      id="clear-search"
+      class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+      aria-label="Limpar pesquisa"
+      title="Limpar"
+    >
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Seletor de ordenação -->
+  <div class="flex items-center gap-2">
+    <label for="sort-learned" class="text-sm text-gray-400">Ordenar por:</label>
+    <select
+      id="sort-learned"
+      class="bg-gray-700 text-gray-200 border border-gray-600 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-custom-blue"
+    >
+      <option value="alphabetical">A-Z (alfabética)</option>
+      <option value="date">Mais recente</option>
+    </select>
+  </div>
+</div>
+
           </h2>
           <div id="learned-words-container" class="space-y-10">
             <!-- Categories and words will be dynamically inserted here -->
@@ -395,105 +444,141 @@
     </div>
   </div>
  <script type="module">
-  // ===============================================================
-  // 1. CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE
-  // ===============================================================
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, query, where, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
-  
-  const firebaseConfig = {
-    apiKey: "AIzaSyBHBNmm9p-EwE9oQ5L22TgA95dgqEpKCu4",
-    authDomain: "my-dictionary-7a591.firebaseapp.com",
-    projectId: "my-dictionary-7a591",
-    storageBucket: "my-dictionary-7a591.appspot.com",
-    messagingSenderId: "857389257735",
-    appId: "1:857389257735:web:bebefde9efccf3ddc946a2"
-  };
+ // ===============================================================
+// 1. CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE
+// ===============================================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, where, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+const firebaseConfig = {
+  apiKey: "AIzaSyBHBNmm9p-EwE9oQ5L22TgA95dgqEpKCu4", // ATENÇÃO: Proteja esta chave!
+  authDomain: "my-dictionary-7a591.firebaseapp.com",
+  projectId: "my-dictionary-7a591",
+  storageBucket: "my-dictionary-7a591.appspot.com",
+  messagingSenderId: "857389257735",
+  appId: "1:857389257735:web:bebefde9efccf3ddc946a2"
+};
 
-  // ===============================================================
-  // 2. ELEMENTOS DA UI E ESTADO DA APLICAÇÃO
-  // ===============================================================
-  const appContainer = document.getElementById('app');
-  const authContainer = document.getElementById('auth-container');
-  const loginButton = document.getElementById('login-button');
-  const registerButton = document.getElementById('register-button');
-  const authError = document.getElementById('auth-error');
-  const logoutButton = document.getElementById('logout-button');
-  const btnHamburger = document.getElementById('btn-hamburger');
-  const checkboxHamburger = document.getElementById('checkbox');
-  const sidebar = document.getElementById('sidebar');
-  const overlay = document.getElementById('overlay');
-  const btnCloseSidebar = document.getElementById('btn-close-sidebar');
-  const mainContent = document.getElementById('main-content');
-  const sidebarTitle = document.querySelector('.sidebar-title');
-  const sidebarTexts = document.querySelectorAll('.sidebar-text');
-  const pageHome = document.getElementById('page-home');
-  const pageLearned = document.getElementById('page-learned');
-  const navButtons = sidebar.querySelectorAll('button[data-page]');
-  const formAddWord = document.getElementById('form-add-word');
-  const btnShowForm = document.getElementById('btn-show-form');
-  const learnedWordsContainer = document.getElementById('learned-words-container');
-  const modalWordDetails = document.getElementById('modal-word-details');
-  const btnCloseModal = document.getElementById('btn-close-modal');
-  const modalWordTitle = document.getElementById('modal-word-title');
-  const modalWordContent = document.getElementById('modal-word-content');
-  const inputWord = document.getElementById('input-word');
-  const inputContext = document.getElementById('input-context');
-  const inputMeaning = document.getElementById('input-meaning');
-  const inputImage = document.getElementById('input-image');
-  const inputCategorySearch = document.getElementById('input-category-search');
-  const btnCreateCategory = document.getElementById('btn-create-category');
-  const categoryListbox = document.getElementById('category-listbox');
-  const btnDiscard = document.getElementById('btn-discard');
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-  let words = [];
-  let categories = [];
-  let currentUser = null;
-  let isSidebarExpanded = window.innerWidth >= 768;
-  let unsubscribeFromWords = null;
+// ===============================================================
+// 2. ELEMENTOS DA UI E ESTADO DA APLICAÇÃO
+// ===============================================================
+const appContainer = document.getElementById('app');
+const togglePassword = document.getElementById('toggle-password');
+const passwordInput = document.getElementById('password');
+const authContainer = document.getElementById('auth-container');
+const loginButton = document.getElementById('login-button');
+const registerButton = document.getElementById('register-button');
+const authFeedback = document.getElementById('auth-feedback'); // Mudamos o nome
+const logoutButton = document.getElementById('logout-button');
+const userEmailDisplay = document.getElementById('user-email');
+const btnHamburger = document.getElementById('btn-hamburger');
+const checkboxHamburger = document.getElementById('checkbox');
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('overlay');
+const btnCloseSidebar = document.getElementById('btn-close-sidebar');
+const mainContent = document.getElementById('main-content');
+const sidebarTitle = document.querySelector('.sidebar-title');
+const sidebarTexts = document.querySelectorAll('.sidebar-text');
+const pageHome = document.getElementById('page-home');
+const pageLearned = document.getElementById('page-learned');
+const navButtons = sidebar.querySelectorAll('button[data-page]');
+const formAddWord = document.getElementById('form-add-word');
+const btnShowForm = document.getElementById('btn-show-form');
+const learnedWordsContainer = document.getElementById('learned-words-container');
+const searchLearnedInput = document.getElementById('search-learned');
+const clearSearchButton = document.getElementById('clear-search');
+const sortLearnedSelect = document.getElementById('sort-learned');
+let currentSort = "alphabetical";
+const modalWordDetails = document.getElementById('modal-word-details');
+const btnCloseModal = document.getElementById('btn-close-modal');
+const modalWordTitle = document.getElementById('modal-word-title');
+const modalWordContent = document.getElementById('modal-word-content');
+const inputWord = document.getElementById('input-word');
+const inputContext = document.getElementById('input-context');
+const inputMeaning = document.getElementById('input-meaning');
+const inputImage = document.getElementById('input-image');
+const inputCategorySearch = document.getElementById('input-category-search');
+const btnCreateCategory = document.getElementById('btn-create-category');
+const categoryListbox = document.getElementById('category-listbox');
+const btnDiscard = document.getElementById('btn-discard');
 
-  // ===============================================================
-  // 3. LÓGICA DE AUTENTICAÇÃO
-  // ===============================================================
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      currentUser = user;
-      authContainer.classList.add('hidden');
-      appContainer.classList.remove('hidden');
-      logoutButton.classList.remove('hidden');
-      loadData();
-    } else {
-      currentUser = null;
-      if (unsubscribeFromWords) unsubscribeFromWords();
-      authContainer.classList.remove('hidden');
-      appContainer.classList.add('hidden');
-      logoutButton.classList.add('hidden');
-      words = [];
-      renderLearnedWords();
-    }
-  });
+let words = [];
+let categories = [];
+let currentUser = null;
+let isSidebarExpanded = window.innerWidth >= 768;
+let unsubscribeFromWords = null;
+
+// ===============================================================
+// 3. LÓGICA DE AUTENTICAÇÃO
+// ===============================================================
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    authContainer.classList.add('hidden');
+    appContainer.classList.remove('hidden');
+    authFeedback.textContent = "";
+    authFeedback.classList.add('hidden');
+    logoutButton.classList.remove('hidden');
+    userEmailDisplay.textContent = currentUser.email;
+    userEmailDisplay.classList.remove('hidden');
+    loadData();
+  } else {
+    currentUser = null;
+    if (unsubscribeFromWords) unsubscribeFromWords();
+    authContainer.classList.remove('hidden');
+    appContainer.classList.add('hidden');
+    logoutButton.classList.add('hidden');
+    userEmailDisplay.textContent = "";
+    userEmailDisplay.classList.add('hidden');
+    words = [];
+    renderLearnedWords();
+  }
+});
 
 loginButton.addEventListener('click', async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
-  authError.classList.add('hidden');
+
+  authFeedback.classList.add('hidden'); // Esconde a mensagem anterior
+  setTimeout(() => {
+  authFeedback.textContent = "";
+  authFeedback.classList.add('hidden');
+}, 3000);
+
+togglePassword.addEventListener('click', () => {
+  const isPassword = passwordInput.type === 'password';
+  passwordInput.type = isPassword ? 'text' : 'password';
+  togglePassword.innerHTML = `<i class="fas ${isPassword ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
+});
 
   try {
     await signInWithEmailAndPassword(auth, email, password);
-  } catch (error) {
-    let msg = "Erro ao entrar. ";
-    if (error.code === 'auth/user-not-found') msg += "Usuário não encontrado.";
-    else if (error.code === 'auth/wrong-password') msg += "Senha incorreta.";
-    else msg += error.message;
 
-    authError.textContent = msg;
-    authError.classList.remove('hidden');
+    // SUCESSO NO LOGIN!
+    authFeedback.textContent = "🎉 Login efetuado com sucesso!";
+    authFeedback.classList.remove('text-red-500');
+    authFeedback.classList.add('text-green-500');
+    authFeedback.classList.remove('hidden');
+
+    // O onAuthStateChanged tratará de mudar de ecrã
+
+  } catch (error) {
+    // ERRO NO LOGIN
+    if (error.code === 'auth/invalid-login-credentials') {
+      authFeedback.textContent = "❌ Email ou senha inválidos.";
+
+    } else {
+      authFeedback.textContent = "Ocorreu um erro ao entrar.";
+    }
+    authFeedback.classList.remove('text-green-500');
+    authFeedback.classList.add('text-red-500');
+    authFeedback.classList.remove('hidden');
   }
 });
 
@@ -501,104 +586,148 @@ registerButton.addEventListener('click', async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
-  authError.classList.add('hidden');
+
+  authFeedback.classList.add('hidden'); // Esconde a mensagem anterior
 
   try {
     await createUserWithEmailAndPassword(auth, email, password);
-  } catch (error) {
-    let msg = "Erro ao registrar. ";
-    if (error.code === 'auth/email-already-in-use') msg += "Este e-mail já está em uso.";
-    else if (error.code === 'auth/invalid-email') msg += "E-mail inválido.";
-    else if (error.code === 'auth/weak-password') msg += "A senha deve ter no mínimo 6 caracteres.";
-    else msg += error.message;
 
-    authError.textContent = msg;
-    authError.classList.remove('hidden');
+    // SUCESSO AO CRIAR CONTA!
+    authFeedback.textContent = "✅ Conta criada! Você já está logado.";
+
+    authFeedback.classList.remove('text-red-500');
+    authFeedback.classList.add('text-green-500');
+    authFeedback.classList.remove('hidden');
+
+    // O onAuthStateChanged tratará de mudar de ecrã
+
+  } catch (error) {
+    // ERRO AO CRIAR CONTA
+    if (error.code === 'auth/email-already-in-use') {
+      authFeedback.textContent = "Este email já está registado. Tente entrar.";
+    } else if (error.code === 'auth/weak-password') {
+      authFeedback.textContent = "A senha precisa de ter pelo menos 6 caracteres.";
+    } else {
+      authFeedback.textContent = "Ocorreu um erro ao criar a conta.";
+    }
+    authFeedback.classList.remove('text-green-500');
+    authFeedback.classList.add('text-red-500');
+    authFeedback.classList.remove('hidden');
   }
 });
 
-  logoutButton.addEventListener('click', () => { signOut(auth); });
+logoutButton.addEventListener('click', () => { signOut(auth); });
 
-  // ===============================================================
-  // 4. LÓGICA DA BASE DE DADOS (FIRESTORE)
-  // ===============================================================
-  function loadData() {
-    if (!currentUser) return;
-    if (unsubscribeFromWords) unsubscribeFromWords();
+// ===============================================================
+// 4. LÓGICA DA BASE DE DADOS (FIRESTORE)
+// ===============================================================
+function loadData() {
+  if (!currentUser) return;
+  if (unsubscribeFromWords) unsubscribeFromWords();
 
-    const q = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
-    
-    unsubscribeFromWords = onSnapshot(q, (querySnapshot) => {
-      words = [];
-      const categorySet = new Set();
-      querySnapshot.forEach((doc) => {
-        const wordData = doc.data();
-        words.push({ id: doc.id, ...wordData });
-        if(wordData.category) categorySet.add(wordData.category);
-      });
-      categories = Array.from(categorySet).sort();
-      words.sort((a,b) => a.word.localeCompare(b.word));
-      renderLearnedWords();
-    });
-  }
-
-  async function addWord(newWordObject) {
-    if (!currentUser) return;
-    await addDoc(collection(db, "palavras"), { ...newWordObject, userId: currentUser.uid });
-  }
-
-  async function updateWord(wordId, updatedData) {
-    if (!currentUser) return;
-    const wordRef = doc(db, "palavras", wordId);
-    await updateDoc(wordRef, updatedData);
-  }
-
-  async function deleteWord(wordId) {
-    if (!currentUser) return;
-    await deleteDoc(doc(db, "palavras", wordId));
-  }
-
-  // ===============================================================
-  // 5. LÓGICA DA APLICAÇÃO (Formulários, Sidebar, Modais, etc.)
-  // ===============================================================
+  const q = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
   
-  // --- Formulários ---
-  formAddWord.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const newWord = {
-      word: inputWord.value.trim(),
-      meaning: inputMeaning.value.trim(),
-      context: inputContext.value.trim(),
-      image: inputImage.value.trim(),
-      category: inputCategorySearch.value.trim(),
-    };
-    if (!newWord.word || !newWord.meaning) {
-        alert("Palavra e significado são obrigatórios.");
-        return;
-    }
-    addWord(newWord);
-    formAddWord.reset();
-    inputCategorySearch.value = '';
-    hideForm();
+  unsubscribeFromWords = onSnapshot(q, (querySnapshot) => {
+    words = [];
+    const categorySet = new Set();
+    querySnapshot.forEach((doc) => {
+      const wordData = doc.data();
+      words.push({ id: doc.id, ...wordData });
+      if(wordData.category) categorySet.add(wordData.category);
+    });
+    categories = Array.from(categorySet).sort();
+    words.sort((a,b) => a.word.localeCompare(b.word));
+    renderLearnedWords();
   });
+}
 
-  document.getElementById('form-edit-word').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const wordId = form.querySelector('#edit-id').value;
-    const updatedData = {
-      word: form.querySelector('#edit-word').value.trim(),
-      meaning: form.querySelector('#edit-meaning').value.trim(),
-      context: form.querySelector('#edit-context').value.trim(),
-      image: form.querySelector('#edit-image').value.trim(),
-      category: form.querySelector('#edit-category').value.trim(),
-    };
-    updateWord(wordId, updatedData);
-    document.getElementById('modal-edit-word').classList.add('hidden');
+async function addWord(newWordObject) {
+  if (!currentUser) return;
+  await addDoc(collection(db, "palavras"), {
+    ...newWordObject,
+    userId: currentUser.uid,
+    import { serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+...
+createdAt: serverTimestamp()
   });
+}
 
-  // --- Sidebar ---
-  function updateSidebarState() {
+async function updateWord(wordId, updatedData) {
+  if (!currentUser) return;
+  const wordRef = doc(db, "palavras", wordId);
+  await updateDoc(wordRef, updatedData);
+}
+
+async function deleteWord(wordId) {
+  if (!currentUser) return;
+  await deleteDoc(doc(db, "palavras", wordId));
+}
+
+// ===============================================================
+// 5. LÓGICA DA APLICAÇÃO
+// ===============================================================
+
+// --- Formulários ---
+formAddWord.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const wordValue = inputWord.value.trim();
+  const meaningValue = inputMeaning.value.trim();
+  
+  document.getElementById('word-error').classList.toggle('hidden', !!wordValue);
+  document.getElementById('meaning-error').classList.toggle('hidden', !!meaningValue);
+
+  if (!wordValue || !meaningValue) {
+    return;
+  }
+  
+  const newWord = {
+    word: wordValue,
+    meaning: meaningValue,
+    context: inputContext.value.trim(),
+    image: inputImage.value.trim(),
+    category: inputCategorySearch.value.trim() || 'Sem Categoria',
+  };
+
+  addWord(newWord);
+  formAddWord.reset();
+  inputCategorySearch.value = '';
+  hideForm();
+});
+
+document.getElementById('form-edit-word').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const wordId = form.querySelector('#edit-id').value;
+  const updatedData = {
+    word: form.querySelector('#edit-word').value.trim(),
+    meaning: form.querySelector('#edit-meaning').value.trim(),
+    context: form.querySelector('#edit-context').value.trim(),
+    image: form.querySelector('#edit-image').value.trim(),
+    category: form.querySelector('#edit-category').value.trim() || 'Sem Categoria',
+  };
+  if (!updatedData.word || !updatedData.meaning) {
+      alert("Palavra e significado são obrigatórios.");
+      return;
+  }
+  updateWord(wordId, updatedData);
+  document.getElementById('modal-edit-word').classList.add('hidden');
+});
+
+function hideForm() { 
+  formAddWord.classList.add('hidden'); 
+  btnShowForm.classList.remove('hidden'); 
+}
+
+function showForm() { 
+  formAddWord.classList.remove('hidden'); 
+  btnShowForm.classList.add('hidden'); 
+}
+
+btnShowForm.addEventListener('click', showForm);
+btnDiscard.addEventListener('click', hideForm);
+
+// --- Sidebar e Navegação ---
+function updateSidebarState() {
     const isDesktop = window.innerWidth >= 768;
     mainContent.classList.remove('ml-20', 'ml-64');
     sidebar.classList.remove('w-20', 'w-64', '-translate-x-full');
@@ -627,15 +756,14 @@ registerButton.addEventListener('click', async (e) => {
       }
     }
     checkboxHamburger.checked = isSidebarExpanded;
-  }
-  function toggleSidebar() { isSidebarExpanded = !isSidebarExpanded; updateSidebarState(); }
-  btnHamburger.addEventListener('click', toggleSidebar);
-  btnCloseSidebar.addEventListener('click', toggleSidebar);
-  overlay.addEventListener('click', toggleSidebar);
-  window.addEventListener('resize', updateSidebarState);
-  
-  // --- Navegação de Página ---
-  function showPage(page) {
+}
+
+function toggleSidebar() { 
+  isSidebarExpanded = !isSidebarExpanded; 
+  updateSidebarState(); 
+}
+
+function showPage(page) {
     pageHome.classList.add('hidden');
     pageLearned.classList.add('hidden');
     if (page === 'home') pageHome.classList.remove('hidden');
@@ -647,79 +775,136 @@ registerButton.addEventListener('click', async (e) => {
       btn.classList.toggle('text-white', isSelected);
       btn.classList.toggle('text-custom-blue', !isSelected);
     });
-    if (window.innerWidth < 768) { isSidebarExpanded = false; updateSidebarState(); }
-  }
-  navButtons.forEach(btn => { btn.addEventListener('click', () => showPage(btn.dataset.page)); });
-
-  // --- Renderização e Modais ---
-  function renderLearnedWords() {
-    if (!learnedWordsContainer) return;
-    if (words.length === 0) {
-      learnedWordsContainer.innerHTML = '<p class="text-gray-500 italic">Nenhuma palavra adicionada ainda.</p>';
-      return;
+    if (window.innerWidth < 768) { 
+      isSidebarExpanded = false; 
+      updateSidebarState(); 
     }
-    const grouped = words.reduce((acc, w) => {
-        const cat = w.category || 'Sem Categoria';
-        if (!acc[cat]) acc[cat] = [];
-        acc[cat].push(w);
-        return acc;
-    }, {});
-    const sortedCats = Object.keys(grouped).sort();
-    learnedWordsContainer.innerHTML = sortedCats.map(cat => `
-        <div class="space-y-3">
-            <h3 class="text-xl font-extrabold text-custom-blue">${cat}</h3>
-            <ul class="space-y-1">
-                ${grouped[cat].map(w => `
-                    <li class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center cursor-pointer" onclick="openModalWordDetails('${w.id}')">
-                        <span class="flex-1">${w.word}</span>
-                        <button class="ml-4 p-2 text-gray-400 hover:text-white" onclick="event.stopPropagation(); openEditModal('${w.id}');">
-                            <i class="fas fa-pen"></i>
-                        </button>
-                    </li>
-                `).join('')}
-            </ul>
-        </div>
-    `).join('');
-  }
-  
-  function openModalWordDetails(wordId) {
-    const word = words.find(w => w.id === wordId);
-    if (!word) return;
-    modalWordTitle.textContent = word.word;
-    modalWordContent.innerHTML = `...`; // Sua lógica de innerHTML para detalhes
-    modalWordDetails.classList.remove('hidden');
-  }
-  
-  function openEditModal(wordId) {
-    const word = words.find(w => w.id === wordId);
-    if (!word) return;
-    const modal = document.getElementById('modal-edit-word');
-    modal.querySelector('#edit-id').value = word.id;
-    modal.querySelector('#edit-word').value = word.word;
-    // ... preencher o resto dos campos
-    modal.classList.remove('hidden');
-  }
+}
 
-  // Disponibiliza funções globalmente para o HTML poder chamá-las
-  window.openModalWordDetails = openModalWordDetails;
-  window.openEditModal = openEditModal;
+btnHamburger.addEventListener('click', toggleSidebar);
+btnCloseSidebar.addEventListener('click', toggleSidebar);
+overlay.addEventListener('click', toggleSidebar);
+window.addEventListener('resize', updateSidebarState);
+navButtons.forEach(btn => { btn.addEventListener('click', () => showPage(btn.dataset.page)); });
+
+// --- Renderização e Modais ---
+function renderLearnedWords(searchTerm = "") {
+  if (!learnedWordsContainer) return;
+
+  const filteredWords = words.filter(word =>
+  word.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  word.meaning?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  word.context?.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+if (currentSort === "date") {
+  filteredWords.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
+} else {
+  filteredWords.sort((a, b) => a.word.localeCompare(b.word));
+}
+
+  const grouped = filteredWords.reduce((acc, w) => {
+    const cat = w.category || 'Sem Categoria';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(w);
+    return acc;
+  }, {});
+
+  const sortedCats = Object.keys(grouped).sort();
+  learnedWordsContainer.innerHTML = sortedCats.map(cat => `
+    <div class="space-y-3">
+      <h3 class="text-xl font-extrabold text-custom-blue">${cat}</h3>
+      <ul class="space-y-1">
+        ${grouped[cat].map(w => `
+          <li data-action="details" data-word-id="${w.id}" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center cursor-pointer">
+            <span class="flex-1">${w.word}</span>
+            <button data-action="edit" data-word-id="${w.id}" class="ml-4 p-2 text-gray-400 hover:text-white">
+              <i class="fas fa-pen"></i>
+            </button>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+  `).join('');
+}
+
+
+learnedWordsContainer.addEventListener('click', (e) => {
+    const target = e.target.closest('li[data-action="details"], button[data-action="edit"]');
+    if (!target) return;
+
+    const action = target.dataset.action;
+    const wordId = target.dataset.wordId;
+
+    if (action === 'details') {
+        openModalWordDetails(wordId);
+    } else if (action === 'edit') {
+        openEditModal(wordId);
+    }
+});
+
+function openModalWordDetails(wordId) {
+  const word = words.find(w => w.id === wordId);
+  if (!word) return;
+  modalWordTitle.textContent = word.word;
+  modalWordContent.innerHTML = `
+      ${word.image ? `<img src="${word.image}" alt="Imagem de ${word.word}" class="w-full max-h-60 object-cover rounded-md mb-4">` : ''}
+      <p><strong class="font-semibold text-custom-blue">Significado:</strong><br>${word.meaning.replace(/\n/g, '<br>')}</p>
+      ${word.context ? `<p class="mt-2"><strong class="font-semibold text-custom-blue">Contexto/Exemplo:</strong><br>${word.context.replace(/\n/g, '<br>')}</p>` : ''}
+      <p class="mt-2 text-sm text-gray-400"><strong>Categoria:</strong> ${word.category || 'Nenhuma'}</p>
+  `;
+  modalWordDetails.classList.remove('hidden');
+}
+
+function openEditModal(wordId) {
+  const word = words.find(w => w.id === wordId);
+  if (!word) return;
+  const modal = document.getElementById('modal-edit-word');
   
-  // ... (O resto das suas funções helper como hideForm, showForm, etc. aqui)
-  function hideForm() { formAddWord.classList.add('hidden'); btnShowForm.classList.remove('hidden'); }
-  function showForm() { formAddWord.classList.remove('hidden'); btnShowForm.classList.add('hidden'); }
-  btnShowForm.addEventListener('click', showForm);
-  btnDiscard.addEventListener('click', hideForm);
+  modal.querySelector('#edit-id').value = word.id;
+  modal.querySelector('#edit-word').value = word.word;
+  modal.querySelector('#edit-meaning').value = word.meaning;
+  modal.querySelector('#edit-context').value = word.context || '';
+  modal.querySelector('#edit-image').value = word.image || '';
+  modal.querySelector('#edit-category').value = word.category || '';
   
-  // ===============================================================
-  // 6. INICIALIZAÇÃO DA APLICAÇÃO
-  // ===============================================================
-  function initialize() {
-    updateSidebarState();
-    showPage('home');
-    // loadData() é chamado pelo onAuthStateChanged
-  }
+  modal.classList.remove('hidden');
+}
+
+document.getElementById('btn-close-edit-modal').addEventListener('click', () => {
+    document.getElementById('modal-edit-word').classList.add('hidden');
+});
+document.getElementById('btn-cancel-edit').addEventListener('click', () => {
+    document.getElementById('modal-edit-word').classList.add('hidden');
+});
+btnCloseModal.addEventListener('click', () => {
+    modalWordDetails.classList.add('hidden');
+});
+
+// ===============================================================
+// 6. INICIALIZAÇÃO DA APLICAÇÃO
+// ===============================================================
+function initialize() {
+  updateSidebarState();
+  showPage('home');
+  // loadData() é chamado pelo onAuthStateChanged
+}
   
-  initialize();
+initialize();
+clearSearchButton?.addEventListener('click', () => {
+  searchLearnedInput.value = "";
+  renderLearnedWords();
+  searchLearnedInput.focus();
+});
+
+sortLearnedSelect?.addEventListener('change', (e) => {
+  currentSort = e.target.value;
+  renderLearnedWords(searchLearnedInput.value);
+});
+
+searchLearnedInput?.addEventListener('input', (e) => {
+  renderLearnedWords(e.target.value);
+});
 </script>
 </body>
-</html>           
+</html>
