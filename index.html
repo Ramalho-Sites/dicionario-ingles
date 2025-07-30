@@ -464,36 +464,41 @@
       btnCloseSidebar.addEventListener('click', closeSidebar);
       overlay.addEventListener('click', closeSidebar);
 
-      // Navigation
+      // =========================================================
+      // LÓGICA DE NAVEGAÇÃO QUE PODE TER SIDO APAGADA
+      // =========================================================
       function showPage(page) {
-  if (page === 'home') {
-    pageHome.classList.remove('hidden');
-    pageLearned.classList.add('hidden');
-  } else if (page === 'learned') {
-    pageHome.classList.add('hidden');
-    pageLearned.classList.remove('hidden');
-    renderLearnedWords(); // ← só aqui dentro
-  }
+        if (page === 'home') {
+          pageHome.classList.remove('hidden');
+          pageLearned.classList.add('hidden');
+        } else if (page === 'learned') {
+          pageHome.classList.add('hidden');
+          pageLearned.classList.remove('hidden');
+          renderLearnedWords(); // Renderiza as palavras ao mudar para a página
+        }
 
-  // Atualiza visual dos botões do menu
-  navButtons.forEach((btn) => {
-    if (btn.dataset.page === page) {
-      btn.classList.add('bg-[rgb(92,130,255)]', 'text-white');
-      btn.classList.remove('text-custom-blue');
-    } else {
-      btn.classList.remove('bg-[rgb(92,130,255)]', 'text-white');
-      btn.classList.add('text-custom-blue');
-    }
-  });
+        // Atualiza visual dos botões do menu
+        navButtons.forEach((btn) => {
+          if (btn.dataset.page === page) {
+            btn.classList.add('bg-[rgb(92,130,255)]', 'text-white');
+            btn.classList.remove('text-custom-blue');
+          } else {
+            btn.classList.remove('bg-[rgb(92,130,255)]', 'text-white');
+            btn.classList.add('text-custom-blue');
+          }
+        });
 
-  closeSidebar();
-} // ← 👈 TEM QUE FECHAR AQUI!
+        closeSidebar();
+      }
 
       navButtons.forEach((btn) => {
         btn.addEventListener('click', () => {
           showPage(btn.dataset.page);
         });
       });
+      // =========================================================
+      // FIM DA LÓGICA DE NAVEGAÇÃO
+      // =========================================================
 
       // Category autocomplete & selection
       function filterCategories(query) {
@@ -611,7 +616,6 @@
       formAddWord.addEventListener('submit', (e) => {
         e.preventDefault();
 
-        // Reset errors
         document.getElementById('word-error').classList.add('hidden');
         document.getElementById('meaning-error').classList.add('hidden');
         document.getElementById('image-error').classList.add('hidden');
@@ -644,13 +648,11 @@
 
         if (hasError) return;
 
-        // Add category if not exists
         if (!categories.some((c) => c.toLowerCase() === categoryVal.toLowerCase())) {
           categories.push(categoryVal);
           categories.sort((a, b) => a.localeCompare(b));
         }
 
-        // Add word
         const newWord = {
           id: Date.now().toString(),
           word: wordVal,
@@ -670,7 +672,6 @@
         hideForm();
       });
 
-      // Discard button resets form and errors
       btnDiscard.addEventListener('click', () => {
         formAddWord.reset();
         inputCategorySearch.value = '';
@@ -680,13 +681,11 @@
         hideForm();
       });
 
-      // Show/hide form with button
       function showForm() {
         formAddWord.classList.remove('hidden');
         formAddWord.setAttribute('aria-hidden', 'false');
         btnShowForm.setAttribute('aria-expanded', 'true');
         btnShowForm.classList.add('hidden');
-        // Scroll form into view and focus first input
         formAddWord.scrollIntoView({ behavior: 'smooth', block: 'center' });
         inputWord.focus();
       }
@@ -702,80 +701,74 @@
         showForm();
       });
 
-      // Render learned words grouped by category
- function renderLearnedWords() {
-  if (words.length === 0) {
-    learnedWordsContainer.innerHTML =
-      '<p class="text-gray-500 italic select-none">Nenhuma palavra adicionada ainda.</p>';
-    return;
-  }
-
-  const grouped = {};
-  for (const w of words) {
-    const cat = w.category || 'Sem Categoria';
-    if (!grouped[cat]) grouped[cat] = [];
-    grouped[cat].push(w);
-  }
-
-  const sortedCats = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
-  learnedWordsContainer.innerHTML = ''; // Limpa o container
-
-  for (const cat of sortedCats) {
-    const catDiv = document.createElement('div');
-    catDiv.className = 'space-y-3';
-
-    const catTitle = document.createElement('h3');
-    catTitle.className = 'text-xl font-extrabold text-custom-blue select-none';
-    catTitle.textContent = cat;
-    catDiv.appendChild(catTitle);
-
-    const ul = document.createElement('ul');
-    ul.className = 'space-y-1';
-
-    for (const w of catWords) {
-      const li = document.createElement('li');
-      li.className =
-        'rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:outline-none select-none flex justify-between items-center cursor-pointer';
-
-      // --- PASSO 1: Crie os elementos internos (sem listeners ainda) ---
-      const span = document.createElement('span');
-      span.textContent = w.word;
-      span.className = 'flex-1'; // Ocupa o espaço disponível
-
-      const btnEdit = document.createElement('button');
-      // Adicionei classes para melhor aparência e área de clique
-      btnEdit.className = 'ml-4 p-2 text-gray-400 hover:text-white focus:outline-none';
-      btnEdit.innerHTML = '<i class="fas fa-pen"></i>';
-      btnEdit.setAttribute('aria-label', `Editar ${w.word}`);
-      // IMPORTANTE: O botão precisa de um identificador para a lógica abaixo
-      btnEdit.dataset.action = 'edit';
-
-
-      // --- PASSO 2: Adicione os elementos ao <li> ---
-      li.appendChild(span);
-      li.appendChild(btnEdit);
-
-
-      // --- PASSO 3: Adicione UM ÚNICO listener ao <li> ---
-      li.addEventListener('click', (e) => {
-        // Verifica se o clique foi no botão de editar ou em um de seus filhos (o <i>)
-        if (e.target.closest('[data-action="edit"]')) {
-          // Se foi no botão, abre o modal de EDIÇÃO
-          window.openEditModal(w.id);
-        } else {
-          // Se foi em qualquer outro lugar, abre o modal de DETALHES
-          openModalWordDetails(w.id);
+      // =========================================================
+      // FUNÇÃO renderLearnedWords COM A CORREÇÃO DO CLIQUE
+      // =========================================================
+      function renderLearnedWords() {
+        if (words.length === 0) {
+          learnedWordsContainer.innerHTML =
+            '<p class="text-gray-500 italic select-none">Nenhuma palavra adicionada ainda.</p>';
+          return;
         }
-      });
-      
-      // Adiciona o item da lista à lista
-      ul.appendChild(li);
-    }
 
-    catDiv.appendChild(ul);
-    learnedWordsContainer.appendChild(catDiv);
-  }
-}
+        const grouped = {};
+        for (const w of words) {
+          const cat = w.category || 'Sem Categoria';
+          if (!grouped[cat]) grouped[cat] = [];
+          grouped[cat].push(w);
+        }
+
+        const sortedCats = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
+        learnedWordsContainer.innerHTML = '';
+
+        for (const cat of sortedCats) {
+          const catDiv = document.createElement('div');
+          catDiv.className = 'space-y-3';
+
+          const catTitle = document.createElement('h3');
+          catTitle.className = 'text-xl font-extrabold text-custom-blue select-none';
+          catTitle.textContent = cat;
+          catDiv.appendChild(catTitle);
+
+          const ul = document.createElement('ul');
+          ul.className = 'space-y-1';
+
+          for (const w of catWords) {
+            const li = document.createElement('li');
+            li.className =
+              'rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:outline-none select-none flex justify-between items-center cursor-pointer';
+
+            const span = document.createElement('span');
+            span.textContent = w.word;
+            span.className = 'flex-1';
+
+            const btnEdit = document.createElement('button');
+            btnEdit.className = 'ml-4 p-2 text-gray-400 hover:text-white focus:outline-none';
+            btnEdit.innerHTML = '<i class="fas fa-pen"></i>';
+            btnEdit.setAttribute('aria-label', `Editar ${w.word}`);
+            btnEdit.dataset.action = 'edit';
+
+            li.appendChild(span);
+            li.appendChild(btnEdit);
+
+            li.addEventListener('click', (e) => {
+              if (e.target.closest('[data-action="edit"]')) {
+                window.openEditModal(w.id);
+              } else {
+                openModalWordDetails(w.id);
+              }
+            });
+            
+            ul.appendChild(li);
+          }
+
+          catDiv.appendChild(ul);
+          learnedWordsContainer.appendChild(catDiv);
+        }
+      }
+      // =========================================================
+      // FIM DA FUNÇÃO CORRIGIDA
+      // =========================================================
 
 
       // Open modal with word details
@@ -847,50 +840,50 @@
       }
 
 
-// Funções de Edição
-window.openEditModal = function(id) {
-  const w = words.find(x => x.id === id);
-  if (!w) return;
+      // Funções de Edição
+      window.openEditModal = function(id) {
+        const w = words.find(x => x.id === id);
+        if (!w) return;
 
-  document.getElementById('edit-id').value = w.id;
-  document.getElementById('edit-word').value = w.word;
-  document.getElementById('edit-meaning').value = w.meaning;
-  document.getElementById('edit-context').value = w.context || '';
-  document.getElementById('edit-image').value = w.image || '';
-  document.getElementById('edit-category').value = w.category || '';
+        document.getElementById('edit-id').value = w.id;
+        document.getElementById('edit-word').value = w.word;
+        document.getElementById('edit-meaning').value = w.meaning;
+        document.getElementById('edit-context').value = w.context || '';
+        document.getElementById('edit-image').value = w.image || '';
+        document.getElementById('edit-category').value = w.category || '';
 
-  document.getElementById('modal-edit-word').classList.remove('hidden');
-};
+        document.getElementById('modal-edit-word').classList.remove('hidden');
+      };
 
-document.getElementById('btn-close-edit-modal').addEventListener('click', () => {
-  document.getElementById('modal-edit-word').classList.add('hidden');
-});
+      document.getElementById('btn-close-edit-modal').addEventListener('click', () => {
+        document.getElementById('modal-edit-word').classList.add('hidden');
+      });
 
-document.getElementById('btn-cancel-edit').addEventListener('click', () => {
-  document.getElementById('modal-edit-word').classList.add('hidden');
-});
+      document.getElementById('btn-cancel-edit').addEventListener('click', () => {
+        document.getElementById('modal-edit-word').classList.add('hidden');
+      });
 
-document.getElementById('form-edit-word').addEventListener('submit', (e) => {
-  e.preventDefault();
-  const id = document.getElementById('edit-id').value;
-  const w = words.find(x => x.id === id);
-  if (!w) return;
+      document.getElementById('form-edit-word').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-id').value;
+        const w = words.find(x => x.id === id);
+        if (!w) return;
 
-  w.word = document.getElementById('edit-word').value.trim();
-  w.meaning = document.getElementById('edit-meaning').value.trim();
-  w.context = document.getElementById('edit-context').value.trim();
-  w.image = document.getElementById('edit-image').value.trim();
-  w.category = document.getElementById('edit-category').value.trim();
+        w.word = document.getElementById('edit-word').value.trim();
+        w.meaning = document.getElementById('edit-meaning').value.trim();
+        w.context = document.getElementById('edit-context').value.trim();
+        w.image = document.getElementById('edit-image').value.trim();
+        w.category = document.getElementById('edit-category').value.trim();
 
-  saveData();
-  renderLearnedWords();
-  document.getElementById('modal-edit-word').classList.add('hidden');
-});
+        saveData();
+        renderLearnedWords();
+        document.getElementById('modal-edit-word').classList.add('hidden');
+      });
+
       // Initialize
       loadData();
       showPage('home');
     })();
-
-</script>  
+  </script> 
 </body>
 </html>            
