@@ -466,28 +466,28 @@
 
       // Navigation
       function showPage(page) {
-        if (page === 'home') {
-          pageHome.classList.remove('hidden');
-          pageLearned.classList.add('hidden');
-        } else if (page === 'learned') {
-          pageHome.classList.add('hidden');
-          pageLearned.classList.remove('hidden');
-          renderLearnedWords();
-        }
-
-      // Atualiza visual dos botões do menu
-      navButtons.forEach((btn) => {
-        if (btn.dataset.page === page) {
-          btn.classList.add('bg-[rgb(92,130,255)]', 'text-white');
-          btn.classList.remove('text-custom-blue');
-        } else {
-          btn.classList.remove('bg-[rgb(92,130,255)]', 'text-white');
-          btn.classList.add('text-custom-blue');
-        }
-     });
-
-    closeSidebar();
+  if (page === 'home') {
+    pageHome.classList.remove('hidden');
+    pageLearned.classList.add('hidden');
+  } else if (page === 'learned') {
+    pageHome.classList.add('hidden');
+    pageLearned.classList.remove('hidden');
+    renderLearnedWords(); // ← só aqui dentro
   }
+
+  // Atualiza visual dos botões do menu
+  navButtons.forEach((btn) => {
+    if (btn.dataset.page === page) {
+      btn.classList.add('bg-[rgb(92,130,255)]', 'text-white');
+      btn.classList.remove('text-custom-blue');
+    } else {
+      btn.classList.remove('bg-[rgb(92,130,255)]', 'text-white');
+      btn.classList.add('text-custom-blue');
+    }
+  });
+
+  closeSidebar();
+} // ← 👈 TEM QUE FECHAR AQUI!
 
       navButtons.forEach((btn) => {
         btn.addEventListener('click', () => {
