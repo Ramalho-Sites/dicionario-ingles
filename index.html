@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
     <style>
+      .sidebar-text {
+        transition: opacity 0.2s ease-in-out;
+      }
       body {
         font-family: 'Inter', sans-serif;
       }
@@ -89,9 +92,8 @@
         class="fixed inset-y-0 left-0 z-30 w-64 bg-gray-800 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out md:shadow-none"
         aria-label="Menu principal"
       >
-        <div class="h-full flex flex-col">
-          <div class="px-6 py-6 border-b border-gray-700 flex items-center justify-between">
-            <h2 class="text-2xl italic font-extrabold text-custom-blue select-none tracking-wide drop-shadow-lg">
+        <div class="px-6 py-6 border-b border-gray-700 flex items-center justify-between">
+            <h2 class="sidebar-title text-2xl italic font-extrabold text-custom-blue select-none tracking-wide drop-shadow-lg">
               Menu
             </h2>
             <button
@@ -106,17 +108,19 @@
             <li>
              <button
                 data-page="home"
-               class="w-full text-left px-3 py-2 rounded-md hover:bg-[rgb(92,130,255)] hover:text-white focus:outline-none focus:bg-[rgb(92,130,255)] font-semibold"
+                class="w-full flex items-center px-3 py-2 rounded-md hover:bg-[rgb(92,130,255)] hover:text-white focus:outline-none focus:bg-[rgb(92,130,255)] font-semibold"
               >
-                Tela Inicial
+                <i class="fas fa-home w-8 text-center"></i>
+                <span class="sidebar-text">Tela Inicial</span>
               </button>
             </li>
             <li>
               <button
                 data-page="learned"
-                 class="w-full text-left px-3 py-2 rounded-md hover:bg-[rgb(92,130,255)] hover:text-white focus:outline-none focus:bg-[rgb(92,130,255)] font-semibold text-custom-blue"
+                class="w-full flex items-center px-3 py-2 rounded-md hover:bg-[rgb(92,130,255)] hover:text-white focus:outline-none focus:bg-[rgb(92,130,255)] font-semibold text-custom-blue"
               >
-                Palavras Aprendidas
+                <i class="fas fa-book-open w-8 text-center"></i>
+                <span class="sidebar-text">Palavras Aprendidas</span>
               </button>
             </li>
           </ul>
@@ -375,9 +379,11 @@
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('overlay');
       const btnCloseSidebar = document.getElementById('btn-close-sidebar');
-      const mainContent = document.getElementById('main-content'); // Adicionado para referência
-      
-      // ... (o restante das suas variáveis de elementos continua aqui)
+      const mainContent = document.getElementById('main-content');
+      const sidebarTitle = document.querySelector('.sidebar-title');
+      const sidebarTexts = document.querySelectorAll('.sidebar-text');
+
+      // ... (o restante das suas variáveis de elementos)
       const pageHome = document.getElementById('page-home');
       const pageLearned = document.getElementById('page-learned');
       const navButtons = sidebar.querySelectorAll('button[data-page]');
@@ -404,57 +410,83 @@
       // State
       let words = [];
       let categories = [];
-      let isSidebarOpen = window.innerWidth >= 768; // Estado inicial do sidebar
+      let isSidebarExpanded = window.innerWidth >= 768; // Em desktop, começa expandido
 
       // =========================================================
-      // NOVA LÓGICA UNIFICADA DO SIDEBAR
+      // NOVA LÓGICA DO SIDEBAR (DESKTOP E MOBILE)
       // =========================================================
       function updateSidebarState() {
-        if (isSidebarOpen) {
-          sidebar.classList.remove('-translate-x-full');
-          mainContent.classList.add('md:ml-64'); // Empurra o conteúdo no desktop
-          overlay.classList.remove('hidden'); // Mostra overlay no mobile
-          checkboxHamburger.checked = true;
-        } else {
-          sidebar.classList.add('-translate-x-full');
-          mainContent.classList.remove('md:ml-64'); // Conteúdo ocupa tela toda
-          overlay.classList.add('hidden'); // Esconde overlay
-          checkboxHamburger.checked = false;
+        // Comportamento para MOBILE
+        if (window.innerWidth < 768) {
+          mainContent.classList.remove('md:ml-64', 'md:ml-20');
+          sidebar.classList.remove('md:w-64', 'md:w-20');
+          sidebarTitle.classList.remove('hidden');
+          sidebarTexts.forEach(text => text.classList.remove('hidden'));
+          
+          if (isSidebarExpanded) {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            checkboxHamburger.checked = true;
+          } else {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+            checkboxHamburger.checked = false;
+          }
+        } 
+        // Comportamento para DESKTOP
+        else {
+          overlay.classList.add('hidden'); // Overlay nunca é usado no desktop
+          sidebar.classList.remove('-translate-x-full'); // Sidebar nunca some no desktop
+
+          if (isSidebarExpanded) {
+            // Estado EXPANDIDO
+            sidebar.classList.remove('w-20');
+            sidebar.classList.add('w-64');
+            mainContent.classList.remove('ml-20');
+            mainContent.classList.add('ml-64');
+            sidebarTitle.classList.remove('hidden');
+            sidebarTexts.forEach(text => text.classList.remove('hidden'));
+            checkboxHamburger.checked = true;
+          } else {
+            // Estado "MINI" (Colapsado)
+            sidebar.classList.remove('w-64');
+            sidebar.classList.add('w-20');
+            mainContent.classList.remove('ml-64');
+            mainContent.classList.add('ml-20');
+            sidebarTitle.classList.add('hidden');
+            sidebarTexts.forEach(text => text.classList.add('hidden'));
+            checkboxHamburger.checked = false;
+          }
         }
       }
 
       function toggleSidebar() {
-        isSidebarOpen = !isSidebarOpen;
+        isSidebarExpanded = !isSidebarExpanded;
         updateSidebarState();
       }
 
       function closeSidebarOnMobile() {
         if (window.innerWidth < 768) {
-          isSidebarOpen = false;
+          isSidebarExpanded = false;
           updateSidebarState();
         }
       }
 
+      // Adiciona listeners
       btnHamburger.addEventListener('click', toggleSidebar);
-      btnCloseSidebar.addEventListener('click', toggleSidebar);
-      overlay.addEventListener('click', toggleSidebar);
+      btnCloseSidebar.addEventListener('click', () => { // btnClose é só para mobile
+          isSidebarExpanded = false;
+          updateSidebarState();
+      });
+      overlay.addEventListener('click', () => { // Overlay é só para mobile
+          isSidebarExpanded = false;
+          updateSidebarState();
+      });
+      // Reavalia o layout se o usuário redimensionar a janela
+      window.addEventListener('resize', updateSidebarState);
       // =========================================================
       // FIM DA NOVA LÓGICA
       // =========================================================
-
-      // Load from localStorage
-      function loadData() {
-        const wordsLS = localStorage.getItem(STORAGE_WORDS_KEY);
-        const categoriesLS = localStorage.getItem(STORAGE_CATEGORIES_KEY);
-        words = wordsLS ? JSON.parse(wordsLS) : [];
-        categories = categoriesLS ? JSON.parse(categoriesLS) : [];
-      }
-
-      // Save to localStorage
-      function saveData() {
-        localStorage.setItem(STORAGE_WORDS_KEY, JSON.stringify(words));
-        localStorage.setItem(STORAGE_CATEGORIES_KEY, JSON.stringify(categories));
-      }
 
       function showPage(page) {
         if (page === 'home') {
@@ -474,7 +506,23 @@
             btn.classList.add('text-custom-blue');
           }
         });
-        closeSidebarOnMobile(); // Fecha o sidebar ao navegar no mobile
+        closeSidebarOnMobile();
+      }
+
+      // ... (TODO O RESTANTE DO SEU CÓDIGO JS CONTINUA AQUI, SEM ALTERAÇÕES)
+      
+      // Load from localStorage
+      function loadData() {
+        const wordsLS = localStorage.getItem(STORAGE_WORDS_KEY);
+        const categoriesLS = localStorage.getItem(STORAGE_CATEGORIES_KEY);
+        words = wordsLS ? JSON.parse(wordsLS) : [];
+        categories = categoriesLS ? JSON.parse(categoriesLS) : [];
+      }
+
+      // Save to localStorage
+      function saveData() {
+        localStorage.setItem(STORAGE_WORDS_KEY, JSON.stringify(words));
+        localStorage.setItem(STORAGE_CATEGORIES_KEY, JSON.stringify(categories));
       }
 
       navButtons.forEach((btn) => {
@@ -483,7 +531,6 @@
         });
       });
 
-      // ... (TODO O RESTANTE DO SEU CÓDIGO JS CONTINUA AQUI, SEM ALTERAÇÕES)
       // Category autocomplete & selection
       function filterCategories(query) {
         if (!query) return categories;
