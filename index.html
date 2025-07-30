@@ -88,7 +88,7 @@
 <!-- Header superior (mobile): botão menu à esquerda, perfil à direita -->
 <div class="fixed top-1 left-2 right-2 z-40 flex justify-between items-center px-3 sm:px-6">
   <!-- Botão Hamburguer -->
-  <button id="sidebar-toggle-container"> class="md:hidden text-custom-blue text-2xl focus:outline-none">
+  <button id="btn-hamburger" class="md:hidden text-custom-blue text-2xl focus:outline-none">
     <i class="fas fa-bars"></i>
   </button>
 
@@ -98,11 +98,9 @@
       <i class="fas fa-user-circle"></i>
     </button>
     <!-- Menu do perfil -->
-    <div id="profile-menu" class="absolute right-0 mt-2 w-48 bg-gray-900 border border-gray-700 rounded-md shadow-lg p-3 space-y-2 hidden z-50">
+    <div id="profile-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-gray-800 text-white rounded shadow-md z-50 p-3 space-y-2">
       <p id="user-email" class="text-sm text-gray-300 truncate"></p>
-      <button id="logout-button" class="w-full text-xs bg-red-600 hover:bg-red-700 text-white font-semibold py-1 px-2 rounded">
-        Sair
-      </button>
+     <button id="logout-button" class="text-xs text-red-500 hover:text-red-400">Sair</button>
 
     </div>
   </div>
@@ -131,7 +129,7 @@
       >
         <div class="px-6 py-6 border-b border-gray-700 flex items-center gap-4">
 
-          <div id="btn-hamburger">
+          <div id="sidebar-toggle-container">
           <input id="checkbox" type="checkbox">
           <label class="toggle" for="checkbox">
             <div id="bar1" class="bars"></div>
@@ -489,7 +487,7 @@ const registerButton = document.getElementById('register-button');
 const authFeedback = document.getElementById('auth-feedback'); // Mudamos o nome
 const logoutButton = document.getElementById('logout-button');
 const userEmailDisplay = document.getElementById('user-email');
-const btnHamburger = document.querySelector('button#btn-hamburger');
+const btnHamburger = document.getElementById('btn-hamburger');
 const checkboxHamburger = document.getElementById('checkbox');
 const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('overlay');
