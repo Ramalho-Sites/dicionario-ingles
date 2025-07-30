@@ -685,7 +685,13 @@
             li.className =
               'cursor-pointer rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:bg-[rgb(92,130,255)] focus:outline-none select-none';
             li.tabIndex = 0;
-            li.textContent = w.word;
+           li.innerHTML = `
+               <span>${w.word}</span>
+                <button class="ml-2 text-gray-400 hover:text-white edit-word-btn" data-id="${w.id}" title="Editar">
+                  <i class="fas fa-pen"></i>
+                </button>
+            `;
+
             li.dataset.wordId = w.id;
 
             li.addEventListener('click', () => openModalWordDetails(w.id));
