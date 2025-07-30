@@ -702,7 +702,7 @@
       });
 
       // =========================================================
-      // FUNÇÃO renderLearnedWords COM A CORREÇÃO DO CLIQUE
+      // FUNÇÃO renderLearnedWords COM A CORREÇÃO FINAL
       // =========================================================
       function renderLearnedWords() {
         if (words.length === 0) {
@@ -733,7 +733,9 @@
           const ul = document.createElement('ul');
           ul.className = 'space-y-1';
 
-          for (const w of catWords) {
+          // 👇 AQUI ESTÁ A LINHA CORRIGIDA
+          // A variável 'grouped[cat]' contém a lista de palavras para a categoria atual.
+          for (const w of grouped[cat]) {
             const li = document.createElement('li');
             li.className =
               'rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:outline-none select-none flex justify-between items-center cursor-pointer';
