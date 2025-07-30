@@ -736,16 +736,15 @@
 
 
             li.innerHTML = `
-                <span>${escapeHtml(w.word)}</span>
-                <button
-                  class="ml-2 text-custom-blue hover:text-white focus:outline-none"
-                  aria-label="Editar ${escapeHtml(w.word)}"
-                  onclick="event.stopPropagation(); openEditModal('${w.id}')"
-                >
-                  <i class="fas fa-pen"></i>
-                </button>
-                `;
-
+              <span>${escapeHtml(w.word)}</span>
+              <button
+                class="ml-2 text-custom-blue hover:text-white focus:outline-none"
+                aria-label="Editar ${escapeHtml(w.word)}"
+                onclick="event.stopPropagation(); openEditModal('${w.id}')"
+            >
+              <i class="fas fa-pen"></i>
+            </button>
+          `;
 
             li.dataset.wordId = w.id;
 
@@ -835,7 +834,7 @@
 
 
 // Funções de Edição
-function openEditModal(id) {
+window.openEditModal = function(id) {
   const w = words.find(x => x.id === id);
   if (!w) return;
 
