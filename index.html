@@ -65,16 +65,36 @@
       #bar2 {
         width: 75%;
       }
-
     </style>
   </head>
   <body class="bg-gray-900 text-gray-300 min-h-screen flex flex-col">
-    <div id="app" class="flex-1 flex flex-col">
+    <div id="auth-container" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center">
+  <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-sm">
+    <h2 class="text-2xl font-bold text-center text-custom-blue mb-6">Meu Dicionário</h2>
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label for="email" class="block text-gray-400">Email</label>
+        <input type="email" id="email" class="w-full bg-gray-700 rounded px-3 py-2 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-custom-blue" required>
+      </div>
+      <div>
+        <label for="password" class="block text-gray-400">Senha</label>
+        <input type="password" id="password" class="w-full bg-gray-700 rounded px-3 py-2 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-custom-blue" required>
+      </div>
+      <button type="submit" class="w-full bg-custom-blue text-white font-bold py-2 rounded hover:bg-blue-600 transition-colors">Entrar / Registrar</button>
+    </form>
+    <p id="auth-error" class="text-red-500 text-center mt-4 hidden"></p>
+  </div>
+</div>
+<div class="fixed top-3 right-4 z-40">
+    <button id="logout-button" class="hidden bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md text-sm">Sair</button>
+</div>
+    <div id="app" class="flex-1 flex flex-col hidden">
       <!-- Header com botão hamburger customizado -->
       <header class="flex items-center justify-center bg-gray-800 px-4 py-3 shadow-md">
         <h1 class="text-xl font-bold select-none text-gray-300">Meu Dicionário</h1>
         <div class="w-6"></div>
       </header>
+
 
     <div class="flex flex-1 overflow-hidden">
       <!-- Sidebar / Menu -->
@@ -914,6 +934,38 @@
       
       initialize();
     })();
+    // Import the functions you need from the SDKs you need
+
+import { initializeApp } from "firebase/app";
+
+// TODO: Add SDKs for Firebase products that you want to use
+
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+
+// Your web app's Firebase configuration
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyBHBNmm9p-EwE9oQ5L22TgA95dgqEpKCu4",
+
+  authDomain: "my-dictionary-7a591.firebaseapp.com",
+
+  projectId: "my-dictionary-7a591",
+
+  storageBucket: "my-dictionary-7a591.firebasestorage.app",
+
+  messagingSenderId: "857389257735",
+
+  appId: "1:857389257735:web:bebefde9efccf3ddc946a2"
+
+};
+
+
+// Initialize Firebase
+
+const app = initializeApp(firebaseConfig);
+
 </script>
 </body>
 </html>            
