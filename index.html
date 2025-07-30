@@ -837,9 +837,7 @@
       loadData();
       showPage('home');
     })();
-
-
-    <script>
+  // Funções de Edição
 function openEditModal(id) {
   const w = words.find(x => x.id === id);
   if (!w) return;
@@ -879,7 +877,12 @@ document.getElementById('form-edit-word').addEventListener('submit', (e) => {
   document.getElementById('modal-edit-word').classList.add('hidden');
 });
 
+// Initialize
+loadData();
+showPage('home');
 
-</script>
+
+
+
 </body>
 </html>            
