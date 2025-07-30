@@ -316,8 +316,61 @@
       </main>
     </div>
   </div>
+ <div
+    id="modal-edit-word"
+    class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="bg-gray-800 rounded-lg max-w-lg w-full p-6 relative shadow-lg max-h-[90vh] overflow-y-auto">
+      <button
+        id="btn-close-edit-modal"
+        class="absolute top-4 right-4 text-gray-400 hover:text-custom-blue focus:outline-none focus:ring-2 focus:ring-custom-blue rounded"
+      >
+        <i class="fas fa-times fa-lg"></i>
+      </button>
+      <h3 class="text-2xl font-bold text-custom-blue mb-4">Editar Palavra</h3>
+      <form id="form-edit-word" class="space-y-4">
+        <input type="hidden" id="edit-id" />
+        <div>
+          <label class="block text-gray-400 font-semibold mb-1">Palavra</label>
+          <input id="edit-word" type="text" class="w-full px-3 py-2 rounded bg-gray-700 text-white" required />
+        </div>
+        <div>
+          <label class="block text-gray-400 font-semibold mb-1">Significado</label>
+          <textarea id="edit-meaning" class="w-full px-3 py-2 rounded bg-gray-700 text-white" rows="2" required></textarea>
+        </div>
+        <div>
+          <label class="block text-gray-400 font-semibold mb-1">Contexto (opcional)</label>
+          <textarea id="edit-context" class="w-full px-3 py-2 rounded bg-gray-700 text-white" rows="2"></textarea>
+        </div>
+        <div>
+          <label class="block text-gray-400 font-semibold mb-1">URL da Imagem (opcional)</label>
+          <input id="edit-image" type="url" class="w-full px-3 py-2 rounded bg-gray-700 text-white" />
+        </div>
+        <div>
+          <label class="block text-gray-400 font-semibold mb-1">Categoria</label>
+          <input id="edit-category" type="text" class="w-full px-3 py-2 rounded bg-gray-700 text-white" />
+        </div>
+        <div class="flex justify-end space-x-2">
+          <button
+            type="button"
+            id="btn-cancel-edit"
+            class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded text-white"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2 bg-[rgb(92,130,255)] hover:bg-blue-600 rounded text-white"
+          >
+            Salvar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-  <!-- Modal for Word Details -->
   <div
     id="modal-word-details"
     class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-40 hidden"
@@ -325,64 +378,6 @@
     aria-modal="true"
     aria-labelledby="modal-word-title"
   >
-
-
-<!-- Modal de Edição -->
-<div
-  id="modal-edit-word"
-  class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
-  role="dialog"
-  aria-modal="true"
->
-  <div class="bg-gray-800 rounded-lg max-w-lg w-full p-6 relative shadow-lg max-h-[90vh] overflow-y-auto">
-    <button
-      id="btn-close-edit-modal"
-      class="absolute top-4 right-4 text-gray-400 hover:text-custom-blue focus:outline-none focus:ring-2 focus:ring-custom-blue rounded"
-    >
-      <i class="fas fa-times fa-lg"></i>
-    </button>
-    <h3 class="text-2xl font-bold text-custom-blue mb-4">Editar Palavra</h3>
-    <form id="form-edit-word" class="space-y-4">
-      <input type="hidden" id="edit-id" />
-      <div>
-        <label class="block text-gray-400 font-semibold mb-1">Palavra</label>
-        <input id="edit-word" type="text" class="w-full px-3 py-2 rounded bg-gray-700 text-white" required />
-      </div>
-      <div>
-        <label class="block text-gray-400 font-semibold mb-1">Significado</label>
-        <textarea id="edit-meaning" class="w-full px-3 py-2 rounded bg-gray-700 text-white" rows="2" required></textarea>
-      </div>
-      <div>
-        <label class="block text-gray-400 font-semibold mb-1">Contexto (opcional)</label>
-        <textarea id="edit-context" class="w-full px-3 py-2 rounded bg-gray-700 text-white" rows="2"></textarea>
-      </div>
-      <div>
-        <label class="block text-gray-400 font-semibold mb-1">URL da Imagem (opcional)</label>
-        <input id="edit-image" type="url" class="w-full px-3 py-2 rounded bg-gray-700 text-white" />
-      </div>
-      <div>
-        <label class="block text-gray-400 font-semibold mb-1">Categoria</label>
-        <input id="edit-category" type="text" class="w-full px-3 py-2 rounded bg-gray-700 text-white" />
-      </div>
-      <div class="flex justify-end space-x-2">
-        <button
-          type="button"
-          id="btn-cancel-edit"
-          class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded text-white"
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          class="px-4 py-2 bg-[rgb(92,130,255)] hover:bg-blue-600 rounded text-white"
-        >
-          Salvar
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
     <div
       class="bg-gray-800 rounded-lg max-w-lg w-full p-6 relative shadow-lg max-h-[90vh] overflow-y-auto"
     >
@@ -395,11 +390,9 @@
       </button>
       <h3 id="modal-word-title" class="text-2xl font-bold text-custom-blue mb-4"></h3>
       <div id="modal-word-content" class="space-y-4 text-gray-300">
-        <!-- Word details inserted here -->
-      </div>
+        </div>
     </div>
   </div>
-
   <script>
     (() => {
       // Elements
