@@ -322,21 +322,21 @@
         <section id="page-learned" class="max-w-4xl mx-auto space-y-8 hidden">
           <h2 class="text-3xl font-bold text-custom-blue mb-2 select-none">
             Palavras Aprendidas
-            <!-- 🔄 Seletor de ordenação + campo de pesquisa -->
-  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2 mt-[-1rem]">
-  <!-- Campo de busca -->
+   <!-- 🔄 Seletor de ordenação + campo de pesquisa -->
+<div class="flex flex-wrap items-center justify-between gap-4 mt-2 mb-6">
+  <!-- Campo de busca menor e mais compacto -->
   <div class="relative w-full max-w-xs">
     <input
       type="text"
       id="search-learned"
-      placeholder="🔍 Pesquisar palavras..."
-      class="w-full pl-4 pr-9 py-1.5 text-sm rounded-md bg-gray-700 border border-gray-600 text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-custom-blue"
+      placeholder="🔍 Pesquisar..."
+      class="w-full pl-4 pr-8 py-1.5 rounded-md text-sm bg-gray-700 border border-gray-600 text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-custom-blue"
       autocomplete="off"
     />
     <button
       type="button"
       id="clear-search"
-      class="absolute right-2 top-1/2 transform -translate-y-1/2 text-xs text-gray-400 hover:text-white"
+      class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-white"
       aria-label="Limpar pesquisa"
       title="Limpar"
     >
@@ -344,19 +344,18 @@
     </button>
   </div>
 
-  <!-- Seletor de ordenação -->
-  <div class="flex items-center gap-2 text-sm mt-1 md:mt-0">
-    <label for="sort-learned" class="text-gray-400 whitespace-nowrap">Ordenar por:</label>
+  <!-- Seletor de ordenação compacto -->
+  <div class="flex items-center gap-2 text-sm">
+    <label for="sort-learned" class="text-gray-400">Ordenar:</label>
     <select
       id="sort-learned"
       class="bg-gray-700 text-gray-200 border border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-custom-blue text-sm"
     >
-      <option value="alphabetical">A-Z (alfabética)</option>
+      <option value="alphabetical">A-Z</option>
       <option value="date">Mais recente</option>
     </select>
   </div>
 </div>
-
           </h2>
           <div id="learned-words-container" class="space-y-10">
             <!-- Categories and words will be dynamically inserted here -->
