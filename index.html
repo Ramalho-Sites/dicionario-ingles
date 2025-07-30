@@ -85,6 +85,29 @@
     </button>
   </div>
 </div>
+<!-- Header superior (mobile): botão menu à esquerda, perfil à direita -->
+<div class="fixed top-2 left-2 right-2 z-40 flex justify-between items-center px-3 sm:px-6">
+  <!-- Botão Hamburguer -->
+  <button id="btn-hamburger" class="md:hidden text-custom-blue text-2xl focus:outline-none">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <!-- Perfil -->
+  <div class="relative">
+    <button id="profile-toggle" class="text-custom-blue text-2xl focus:outline-none">
+      <i class="fas fa-user-circle"></i>
+    </button>
+    <!-- Menu do perfil -->
+    <div id="profile-menu" class="absolute right-0 mt-2 w-48 bg-gray-900 border border-gray-700 rounded-md shadow-lg p-3 space-y-2 hidden z-50">
+      <p id="user-email" class="text-sm text-gray-300 truncate"></p>
+      <button id="logout-button" class="w-full text-xs bg-red-600 hover:bg-red-700 text-white font-semibold py-1 px-2 rounded">
+        Sair
+      </button>
+
+    </div>
+  </div>
+</div>
+
       <div class="flex gap-2">
   <button id="login-button" type="submit" class="flex-1 bg-custom-blue text-white font-bold py-2 rounded">Entrar</button>
   <button id="register-button" type="button" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded">Criar Conta</button>
@@ -93,25 +116,12 @@
   <p id="auth-feedback" class="text-center mt-4 hidden"></p>
   </div>
 </div>
-<div class="fixed top-1 right-4 z-40 flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-full px-4 py-1.5 shadow-md">
-  <i class="fas fa-user-circle text-custom-blue text-xl"></i>
-  <span id="user-email" class="text-sm font-medium text-gray-200 hidden"></span>
-  <button
-    id="logout-button"
-    class="hidden text-sm bg-red-600 hover:bg-red-700 text-white font-semibold py-1 px-3 rounded-full"
-    title="Sair da conta"
-  >
-    <i class="fas fa-sign-out-alt mr-1"></i> Sair
-  </button>
-</div>
     <div id="app" class="flex-1 flex flex-col hidden">
       <!-- Header com botão hamburger customizado -->
       <header class="flex items-center justify-center bg-gray-800 px-4 py-3 shadow-md">
         <h1 class="text-xl font-bold select-none text-gray-300">Meu Dicionário</h1>
         <div class="w-6"></div>
       </header>
-
-
     <div class="flex flex-1 overflow-hidden">
       <!-- Sidebar / Menu -->
       <nav
@@ -898,6 +908,20 @@ sortLearnedSelect?.addEventListener('change', (e) => {
 
 searchLearnedInput?.addEventListener('input', (e) => {
   renderLearnedWords(e.target.value);
+});
+// Mostrar/esconder menu de perfil no mobile
+const profileToggle = document.getElementById('profile-toggle');
+const profileMenu = document.getElementById('profile-menu');
+
+profileToggle?.addEventListener('click', () => {
+  profileMenu.classList.toggle('hidden');
+});
+
+// Fecha o menu ao clicar fora
+window.addEventListener('click', (e) => {
+  if (!profileMenu.contains(e.target) && !profileToggle.contains(e.target)) {
+    profileMenu.classList.add('hidden');
+  }
 });
 </script>
 </body>
