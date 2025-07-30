@@ -693,83 +693,81 @@
       });
 
       // Render learned words grouped by category
-      function renderLearnedWords() {
-        if (words.length === 0) {
-          learnedWordsContainer.innerHTML =
-            '<p class="text-gray-500 italic select-none">Nenhuma palavra adicionada ainda.</p>';
-          return;
+     function renderLearnedWords() {
+  if (words.length === 0) {
+    learnedWordsContainer.innerHTML =
+      '<p class="text-gray-500 italic select-none">Nenhuma palavra adicionada ainda.</p>';
+    return;
+  }
+
+  // Agrupa por categoria
+  const grouped = {};
+  for (const w of words) {
+    const cat = w.category || 'Sem Categoria';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(w);
+  }
+
+  const sortedCats = Object.keys(grouped).sort((a, b) =>
+    a.localeCompare(b)
+  );
+
+  learnedWordsContainer.innerHTML = '';
+
+  for (const cat of sortedCats) {
+    const catWords = grouped[cat];
+    const catDiv = document.createElement('div');
+    catDiv.className = 'space-y-3';
+
+    const catTitle = document.createElement('h3');
+    catTitle.className =
+      'text-xl font-extrabold text-custom-blue select-none';
+    catTitle.textContent = cat;
+    catDiv.appendChild(catTitle);
+
+    const ul = document.createElement('ul');
+    ul.className = 'space-y-1';
+
+    for (const w of catWords) {
+      const li = document.createElement('li');
+      li.className =
+        'cursor-pointer rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:bg-[rgb(92,130,255)] focus:outline-none select-none flex justify-between items-center';
+      li.tabIndex = 0;
+
+      // Parte esquerda: palavra
+      const span = document.createElement('span');
+      span.textContent = w.word;
+
+      // Parte direita: botão de edição
+      const btn = document.createElement('button');
+      btn.className =
+        'btn-edit text-custom-blue hover:text-white focus:outline-none';
+      btn.setAttribute('aria-label', `Editar ${w.word}`);
+      btn.innerHTML = '<i class="fas fa-pen"></i>';
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openEditModal(w.id);
+      });
+
+      // Adiciona eventos de clique/teclado para o item completo
+      li.addEventListener('click', () => openModalWordDetails(w.id));
+      li.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openModalWordDetails(w.id);
         }
-        // Group words by category
-        const grouped = {};
-        for (const w of words) {
-          const cat = w.category || 'Sem Categoria';
-          if (!grouped[cat]) grouped[cat] = [];
-          grouped[cat].push(w);
-        }
+      });
 
-        // Sort categories alphabetically
-        const sortedCats = Object.keys(grouped).sort((a, b) =>
-          a.localeCompare(b)
-        );
+      li.appendChild(span);
+      li.appendChild(btn);
+      ul.appendChild(li);
+    }
 
-        learnedWordsContainer.innerHTML = '';
+    catDiv.appendChild(ul);
+    learnedWordsContainer.appendChild(catDiv);
+  }
+}
 
-        for (const cat of sortedCats) {
-          const catWords = grouped[cat];
-          const catDiv = document.createElement('div');
-          catDiv.className = 'space-y-3';
-
-          const catTitle = document.createElement('h3');
-          catTitle.className =
-            'text-xl font-extrabold text-custom-blue select-none';
-          catTitle.textContent = cat;
-          catDiv.appendChild(catTitle);
-
-          const ul = document.createElement('ul');
-          ul.className = 'space-y-1';
-
-         for (const w of catWords) {
-            const li = document.createElement('li');
-            li.className =
-              'cursor-pointer rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:bg-[rgb(92,130,255)] focus:outline-none select-none';
-             li.tabIndex = 0;
-
-             // Primeiro define o conteúdo do li
-              li.innerHTML = `
-              <span>${escapeHtml(w.word)}</span>
-              <button
-                class="btn-edit ml-2 text-custom-blue hover:text-white focus:outline-none"
-                data-id="${w.id}"
-                aria-label="Editar ${escapeHtml(w.word)}"
-              >
-                <i class="fas fa-pen"></i>
-              </button>
-            `;
-
-            // Depois acessa o botão que acabou de ser adicionado
-            const btnEdit = li.querySelector('.btn-edit');
-            btnEdit.addEventListener('click', (e) => {
-            e.stopPropagation(); // Evita que clique acione o evento do li
-            openEditModal(btnEdit.dataset.id);
-          });
-
-            // Evento de clique na palavra
-            li.addEventListener('click', () => openModalWordDetails(w.id));
-            li.addEventListener('keydown', (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              openModalWordDetails(w.id);
-            }
-          });
-
-          ul.appendChild(li);
-        }
-
-
-          catDiv.appendChild(ul);
-          learnedWordsContainer.appendChild(catDiv);
-        }
-      }
 
       // Open modal with word details
       function openModalWordDetails(wordId) {
