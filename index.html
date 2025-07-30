@@ -729,39 +729,38 @@
     ul.className = 'space-y-1';
 
     for (const w of catWords) {
-      const li = document.createElement('li');
-      li.className =
-        'cursor-pointer rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:bg-[rgb(92,130,255)] focus:outline-none select-none flex justify-between items-center';
-      li.tabIndex = 0;
+  const li = document.createElement('li');
+  li.className =
+    'cursor-pointer rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:bg-[rgb(92,130,255)] focus:outline-none select-none flex justify-between items-center';
+  li.tabIndex = 0;
 
-      // Parte esquerda: palavra
-      const span = document.createElement('span');
-      span.textContent = w.word;
+  const span = document.createElement('span');
+  span.textContent = w.word;
 
-      // Parte direita: botão de edição
-      const btn = document.createElement('button');
-      btn.className =
-        'btn-edit text-custom-blue hover:text-white focus:outline-none';
-      btn.setAttribute('aria-label', `Editar ${w.word}`);
-      btn.innerHTML = '<i class="fas fa-pen"></i>';
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openEditModal(w.id);
-      });
+  const btnEdit = document.createElement('button');
+  btnEdit.className = 'text-custom-blue hover:text-white focus:outline-none';
+  btnEdit.innerHTML = '<i class="fas fa-pen"></i>';
+  btnEdit.setAttribute('aria-label', `Editar ${w.word}`);
+  btnEdit.addEventListener('click', (e) => {
+    e.stopPropagation(); // Impede o clique no li
+    window.openEditModal(w.id);
+  });
 
-      // Adiciona eventos de clique/teclado para o item completo
-      li.addEventListener('click', () => openModalWordDetails(w.id));
-      li.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          openModalWordDetails(w.id);
-        }
-      });
+  li.addEventListener('click', () => {
+    openModalWordDetails(w.id);
+  });
 
-      li.appendChild(span);
-      li.appendChild(btn);
-      ul.appendChild(li);
+  li.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openModalWordDetails(w.id);
     }
+  });
+
+  li.appendChild(span);
+  li.appendChild(btnEdit);
+  ul.appendChild(li);
+}
 
     catDiv.appendChild(ul);
     learnedWordsContainer.appendChild(catDiv);
@@ -851,7 +850,7 @@ window.openEditModal = function(id) {
   document.getElementById('edit-category').value = w.category || '';
 
   document.getElementById('modal-edit-word').classList.remove('hidden');
-}
+};
 
 document.getElementById('btn-close-edit-modal').addEventListener('click', () => {
   document.getElementById('modal-edit-word').classList.add('hidden');
