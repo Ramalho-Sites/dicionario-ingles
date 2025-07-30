@@ -703,14 +703,13 @@
       });
 
       // Render learned words grouped by category
-     function renderLearnedWords() {
+ function renderLearnedWords() {
   if (words.length === 0) {
     learnedWordsContainer.innerHTML =
       '<p class="text-gray-500 italic select-none">Nenhuma palavra adicionada ainda.</p>';
     return;
   }
 
-  // Agrupa por categoria
   const grouped = {};
   for (const w of words) {
     const cat = w.category || 'Sem Categoria';
@@ -718,73 +717,63 @@
     grouped[cat].push(w);
   }
 
-  const sortedCats = Object.keys(grouped).sort((a, b) =>
-    a.localeCompare(b)
-  );
-
-  learnedWordsContainer.innerHTML = '';
+  const sortedCats = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
+  learnedWordsContainer.innerHTML = ''; // Limpa o container
 
   for (const cat of sortedCats) {
-    const catWords = grouped[cat];
     const catDiv = document.createElement('div');
     catDiv.className = 'space-y-3';
 
     const catTitle = document.createElement('h3');
-    catTitle.className =
-      'text-xl font-extrabold text-custom-blue select-none';
+    catTitle.className = 'text-xl font-extrabold text-custom-blue select-none';
     catTitle.textContent = cat;
     catDiv.appendChild(catTitle);
 
-   const ul = document.createElement('ul');
-ul.className = 'space-y-1';
+    const ul = document.createElement('ul');
+    ul.className = 'space-y-1';
 
-for (const w of catWords) {
-  const li = document.createElement('li');
-  li.className =
-    'rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:outline-none select-none flex justify-between items-center';
+    for (const w of catWords) {
+      const li = document.createElement('li');
+      li.className =
+        'rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:outline-none select-none flex justify-between items-center cursor-pointer';
 
-  // SPAN — palavra (detalhes)
-  const span = document.createElement('span');
-  span.textContent = w.word;
-  span.tabIndex = 0;
-  span.classList.add('flex-1', 'cursor-pointer', 'outline-none');
+      // --- PASSO 1: Crie os elementos internos (sem listeners ainda) ---
+      const span = document.createElement('span');
+      span.textContent = w.word;
+      span.className = 'flex-1'; // Ocupa o espaço disponível
 
-  // Clique no nome da palavra → abre detalhes
-  span.addEventListener('click', () => {
-    openModalWordDetails(w.id);
-  });
+      const btnEdit = document.createElement('button');
+      // Adicionei classes para melhor aparência e área de clique
+      btnEdit.className = 'ml-4 p-2 text-gray-400 hover:text-white focus:outline-none';
+      btnEdit.innerHTML = '<i class="fas fa-pen"></i>';
+      btnEdit.setAttribute('aria-label', `Editar ${w.word}`);
+      // IMPORTANTE: O botão precisa de um identificador para a lógica abaixo
+      btnEdit.dataset.action = 'edit';
 
-  // Tecla Enter ou Espaço no nome → abre detalhes
-  span.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      openModalWordDetails(w.id);
+
+      // --- PASSO 2: Adicione os elementos ao <li> ---
+      li.appendChild(span);
+      li.appendChild(btnEdit);
+
+
+      // --- PASSO 3: Adicione UM ÚNICO listener ao <li> ---
+      li.addEventListener('click', (e) => {
+        // Verifica se o clique foi no botão de editar ou em um de seus filhos (o <i>)
+        if (e.target.closest('[data-action="edit"]')) {
+          // Se foi no botão, abre o modal de EDIÇÃO
+          window.openEditModal(w.id);
+        } else {
+          // Se foi em qualquer outro lugar, abre o modal de DETALHES
+          openModalWordDetails(w.id);
+        }
+      });
+      
+      // Adiciona o item da lista à lista
+      ul.appendChild(li);
     }
-  });
 
-// BOTÃO DE EDIÇÃO
-const btnEdit = document.createElement('button');
-// Adicionei um padding para facilitar o clique
-btnEdit.className = 'p-2 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-custom-blue rounded-full'; 
-btnEdit.innerHTML = '<i class="fas fa-pen"></i>';
-btnEdit.setAttribute('aria-label', `Editar ${w.word}`);
-
-// 👇 AQUI ESTÁ A CORREÇÃO PRINCIPAL 👇
-btnEdit.addEventListener('click', (e) => {
-  // 1. Impede que o clique "borbulhe" para o <li> ou o <span>
-  e.stopPropagation(); 
-
-  // 2. Abre o modal de edição como planejado
-  window.openEditModal(w.id); 
-});
-
-li.appendChild(span);
-li.appendChild(btnEdit);
-ul.appendChild(li);
-}
-
-catDiv.appendChild(ul);
-learnedWordsContainer.appendChild(catDiv);
+    catDiv.appendChild(ul);
+    learnedWordsContainer.appendChild(catDiv);
   }
 }
 
