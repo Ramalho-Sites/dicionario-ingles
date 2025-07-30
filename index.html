@@ -738,13 +738,13 @@
             li.innerHTML = `
                 <span>${escapeHtml(w.word)}</span>
                 <button
-                   class="ml-2 text-custom-blue hover:text-white focus:outline-none"
-                   aria-label="Editar ${escapeHtml(w.word)}"
-                  onclick="openEditModal('${w.id}')"
+                  class="ml-2 text-custom-blue hover:text-white focus:outline-none"
+                  aria-label="Editar ${escapeHtml(w.word)}"
+                  onclick="event.stopPropagation(); openEditModal('${w.id}')"
                 >
                   <i class="fas fa-pen"></i>
-                 </button>
-              `;
+                </button>
+                `;
 
 
             li.dataset.wordId = w.id;
@@ -877,7 +877,7 @@ document.getElementById('form-edit-word').addEventListener('submit', (e) => {
       loadData();
       showPage('home');
     })();
-    
+
 </script>  
 </body>
 </html>            
