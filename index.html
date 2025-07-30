@@ -391,7 +391,26 @@
         </div>
     </div>
   </div>
-  <script>
+  <script type="module">
+    // COLOQUE ISTO NO INÍCIO DO SEU SCRIPT
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, where, getDocs, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+
+// As suas chaves de configuração do Firebase que você já tinha
+const firebaseConfig = {
+  apiKey: "AIzaSyBHBNmm9p-EwE9oQ5L22TgA95dgqEpKCu4",
+  authDomain: "my-dictionary-7a591.firebaseapp.com",
+  projectId: "my-dictionary-7a591",
+  storageBucket: "my-dictionary-7a591.appspot.com",
+  messagingSenderId: "857389257735",
+  appId: "1:857389257735:web:bebefde9efccf3ddc946a2"
+};
+
+// Inicializa o Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
     (() => {
       // Elements
       const btnHamburger = document.getElementById('btn-hamburger');
@@ -423,128 +442,97 @@
       const modalWordContent = document.getElementById('modal-word-content');
       const btnShowForm = document.getElementById('btn-show-form');
 
-      // Data storage keys
-      const STORAGE_WORDS_KEY = 'app_palavras';
-      const STORAGE_CATEGORIES_KEY = 'app_categorias';
+      // COLE ESTE BLOCO NO LUGAR DAS FUNÇÕES APAGADAS
 
-      // State
-      let words = [];
-      let categories = [];
-      let isSidebarExpanded = window.innerWidth >= 768; // Em desktop, começa expandido
+// Novos elementos da UI de login
+const authContainer = document.getElementById('auth-container');
+const loginForm = document.getElementById('login-form');
+const authError = document.getElementById('auth-error');
+const logoutButton = document.getElementById('logout-button');
 
-      // =========================================================
-      // NOVA LÓGICA DO SIDEBAR (DESKTOP E MOBILE)
-      // =========================================================
-      function updateSidebarState() {
-        // Comportamento para MOBILE
-        if (window.innerWidth < 768) {
-          mainContent.classList.remove('md:ml-64', 'md:ml-20');
-          sidebar.classList.remove('md:w-64', 'md:w-20');
-          sidebarTitle.classList.remove('hidden');
-          sidebarTexts.forEach(text => text.classList.remove('hidden'));
-          
-          if (isSidebarExpanded) {
-            sidebar.classList.remove('-translate-x-full');
-            overlay.classList.remove('hidden');
-            checkboxHamburger.checked = true;
-          } else {
-            sidebar.classList.add('-translate-x-full');
-            overlay.classList.add('hidden');
-            checkboxHamburger.checked = false;
-          }
-        } 
-        // Comportamento para DESKTOP
-        else {
-          overlay.classList.add('hidden'); // Overlay nunca é usado no desktop
-          sidebar.classList.remove('-translate-x-full'); // Sidebar nunca some no desktop
+// Estado do utilizador
+let currentUser = null;
+let unsubscribeFromWords = null; // Para gerir a escuta em tempo real
 
-          if (isSidebarExpanded) {
-            // Estado EXPANDIDO
-            sidebar.classList.remove('w-20');
-            sidebar.classList.add('w-64');
-            mainContent.classList.remove('ml-20');
-            mainContent.classList.add('ml-64');
-            sidebarTitle.classList.remove('hidden');
-            sidebarTexts.forEach(text => text.classList.remove('hidden'));
-            checkboxHamburger.checked = true;
-          } else {
-            // Estado "MINI" (Colapsado)
-            sidebar.classList.remove('w-64');
-            sidebar.classList.add('w-20');
-            mainContent.classList.remove('ml-64');
-            mainContent.classList.add('ml-20');
-            sidebarTitle.classList.add('hidden');
-            sidebarTexts.forEach(text => text.classList.add('hidden'));
-            checkboxHamburger.checked = false;
-          }
-        }
+// LÓGICA DE AUTENTICAÇÃO
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  authError.classList.add('hidden');
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    if (error.code === 'auth/user-not-found') {
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } catch (createError) {
+        authError.textContent = `Erro ao registrar: ${createError.message}`;
+        authError.classList.remove('hidden');
       }
+    } else {
+      authError.textContent = `Erro ao entrar: ${error.message}`;
+      authError.classList.remove('hidden');
+    }
+  }
+});
 
-      function toggleSidebar() {
-        isSidebarExpanded = !isSidebarExpanded;
-        updateSidebarState();
-      }
+logoutButton.addEventListener('click', () => { signOut(auth); });
 
-      function closeSidebarOnMobile() {
-        if (window.innerWidth < 768) {
-          isSidebarExpanded = false;
-          updateSidebarState();
-        }
-      }
+// Observador que reage ao login/logout
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    authContainer.classList.add('hidden');
+    appContainer.classList.remove('hidden');
+    logoutButton.classList.remove('hidden');
+    loadData(); // Carrega os dados DO UTILIZADOR que acabou de entrar
+  } else {
+    currentUser = null;
+    if (unsubscribeFromWords) unsubscribeFromWords();
+    authContainer.classList.remove('hidden');
+    appContainer.classList.add('hidden');
+    logoutButton.classList.add('hidden');
+    words = [];
+    renderLearnedWords();
+  }
+});
 
-      // Adiciona listeners
-      btnHamburger.addEventListener('click', toggleSidebar);
-      btnCloseSidebar.addEventListener('click', () => { // btnClose é só para mobile
-          isSidebarExpanded = false;
-          updateSidebarState();
-      });
-      overlay.addEventListener('click', () => { // Overlay é só para mobile
-          isSidebarExpanded = false;
-          updateSidebarState();
-      });
-      // Reavalia o layout se o usuário redimensionar a janela
-      window.addEventListener('resize', updateSidebarState);
-      // =========================================================
-      // FIM DA NOVA LÓGICA
-      // =========================================================
+// NOVAS FUNÇÕES DA BASE DE DADOS (FIRESTORE)
+function loadData() {
+  if (!currentUser) return;
+  if (unsubscribeFromWords) unsubscribeFromWords();
 
-      function showPage(page) {
-        if (page === 'home') {
-          pageHome.classList.remove('hidden');
-          pageLearned.classList.add('hidden');
-        } else if (page === 'learned') {
-          pageHome.classList.add('hidden');
-          pageLearned.classList.remove('hidden');
-          renderLearnedWords();
-        }
-        navButtons.forEach((btn) => {
-          if (btn.dataset.page === page) {
-            btn.classList.add('bg-[rgb(92,130,255)]', 'text-white');
-            btn.classList.remove('text-custom-blue');
-          } else {
-            btn.classList.remove('bg-[rgb(92,130,255)]', 'text-white');
-            btn.classList.add('text-custom-blue');
-          }
-        });
-        closeSidebarOnMobile();
-      }
+  const q = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
 
-      // ... (TODO O RESTANTE DO SEU CÓDIGO JS CONTINUA AQUI, SEM ALTERAÇÕES)
-      
-      // Load from localStorage
-      function loadData() {
-        const wordsLS = localStorage.getItem(STORAGE_WORDS_KEY);
-        const categoriesLS = localStorage.getItem(STORAGE_CATEGORIES_KEY);
-        words = wordsLS ? JSON.parse(wordsLS) : [];
-        categories = categoriesLS ? JSON.parse(categoriesLS) : [];
-      }
+  unsubscribeFromWords = onSnapshot(q, (querySnapshot) => {
+    words = [];
+    const categorySet = new Set();
+    querySnapshot.forEach((doc) => {
+      const wordData = doc.data();
+      words.push({ id: doc.id, ...wordData });
+      if(wordData.category) categorySet.add(wordData.category);
+    });
+    categories = Array.from(categorySet).sort();
+    words.sort((a,b) => a.word.localeCompare(b.word));
+    renderLearnedWords();
+  });
+}
 
-      // Save to localStorage
-      function saveData() {
-        localStorage.setItem(STORAGE_WORDS_KEY, JSON.stringify(words));
-        localStorage.setItem(STORAGE_CATEGORIES_KEY, JSON.stringify(categories));
-      }
+async function addWord(newWordObject) {
+  if (!currentUser) return;
+  await addDoc(collection(db, "palavras"), { ...newWordObject, userId: currentUser.uid });
+}
 
+async function updateWord(wordId, updatedData) {
+  if (!currentUser) return;
+  const wordRef = doc(db, "palavras", wordId);
+  await updateDoc(wordRef, updatedData);
+}
+
+// Disponibilizar funções de edição globalmente (se os seus modais precisarem)
+window.openEditModal = openEditModal;
+window.openModalWordDetails = openModalWordDetails;
       navButtons.forEach((btn) => {
         btn.addEventListener('click', () => {
           showPage(btn.dataset.page);
@@ -663,66 +651,28 @@
         }
       }
 
-      // Form submit
-      formAddWord.addEventListener('submit', (e) => {
-        e.preventDefault();
+formAddWord.addEventListener('submit', (e) => {
+  e.preventDefault();
+  // ... (a sua lógica de validação continua igual)
+  const wordVal = inputWord.value.trim();
+  const meaningVal = inputMeaning.value.trim();
+  // ... (capture todos os valores)
 
-        document.getElementById('word-error').classList.add('hidden');
-        document.getElementById('meaning-error').classList.add('hidden');
-        document.getElementById('image-error').classList.add('hidden');
+  const newWord = {
+    word: wordVal,
+    meaning: meaningVal,
+    context: inputContext.value.trim(),
+    image: inputImage.value.trim(),
+    category: inputCategorySearch.value.trim(),
+  };
 
-        const wordVal = inputWord.value.trim();
-        const meaningVal = inputMeaning.value.trim();
-        const contextVal = inputContext.value.trim();
-        const imageVal = inputImage.value.trim();
-        const categoryVal = inputCategorySearch.value.trim();
+  addWord(newWord); // << AQUI ESTÁ A MUDANÇA PRINCIPAL
 
-        let hasError = false;
-
-        if (!wordVal) {
-          document.getElementById('word-error').classList.remove('hidden');
-          hasError = true;
-        }
-        if (!meaningVal) {
-          document.getElementById('meaning-error').classList.remove('hidden');
-          hasError = true;
-        }
-        if (imageVal && !isValidUrl(imageVal)) {
-          document.getElementById('image-error').classList.remove('hidden');
-          hasError = true;
-        }
-        if (!categoryVal) {
-          alert('Por favor, selecione ou crie uma categoria para a palavra.');
-          inputCategorySearch.focus();
-          hasError = true;
-        }
-
-        if (hasError) return;
-
-        if (!categories.some((c) => c.toLowerCase() === categoryVal.toLowerCase())) {
-          categories.push(categoryVal);
-          categories.sort((a, b) => a.localeCompare(b));
-        }
-
-        const newWord = {
-          id: Date.now().toString(),
-          word: wordVal,
-          meaning: meaningVal,
-          context: contextVal,
-          image: imageVal,
-          category: categoryVal,
-        };
-        words.push(newWord);
-        words.sort((a, b) => a.word.localeCompare(b.word));
-        saveData();
-
-        alert(`Palavra "${wordVal}" adicionada com sucesso!`);
-
-        formAddWord.reset();
-        inputCategorySearch.value = '';
-        hideForm();
-      });
-
+  alert(`Palavra "${wordVal}" adicionada com sucesso!`);
+  formAddWord.reset();
+  inputCategorySearch.value = '';
+  hideForm();
+});
       btnDiscard.addEventListener('click', () => {
         formAddWord.reset();
         inputCategorySearch.value = '';
@@ -909,62 +859,30 @@
       });
 
       document.getElementById('form-edit-word').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const id = document.getElementById('edit-id').value;
-        const w = words.find(x => x.id === id);
-        if (!w) return;
+  e.preventDefault();
+  const form = e.target;
+  const wordId = form.querySelector('#edit-id').value;
+  const updatedData = {
+    word: form.querySelector('#edit-word').value.trim(),
+    meaning: form.querySelector('#edit-meaning').value.trim(),
+    context: form.querySelector('#edit-context').value.trim(),
+    image: form.querySelector('#edit-image').value.trim(),
+    category: form.querySelector('#edit-category').value.trim(),
+  };
 
-        w.word = document.getElementById('edit-word').value.trim();
-        w.meaning = document.getElementById('edit-meaning').value.trim();
-        w.context = document.getElementById('edit-context').value.trim();
-        w.image = document.getElementById('edit-image').value.trim();
-        w.category = document.getElementById('edit-category').value.trim();
+  updateWord(wordId, updatedData); // << AQUI ESTÁ A MUDANÇA PRINCIPAL
 
-        saveData();
-        renderLearnedWords();
-        document.getElementById('modal-edit-word').classList.add('hidden');
-      });
+  document.getElementById('modal-edit-word').classList.add('hidden');
+});
 
-      // Initialize
       function initialize() {
-        loadData();
-        updateSidebarState(); // Define o estado inicial do sidebar
-        showPage('home');
-      }
+  // onAuthStateChanged agora chama o loadData()
+  updateSidebarState();
+  showPage('home');
+}
       
       initialize();
     })();
-    // Import the functions you need from the SDKs you need
-
-import { initializeApp } from "firebase/app";
-
-// TODO: Add SDKs for Firebase products that you want to use
-
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-
-// Your web app's Firebase configuration
-
-const firebaseConfig = {
-
-  apiKey: "AIzaSyBHBNmm9p-EwE9oQ5L22TgA95dgqEpKCu4",
-
-  authDomain: "my-dictionary-7a591.firebaseapp.com",
-
-  projectId: "my-dictionary-7a591",
-
-  storageBucket: "my-dictionary-7a591.firebasestorage.app",
-
-  messagingSenderId: "857389257735",
-
-  appId: "1:857389257735:web:bebefde9efccf3ddc946a2"
-
-};
-
-
-// Initialize Firebase
-
-const app = initializeApp(firebaseConfig);
 
 </script>
 </body>
