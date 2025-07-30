@@ -449,7 +449,7 @@
 // ===============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, where, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBHBNmm9p-EwE9oQ5L22TgA95dgqEpKCu4", // ATENÇÃO: Proteja esta chave!
@@ -470,6 +470,11 @@ const db = getFirestore(app);
 const appContainer = document.getElementById('app');
 const togglePassword = document.getElementById('toggle-password');
 const passwordInput = document.getElementById('password');
+togglePassword.addEventListener('click', () => {
+  const isPassword = passwordInput.type === 'password';
+  passwordInput.type = isPassword ? 'text' : 'password';
+  togglePassword.innerHTML = `<i class="fas ${isPassword ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
+});
 const authContainer = document.getElementById('auth-container');
 const loginButton = document.getElementById('login-button');
 const registerButton = document.getElementById('register-button');
@@ -550,13 +555,6 @@ loginButton.addEventListener('click', async (e) => {
   authFeedback.textContent = "";
   authFeedback.classList.add('hidden');
 }, 3000);
-
-togglePassword.addEventListener('click', () => {
-  const isPassword = passwordInput.type === 'password';
-  passwordInput.type = isPassword ? 'text' : 'password';
-  togglePassword.innerHTML = `<i class="fas ${isPassword ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
-});
-
   try {
     await signInWithEmailAndPassword(auth, email, password);
 
@@ -646,9 +644,7 @@ async function addWord(newWordObject) {
   await addDoc(collection(db, "palavras"), {
     ...newWordObject,
     userId: currentUser.uid,
-    import { serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
-...
-createdAt: serverTimestamp()
+    createdAt: serverTimestamp()
   });
 }
 
