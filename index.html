@@ -35,7 +35,7 @@
       .bars {
         width: 100%;
         height: 4px;
-        background-color: rgb(92, 130, 255); /* Esta é a linha mais importante, que dá cor às barras */
+        background-color: rgb(92, 130, 255);
         border-radius: 4px;
         transition-duration: .5s;
       }
@@ -43,41 +43,31 @@
       #bar1 {
         width: 50%;
       }
-
+      
       #bar2 {
         width: 75%;
       }
-      .text-custom-blue {
-        color: rgb(92, 130, 255);
-      }
-      .bg-custom-blue {
-        background-color: rgb(92, 130, 255);
-      }
-      .hover\:bg-custom-blue:hover {
-        background-color: rgb(92, 130, 255);
-      }
-      .focus\:ring-custom-blue:focus {
-        --tw-ring-color: rgb(92, 130, 255);
-      }
-      .focus\:border-custom-blue:focus {
-        border-color: rgb(92, 130, 255);
+
+      /* Animação para o "X" quando o menu está aberto */
+      #checkbox:checked + .toggle .bars {
+        position: absolute;
+        transition-duration: .5s;
       }
 
-      /* Botão Hamburger personalizado */
-      #checkbox {
-        display: none;
+      #checkbox:checked + .toggle #bar2 {
+        transform: scaleX(0);
+        transition-duration: .1s;
       }
 
-      .toggle {
-        position: relative;
-        width: 40px;
-        height: 40px;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: center;
-        gap: 10px;
+      #checkbox:checked + .toggle #bar1 {
+        width: 100%;
+        transform: rotate(45deg);
+        transition-duration: .5s;
+      }
+
+      #checkbox:checked + .toggle #bar3 {
+        width: 100%;
+        transform: rotate(-45deg);
         transition-duration: .5s;
       }
 
@@ -105,15 +95,7 @@
   <body class="bg-gray-900 text-gray-300 min-h-screen flex flex-col">
     <div id="app" class="flex-1 flex flex-col">
       <!-- Header com botão hamburger customizado -->
-      <header class="flex items-center justify-between bg-gray-800 px-4 py-3 shadow-md">
-        <div id="btn-hamburger">
-          <input id="checkbox" type="checkbox">
-          <label class="toggle" for="checkbox">
-            <div id="bar1" class="bars"></div>
-            <div id="bar2" class="bars"></div>
-            <div id="bar3" class="bars"></div>
-          </label>
-        </div>
+      <header class="flex items-center justify-center bg-gray-800 px-4 py-3 shadow-md">
         <h1 class="text-xl font-bold select-none text-gray-300">Meu Dicionário</h1>
         <div class="w-6"></div>
       </header>
@@ -125,7 +107,16 @@
          class="fixed inset-y-0 left-0 z-30 bg-gray-800 shadow-lg transform -translate-x-full transition-all duration-300 ease-in-out md:shadow-none"
         aria-label="Menu principal"
       >
-        <div class="px-6 py-6 border-b border-gray-700 flex items-center justify-between">
+        <div class="px-6 py-6 border-b border-gray-700 flex items-center justify-between gap-4">
+
+          <div id="btn-hamburger">
+          <input id="checkbox" type="checkbox">
+          <label class="toggle" for="checkbox">
+            <div id="bar1" class="bars"></div>
+            <div id="bar2" class="bars"></div>
+            <div id="bar3" class="bars"></div>
+          </label>
+        </div>
             <h2 class="sidebar-title text-2xl italic font-extrabold text-custom-blue select-none tracking-wide drop-shadow-lg">
               Menu
             </h2>
