@@ -762,20 +762,25 @@ for (const w of catWords) {
     }
   });
 
-  // BOTÃO DE EDIÇÃO
-  const btnEdit = document.createElement('button');
-  li.className = 'relative z-0 rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:outline-none select-none flex justify-between items-center';
-  btnEdit.innerHTML = '<i class="fas fa-pen"></i>';
-  btnEdit.setAttribute('aria-label', `Editar ${w.word}`);
-  btnEdit.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopImmediatePropagation(); // ESSENCIAL
-    window.openEditModal(w.id);
-  });
+// BOTÃO DE EDIÇÃO
+const btnEdit = document.createElement('button');
+// Adicionei um padding para facilitar o clique
+btnEdit.className = 'p-2 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-custom-blue rounded-full'; 
+btnEdit.innerHTML = '<i class="fas fa-pen"></i>';
+btnEdit.setAttribute('aria-label', `Editar ${w.word}`);
 
-  li.appendChild(span);
-  li.appendChild(btnEdit);
-  ul.appendChild(li);
+// 👇 AQUI ESTÁ A CORREÇÃO PRINCIPAL 👇
+btnEdit.addEventListener('click', (e) => {
+  // 1. Impede que o clique "borbulhe" para o <li> ou o <span>
+  e.stopPropagation(); 
+
+  // 2. Abre o modal de edição como planejado
+  window.openEditModal(w.id); 
+});
+
+li.appendChild(span);
+li.appendChild(btnEdit);
+ul.appendChild(li);
 }
 
 catDiv.appendChild(ul);
