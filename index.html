@@ -86,9 +86,9 @@
   </div>
 </div>
 <!-- Header superior (mobile): botão menu à esquerda, perfil à direita -->
-<div class="fixed top-2 left-2 right-2 z-40 flex justify-between items-center px-3 sm:px-6">
+<div class="fixed top-1 left-2 right-2 z-40 flex justify-between items-center px-3 sm:px-6">
   <!-- Botão Hamburguer -->
-  <button id="btn-hamburger" class="md:hidden text-custom-blue text-2xl focus:outline-none">
+  <button id="sidebar-toggle-container"> class="md:hidden text-custom-blue text-2xl focus:outline-none">
     <i class="fas fa-bars"></i>
   </button>
 
@@ -489,7 +489,7 @@ const registerButton = document.getElementById('register-button');
 const authFeedback = document.getElementById('auth-feedback'); // Mudamos o nome
 const logoutButton = document.getElementById('logout-button');
 const userEmailDisplay = document.getElementById('user-email');
-const btnHamburger = document.getElementById('btn-hamburger');
+const btnHamburger = document.querySelector('button#btn-hamburger');
 const checkboxHamburger = document.getElementById('checkbox');
 const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('overlay');
