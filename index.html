@@ -752,9 +752,11 @@
   btnEdit.innerHTML = '<i class="fas fa-pen"></i>';
   btnEdit.setAttribute('aria-label', `Editar ${w.word}`);
   btnEdit.addEventListener('click', (e) => {
-    e.stopPropagation(); // Impede o clique no li
-    window.openEditModal(w.id);
-  });
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  window.openEditModal(w.id);
+});
+
 
   li.addEventListener('click', () => {
     openModalWordDetails(w.id);
