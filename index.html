@@ -764,7 +764,7 @@ for (const w of catWords) {
 
   // BOTÃO DE EDIÇÃO
   const btnEdit = document.createElement('button');
-  btnEdit.className = 'text-custom-blue hover:text-white focus:outline-none';
+  li.className = 'relative z-0 rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:outline-none select-none flex justify-between items-center';
   btnEdit.innerHTML = '<i class="fas fa-pen"></i>';
   btnEdit.setAttribute('aria-label', `Editar ${w.word}`);
   btnEdit.addEventListener('click', (e) => {
