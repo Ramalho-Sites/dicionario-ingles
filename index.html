@@ -728,36 +728,43 @@
           const ul = document.createElement('ul');
           ul.className = 'space-y-1';
 
-          for (const w of catWords) {
+         for (const w of catWords) {
             const li = document.createElement('li');
             li.className =
               'cursor-pointer rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:bg-[rgb(92,130,255)] focus:outline-none select-none';
-            li.tabIndex = 0;
+             li.tabIndex = 0;
 
-
-            li.innerHTML = `
+             // Primeiro define o conteúdo do li
+              li.innerHTML = `
               <span>${escapeHtml(w.word)}</span>
               <button
-                class="ml-2 text-custom-blue hover:text-white focus:outline-none"
+                class="btn-edit ml-2 text-custom-blue hover:text-white focus:outline-none"
+                data-id="${w.id}"
                 aria-label="Editar ${escapeHtml(w.word)}"
-                onclick="event.stopPropagation(); openEditModal('${w.id}')"
-            >
-              <i class="fas fa-pen"></i>
-            </button>
-          `;
+              >
+                <i class="fas fa-pen"></i>
+              </button>
+            `;
 
-            li.dataset.wordId = w.id;
+            // Depois acessa o botão que acabou de ser adicionado
+            const btnEdit = li.querySelector('.btn-edit');
+            btnEdit.addEventListener('click', (e) => {
+            e.stopPropagation(); // Evita que clique acione o evento do li
+            openEditModal(btnEdit.dataset.id);
+          });
 
+            // Evento de clique na palavra
             li.addEventListener('click', () => openModalWordDetails(w.id));
             li.addEventListener('keydown', (e) => {
               if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                openModalWordDetails(w.id);
-              }
-            });
+              e.preventDefault();
+              openModalWordDetails(w.id);
+            }
+          });
 
-            ul.appendChild(li);
-          }
+          ul.appendChild(li);
+        }
+
 
           catDiv.appendChild(ul);
           learnedWordsContainer.appendChild(catDiv);
