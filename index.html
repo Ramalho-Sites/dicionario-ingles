@@ -64,32 +64,6 @@
         width: 75%;
       }
 
-      #checkbox:checked + .toggle .bars {
-        position: absolute;
-        transition-duration: .5s;
-      }
-
-      #checkbox:checked + .toggle #bar2 {
-        transform: scaleX(0);
-        transition-duration: .1s;
-      }
-
-      #checkbox:checked + .toggle #bar1 {
-        width: 100%;
-        transform: rotate(45deg);
-        transition-duration: .5s;
-      }
-
-      #checkbox:checked + .toggle #bar3 {
-        width: 100%;
-        transform: rotate(-45deg);
-        transition-duration: .5s;
-      }
-
-      #checkbox:checked + .toggle {
-        transition-duration: .5s;
-        transform: rotate(180deg);
-      }
     </style>
   </head>
   <body class="bg-gray-900 text-gray-300 min-h-screen flex flex-col">
@@ -112,7 +86,7 @@
       <!-- Sidebar / Menu -->
       <nav
         id="sidebar"
-        class="fixed inset-y-0 left-0 z-30 w-64 bg-gray-800 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:shadow-none"
+        class="fixed inset-y-0 left-0 z-30 w-64 bg-gray-800 shadow-lg transform -translate-x-full transition-transform duration-300 ease-in-out md:shadow-none"
         aria-label="Menu principal"
       >
         <div class="h-full flex flex-col">
@@ -160,7 +134,7 @@
       <!-- Main content -->
       <main
         id="main-content"
-        class="flex-1 overflow-y-auto p-6 md:ml-64 flex flex-col items-center justify-center"
+        class="flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center transition-all duration-300 ease-in-out"
         tabindex="0"
         aria-live="polite"
       >
@@ -397,9 +371,13 @@
     (() => {
       // Elements
       const btnHamburger = document.getElementById('btn-hamburger');
+      const checkboxHamburger = document.getElementById('checkbox');
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('overlay');
       const btnCloseSidebar = document.getElementById('btn-close-sidebar');
+      const mainContent = document.getElementById('main-content'); // Adicionado para referência
+      
+      // ... (o restante das suas variáveis de elementos continua aqui)
       const pageHome = document.getElementById('page-home');
       const pageLearned = document.getElementById('page-learned');
       const navButtons = sidebar.querySelectorAll('button[data-page]');
@@ -426,6 +404,43 @@
       // State
       let words = [];
       let categories = [];
+      let isSidebarOpen = window.innerWidth >= 768; // Estado inicial do sidebar
+
+      // =========================================================
+      // NOVA LÓGICA UNIFICADA DO SIDEBAR
+      // =========================================================
+      function updateSidebarState() {
+        if (isSidebarOpen) {
+          sidebar.classList.remove('-translate-x-full');
+          mainContent.classList.add('md:ml-64'); // Empurra o conteúdo no desktop
+          overlay.classList.remove('hidden'); // Mostra overlay no mobile
+          checkboxHamburger.checked = true;
+        } else {
+          sidebar.classList.add('-translate-x-full');
+          mainContent.classList.remove('md:ml-64'); // Conteúdo ocupa tela toda
+          overlay.classList.add('hidden'); // Esconde overlay
+          checkboxHamburger.checked = false;
+        }
+      }
+
+      function toggleSidebar() {
+        isSidebarOpen = !isSidebarOpen;
+        updateSidebarState();
+      }
+
+      function closeSidebarOnMobile() {
+        if (window.innerWidth < 768) {
+          isSidebarOpen = false;
+          updateSidebarState();
+        }
+      }
+
+      btnHamburger.addEventListener('click', toggleSidebar);
+      btnCloseSidebar.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+      // =========================================================
+      // FIM DA NOVA LÓGICA
+      // =========================================================
 
       // Load from localStorage
       function loadData() {
@@ -441,25 +456,6 @@
         localStorage.setItem(STORAGE_CATEGORIES_KEY, JSON.stringify(categories));
       }
 
-      // Toggle sidebar mobile
-      function openSidebar() {
-        sidebar.classList.remove('-translate-x-full');
-        overlay.classList.remove('hidden');
-        inputCategorySearch.setAttribute('aria-expanded', 'false');
-      }
-      function closeSidebar() {
-        sidebar.classList.add('-translate-x-full');
-        overlay.classList.add('hidden');
-        inputCategorySearch.setAttribute('aria-expanded', 'false');
-      }
-
-      btnHamburger.addEventListener('click', openSidebar);
-      btnCloseSidebar.addEventListener('click', closeSidebar);
-      overlay.addEventListener('click', closeSidebar);
-
-      // =========================================================
-      // LÓGICA DE NAVEGAÇÃO QUE PODE TER SIDO APAGADA
-      // =========================================================
       function showPage(page) {
         if (page === 'home') {
           pageHome.classList.remove('hidden');
@@ -467,10 +463,8 @@
         } else if (page === 'learned') {
           pageHome.classList.add('hidden');
           pageLearned.classList.remove('hidden');
-          renderLearnedWords(); // Renderiza as palavras ao mudar para a página
+          renderLearnedWords();
         }
-
-        // Atualiza visual dos botões do menu
         navButtons.forEach((btn) => {
           if (btn.dataset.page === page) {
             btn.classList.add('bg-[rgb(92,130,255)]', 'text-white');
@@ -480,8 +474,7 @@
             btn.classList.add('text-custom-blue');
           }
         });
-
-        closeSidebar();
+        closeSidebarOnMobile(); // Fecha o sidebar ao navegar no mobile
       }
 
       navButtons.forEach((btn) => {
@@ -489,10 +482,8 @@
           showPage(btn.dataset.page);
         });
       });
-      // =========================================================
-      // FIM DA LÓGICA DE NAVEGAÇÃO
-      // =========================================================
 
+      // ... (TODO O RESTANTE DO SEU CÓDIGO JS CONTINUA AQUI, SEM ALTERAÇÕES)
       // Category autocomplete & selection
       function filterCategories(query) {
         if (!query) return categories;
@@ -694,9 +685,6 @@
         showForm();
       });
 
-      // =========================================================
-      // FUNÇÃO renderLearnedWords COM A CORREÇÃO FINAL
-      // =========================================================
       function renderLearnedWords() {
         if (words.length === 0) {
           learnedWordsContainer.innerHTML =
@@ -726,8 +714,6 @@
           const ul = document.createElement('ul');
           ul.className = 'space-y-1';
 
-          // 👇 AQUI ESTÁ A LINHA CORRIGIDA
-          // A variável 'grouped[cat]' contém a lista de palavras para a categoria atual.
           for (const w of grouped[cat]) {
             const li = document.createElement('li');
             li.className =
@@ -761,9 +747,6 @@
           learnedWordsContainer.appendChild(catDiv);
         }
       }
-      // =========================================================
-      // FIM DA FUNÇÃO CORRIGIDA
-      // =========================================================
 
 
       // Open modal with word details
@@ -876,9 +859,14 @@
       });
 
       // Initialize
-      loadData();
-      showPage('home');
+      function initialize() {
+        loadData();
+        updateSidebarState(); // Define o estado inicial do sidebar
+        showPage('home');
+      }
+      
+      initialize();
     })();
-  </script> 
+</script>
 </body>
 </html>            
