@@ -417,17 +417,20 @@
           renderLearnedWords();
         }
 
-      // Atualiza destaque no menu lateral
+      // Atualiza visual dos botões do menu
       navButtons.forEach((btn) => {
         if (btn.dataset.page === page) {
-           btn.classList.add('active-menu-button');
-       } else {
-         btn.classList.remove('active-menu-button');
-       }
-      });
+          btn.classList.add('bg-[rgb(92,130,255)]', 'text-white');
+          btn.classList.remove('text-custom-blue');
+        } else {
+          btn.classList.remove('bg-[rgb(92,130,255)]', 'text-white');
+          btn.classList.add('text-custom-blue');
+        }
+     });
 
-      closeSidebar();
-    }
+    closeSidebar();
+  }
+
       navButtons.forEach((btn) => {
         btn.addEventListener('click', () => {
           showPage(btn.dataset.page);
