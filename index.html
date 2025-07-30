@@ -85,27 +85,6 @@
     </button>
   </div>
 </div>
-<!-- Header superior (mobile): botão menu à esquerda, perfil à direita -->
-<div class="fixed top-1 left-2 right-2 z-40 flex justify-between items-center px-3 sm:px-6">
-  <!-- Botão Hamburguer -->
-  <button id="btn-hamburger" class="md:hidden text-custom-blue text-2xl focus:outline-none">
-    <i class="fas fa-bars"></i>
-  </button>
-
-  <!-- Perfil -->
-  <div class="relative">
-    <button id="profile-toggle" class="text-custom-blue text-2xl focus:outline-none">
-      <i class="fas fa-user-circle"></i>
-    </button>
-    <!-- Menu do perfil -->
-    <div id="profile-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-gray-800 text-white rounded shadow-md z-50 p-3 space-y-2">
-      <p id="user-email" class="text-sm text-gray-300 truncate"></p>
-     <button id="logout-button" class="text-xs text-red-500 hover:text-red-400">Sair</button>
-
-    </div>
-  </div>
-</div>
-
       <div class="flex gap-2">
   <button id="login-button" type="submit" class="flex-1 bg-custom-blue text-white font-bold py-2 rounded">Entrar</button>
   <button id="register-button" type="button" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded">Criar Conta</button>
@@ -116,10 +95,23 @@
 </div>
     <div id="app" class="flex-1 flex flex-col hidden">
       <!-- Header com botão hamburger customizado -->
-      <header class="flex items-center justify-center bg-gray-800 px-4 py-3 shadow-md">
-        <h1 class="text-xl font-bold select-none text-gray-300">Meu Dicionário</h1>
-        <div class="w-6"></div>
-      </header>
+      <header class="flex items-center justify-between bg-gray-800 px-4 py-3 shadow-md">
+  <button id="btn-hamburger" class="md:hidden text-custom-blue text-2xl focus:outline-none">
+    <i class="fas fa-bars"></i>
+  </button>
+
+  <h1 class="text-xl font-bold select-none text-gray-300 flex-1 text-center md:text-left">Meu Dicionário</h1>
+
+  <div class="relative">
+    <button id="profile-toggle" class="text-custom-blue text-2xl focus:outline-none">
+      <i class="fas fa-user-circle"></i>
+    </button>
+    <div id="profile-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-gray-800 text-white rounded shadow-md z-50 p-3 space-y-2">
+      <p id="user-email" class="text-sm text-gray-300 truncate"></p>
+      <button id="logout-button" class="text-xs text-red-500 hover:text-red-400 w-full text-left">Sair</button>
+    </div>
+  </div>
+</header>
     <div class="flex flex-1 overflow-hidden">
       <!-- Sidebar / Menu -->
       <nav
@@ -428,12 +420,11 @@
   </div>
 
   <div
-    id="modal-word-details"
-    class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-40 hidden"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="modal-word-title"
-  >
+  id="modal-word-details"
+  class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 hidden" role="dialog"
+  aria-modal="true"
+  aria-labelledby="modal-word-title"
+>
     <div
       class="bg-gray-800 rounded-lg max-w-lg w-full p-6 relative shadow-lg max-h-[90vh] overflow-y-auto"
     >
