@@ -474,27 +474,36 @@
     }
   });
 
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    authError.classList.add('hidden');
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        try {
-          await createUserWithEmailAndPassword(auth, email, password);
-        } catch (createError) {
-          authError.textContent = `Erro ao registrar: ${createError.message}`;
-          authError.classList.remove('hidden');
-        }
-      } else {
-        authError.textContent = `Erro ao entrar: ${error.message}`;
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  authError.classList.add('hidden');
+
+  try {
+    // Tenta fazer login
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    if (error.code === 'auth/user-not-found') {
+      // Se não existe, cria conta nova
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } catch (createError) {
+        authError.textContent = `Erro ao registrar: ${createError.message}`;
         authError.classList.remove('hidden');
       }
+    } else {
+      // Erros comuns: senha errada, e-mail inválido, etc.
+      let msg = "Erro ao entrar. ";
+      if (error.code === 'auth/wrong-password') msg += "Senha incorreta.";
+      else if (error.code === 'auth/invalid-email') msg += "E-mail inválido.";
+      else msg += error.message;
+      authError.textContent = msg;
+      authError.classList.remove('hidden');
     }
-  });
+  }
+});
+
 
   logoutButton.addEventListener('click', () => { signOut(auth); });
 
