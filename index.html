@@ -736,51 +736,51 @@
     catDiv.appendChild(catTitle);
 
     const ul = document.createElement('ul');
-    ul.className = 'space-y-1';
+ul.className = 'space-y-1';
 
-    for (const w of catWords) {
+for (const w of catWords) {
   const li = document.createElement('li');
   li.className =
-    'cursor-pointer rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:bg-[rgb(92,130,255)] focus:outline-none select-none flex justify-between items-center';
-  li.tabIndex = 0;
+    'rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] focus:outline-none select-none flex justify-between items-center';
 
+  // SPAN — palavra (detalhes)
   const span = document.createElement('span');
   span.textContent = w.word;
+  span.tabIndex = 0;
+  span.classList.add('flex-1', 'cursor-pointer', 'outline-none');
 
+  // Clique no nome da palavra → abre detalhes
+  span.addEventListener('click', () => {
+    openModalWordDetails(w.id);
+  });
+
+  // Tecla Enter ou Espaço no nome → abre detalhes
+  span.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openModalWordDetails(w.id);
+    }
+  });
+
+  // BOTÃO DE EDIÇÃO
   const btnEdit = document.createElement('button');
   btnEdit.className = 'text-custom-blue hover:text-white focus:outline-none';
   btnEdit.innerHTML = '<i class="fas fa-pen"></i>';
   btnEdit.setAttribute('aria-label', `Editar ${w.word}`);
   btnEdit.addEventListener('click', (e) => {
-  e.preventDefault();
-  e.stopImmediatePropagation();
-  window.openEditModal(w.id);
-});
-
-
-span.addEventListener('click', () => {
-  openModalWordDetails(w.id);
-});
-
-span.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault();
-    openModalWordDetails(w.id);
-  }
-});
-
-span.tabIndex = 0;
-span.classList.add('flex-1', 'outline-none');
+    e.stopImmediatePropagation(); // ESSENCIAL
+    window.openEditModal(w.id);
+  });
 
   li.appendChild(span);
   li.appendChild(btnEdit);
   ul.appendChild(li);
 }
 
-    catDiv.appendChild(ul);
-    learnedWordsContainer.appendChild(catDiv);
-  }
-}
+catDiv.appendChild(ul);
+learnedWordsContainer.appendChild(catDiv);
+
 
 
       // Open modal with word details
