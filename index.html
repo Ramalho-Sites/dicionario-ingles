@@ -429,8 +429,6 @@
           </button>
         </div>
       </div>
-
-
       </form>
     </div>
   </div>
@@ -456,6 +454,33 @@
         </div>
     </div>
   </div>
+  <!-- Modal de confirmação de deletar palavra -->
+  <div
+    id="modal-delete-confirm"
+    class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 relative shadow-lg">
+      <h3 class="text-xl font-bold text-red-400 mb-4">Deletar Palavra</h3>
+      <p class="text-gray-300 mb-6">Tem certeza que deseja deletar esta palavra? Esta ação não poderá ser desfeita.</p>
+      <div class="flex justify-end gap-4">
+        <button
+          id="btn-cancel-delete"
+          class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded"
+        >
+          Cancelar
+        </button>
+        <button
+          id="btn-confirm-delete"
+          class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded"
+        >
+          Deletar
+        </button>
+      </div>
+    </div>
+  </div>
+
  <script type="module">
  // ===============================================================
 // 1. CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE
@@ -882,6 +907,31 @@ function openEditModal(wordId) {
 document.getElementById('btn-close-edit-modal').addEventListener('click', () => {
     document.getElementById('modal-edit-word').classList.add('hidden');
 });
+// Modal de confirmação de deleção
+const confirmModal = document.getElementById('modal-delete-confirm');
+const btnConfirmDelete = document.getElementById('btn-confirm-delete');
+const btnCancelDelete = document.getElementById('btn-cancel-delete');
+let wordIdToDelete = null;
+
+document.getElementById('btn-delete-word').addEventListener('click', () => {
+  wordIdToDelete = document.getElementById('edit-id').value;
+  confirmModal.classList.remove('hidden');
+});
+
+btnCancelDelete.addEventListener('click', () => {
+  wordIdToDelete = null;
+  confirmModal.classList.add('hidden');
+});
+
+btnConfirmDelete.addEventListener('click', () => {
+  if (wordIdToDelete) {
+    deleteWord(wordIdToDelete);
+    document.getElementById('modal-edit-word').classList.add('hidden');
+    confirmModal.classList.add('hidden');
+    wordIdToDelete = null;
+  }
+});
+
 document.getElementById('btn-cancel-edit').addEventListener('click', () => {
     document.getElementById('modal-edit-word').classList.add('hidden');
 });
@@ -890,10 +940,6 @@ btnCloseModal.addEventListener('click', () => {
 });
 document.getElementById('btn-delete-word').addEventListener('click', () => {
   const wordId = document.getElementById('edit-id').value;
-  if (confirm("Tem certeza que deseja deletar esta palavra?")) {
-    deleteWord(wordId);
-    document.getElementById('modal-edit-word').classList.add('hidden');
-  }
 });
 
 // ===============================================================
