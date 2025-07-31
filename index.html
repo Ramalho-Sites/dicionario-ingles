@@ -762,6 +762,12 @@ function loadData() {
   if (unsubscribeFromWords) unsubscribeFromWords();
 
   const q = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
+  function loadData() {
+  console.log("loadData chamado"); // ✅
+
+  const q = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
+  ...
+}
   
   unsubscribeFromWords = onSnapshot(q, (querySnapshot) => {
     words = [];
@@ -1134,6 +1140,13 @@ clearSearchButton?.addEventListener('click', () => {
   searchLearnedInput.value = "";
   renderLearnedWords();
   searchLearnedInput.focus();
+});
+onAuthStateChanged(auth, (user) => {
+  console.log("onAuthStateChanged →", user); // ✅
+
+  if (user) {
+    ...
+  }
 });
 
 sortLearnedSelect?.addEventListener('change', (e) => {
