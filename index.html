@@ -400,13 +400,26 @@
           <label class="block text-gray-400 font-semibold mb-1">Categoria</label>
           <input id="edit-category" type="text" class="w-full px-3 py-2 rounded bg-gray-700 text-white" />
         </div>
-        <div class="flex justify-end space-x-2">
+
+              <div class="flex justify-between items-center mt-6">
+        <!-- Botão deletar -->
+        <button
+          type="button"
+          id="btn-delete-word"
+          class="text-sm text-red-500 hover:text-red-400 flex items-center gap-1"
+        >
+          <i class="fas fa-trash-alt"></i>
+          Deletar Palavra
+        </button>
+
+        <!-- Botões de ação -->
+        <div class="flex space-x-2">
           <button
             type="button"
             id="btn-cancel-edit"
-            class="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded text-white"
+            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-400 font-semibold rounded-md"
           >
-            Cancelar
+            Descartar
           </button>
           <button
             type="submit"
@@ -415,6 +428,9 @@
             Salvar
           </button>
         </div>
+      </div>
+
+
       </form>
     </div>
   </div>
@@ -860,7 +876,6 @@ function openEditModal(wordId) {
   modal.querySelector('#edit-context').value = word.context || '';
   modal.querySelector('#edit-image').value = word.image || '';
   modal.querySelector('#edit-category').value = word.category || '';
-  
   modal.classList.remove('hidden');
 }
 
@@ -872,6 +887,13 @@ document.getElementById('btn-cancel-edit').addEventListener('click', () => {
 });
 btnCloseModal.addEventListener('click', () => {
     modalWordDetails.classList.add('hidden');
+});
+document.getElementById('btn-delete-word').addEventListener('click', () => {
+  const wordId = document.getElementById('edit-id').value;
+  if (confirm("Tem certeza que deseja deletar esta palavra?")) {
+    deleteWord(wordId);
+    document.getElementById('modal-edit-word').classList.add('hidden');
+  }
 });
 
 // ===============================================================
