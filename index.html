@@ -500,6 +500,46 @@
       </div>
     </div>
   </div>
+  <!-- Modal de edição de categoria -->
+<div
+  id="modal-edit-category"
+  class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
+  role="dialog"
+  aria-modal="true"
+>
+  <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-lg relative">
+    <h3 class="text-xl font-bold text-custom-blue mb-4">Editar Categoria</h3>
+    <input
+      id="input-edit-category-name"
+      type="text"
+      class="w-full bg-gray-700 border border-gray-600 text-white px-3 py-2 rounded mb-4"
+      placeholder="Novo nome da categoria"
+    />
+    <div class="flex justify-between items-center">
+      <button
+        id="btn-delete-category"
+        class="px-4 py-2 bg-gray-700 hover:bg-red-600 text-red-400 font-semibold rounded"
+      >
+        Deletar
+      </button>
+      <div class="space-x-2">
+        <button
+          id="btn-cancel-edit-category"
+          class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-400 rounded"
+        >
+          Cancelar
+        </button>
+        <button
+          id="btn-save-category"
+          class="px-4 py-2 bg-[rgb(92,130,255)] hover:bg-blue-600 text-white rounded"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
  <script type="module">
  // ===============================================================
 // 1. CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE
@@ -898,6 +938,66 @@ function renderLearnedWords(searchTerm = "") {
   word.meaning?.toLowerCase().includes(searchTerm.toLowerCase()) ||
   word.context?.toLowerCase().includes(searchTerm.toLowerCase())
 );
+  let currentCategoryToEdit = null;
+
+learnedWordsContainer.addEventListener('click', (e) => {
+  const editBtn = e.target.closest('button[data-action="edit-category"]');
+  if (editBtn) {
+    currentCategoryToEdit = editBtn.dataset.category;
+    document.getElementById('input-edit-category-name').value = currentCategoryToEdit;
+    document.getElementById('modal-edit-category').classList.remove('hidden');
+  }
+});
+    // === BOTÕES DO MODAL DE EDIÇÃO DE CATEGORIA ===
+    const modalEditCategory = document.getElementById('modal-edit-category');
+    const btnCancelEditCategory = document.getElementById('btn-cancel-edit-category');
+    const btnSaveCategory = document.getElementById('btn-save-category');
+    const btnDeleteCategory = document.getElementById('btn-delete-category');
+    const inputEditCategoryName = document.getElementById('input-edit-category-name');
+
+    // Cancelar edição de categoria
+    btnCancelEditCategory.addEventListener('click', () => {
+      modalEditCategory.classList.add('hidden');
+      currentCategoryToEdit = null;
+    });
+
+    // Salvar novo nome da categoria
+    btnSaveCategory.addEventListener('click', async () => {
+      const newName = inputEditCategoryName.value.trim();
+      if (!newName || !currentCategoryToEdit || newName === currentCategoryToEdit) return;
+
+      // Atualiza todas as palavras com essa categoria
+      const updates = words.filter(w => w.category === currentCategoryToEdit);
+      for (const word of updates) {
+        await updateWord(word.id, { category: newName });
+      }
+
+      modalEditCategory.classList.add('hidden');
+      currentCategoryToEdit = null;
+    });
+
+    // Clicar em "Deletar" no modal de categoria
+    btnDeleteCategory.addEventListener('click', () => {
+      modalEditCategory.classList.add('hidden');
+      confirmModal.classList.remove('hidden');
+
+      // Usamos um identificador especial para diferenciar categoria de palavra
+      wordIdToDelete = '__CATEGORY__' + currentCategoryToEdit;
+    });
+
+    // Adaptar o modal de confirmação para aceitar categorias
+    btnConfirmDelete.addEventListener('click', async () => {
+      if (wordIdToDelete?.startsWith('__CATEGORY__')) {
+        const categoryName = wordIdToDelete.replace('__CATEGORY__', '');
+        
+        // Remove a categoria das palavras (muda para "Sem Categoria")
+        const updates = words.filter(w => w.category === categoryName);
+        for (const word of updates) {
+          await updateWord(word.id, { category: 'Sem Categoria' });
+        }
+
+        confirmModal.classList.add('hidden');
+
 
 if (currentSort === "date") {
   filteredWords.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
@@ -914,8 +1014,18 @@ if (currentSort === "date") {
 
   const sortedCats = Object.keys(grouped).sort();
   learnedWordsContainer.innerHTML = sortedCats.map(cat => `
-    <div class="space-y-3">
-      <h3 class="text-xl font-extrabold text-custom-blue">${cat}</h3>
+          <div class="space-y-3">
+            <h3 class="text-xl font-extrabold text-custom-blue flex items-center justify-between">
+        <span>${cat}</span>
+        <button
+          class="ml-2 text-sm text-gray-400 hover:text-white"
+          data-action="edit-category"
+          data-category="${cat}"
+          title="Editar categoria"
+        >
+          <i class="fas fa-pen"></i>
+        </button>
+      </h3>
       <ul class="space-y-1">
         ${grouped[cat].map(w => `
           <li data-action="details" data-word-id="${w.id}" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center cursor-pointer">
