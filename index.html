@@ -519,21 +519,21 @@
   </div>
 </div>
 
- <script type="module">
- // ===============================================================
+<script type="module">
+// ===============================================================
 // 1. CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE
 // ===============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, where, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBHBNmm9p-EwE9oQ5L22TgA95dgqEpKCu4", // ATENÇÃO: Proteja esta chave!
-  authDomain: "my-dictionary-7a591.firebaseapp.com",
-  projectId: "my-dictionary-7a591",
-  storageBucket: "my-dictionary-7a591.appspot.com",
-  messagingSenderId: "857389257735",
-  appId: "1:857389257735:web:bebefde9efccf3ddc946a2"
+apiKey: "AIzaSyBHBNmm9p-EwE9oQ5L22TgA95dgqEpKCu4", // ATENÇÃO: Proteja esta chave!
+authDomain: "my-dictionary-7a591.firebaseapp.com",
+projectId: "my-dictionary-7a591",
+storageBucket: "my-dictionary-7a591.appspot.com",
+messagingSenderId: "857389257735",
+appId: "1:857389257735:web:bebefde9efccf3ddc946a2"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -546,15 +546,10 @@ const db = getFirestore(app);
 const appContainer = document.getElementById('app');
 const togglePassword = document.getElementById('toggle-password');
 const passwordInput = document.getElementById('password');
-togglePassword.addEventListener('click', () => {
-  const isPassword = passwordInput.type === 'password';
-  passwordInput.type = isPassword ? 'text' : 'password';
-  togglePassword.innerHTML = `<i class="fas ${isPassword ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
-});
 const authContainer = document.getElementById('auth-container');
 const loginButton = document.getElementById('login-button');
 const registerButton = document.getElementById('register-button');
-const authFeedback = document.getElementById('auth-feedback'); // Mudamos o nome
+const authFeedback = document.getElementById('auth-feedback');
 const logoutButton = document.getElementById('logout-button');
 const userEmailDisplay = document.getElementById('user-email');
 const btnHamburger = document.getElementById('btn-hamburger');
@@ -574,7 +569,6 @@ const learnedWordsContainer = document.getElementById('learned-words-container')
 const searchLearnedInput = document.getElementById('search-learned');
 const clearSearchButton = document.getElementById('clear-search');
 const sortLearnedSelect = document.getElementById('sort-learned');
-let currentSort = "alphabetical";
 const modalWordDetails = document.getElementById('modal-word-details');
 const btnCloseModal = document.getElementById('btn-close-modal');
 const modalWordTitle = document.getElementById('modal-word-title');
@@ -585,55 +579,30 @@ const inputMeaning = document.getElementById('input-meaning');
 const inputImage = document.getElementById('input-image');
 const inputCategorySearch = document.getElementById('input-category-search');
 const btnCreateCategory = document.getElementById('btn-create-category');
-btnCreateCategory.addEventListener('click', () => {
-  const newCat = inputCategorySearch.value.trim();
-  if (!newCat || categories.includes(newCat)) return;
-
-  categories.push(newCat);
-  categories.sort();
-  inputCategorySearch.value = newCat;
-
-  showCategorySuggestions('');
-  categoryCreatedMessage.textContent = `A categoria "${newCat}" foi criada com sucesso.`;
-  modalCategory.classList.remove('hidden');
-});
-inputCategorySearch.addEventListener('input', (e) => {
-  const value = e.target.value.toLowerCase();
-  showCategorySuggestions(value);
-});
-
-function showCategorySuggestions(search = "") {
-  categoryListbox.innerHTML = '';
-  const matches = categories.filter(cat =>
-    cat.toLowerCase().includes(search)
-  );
-
-  if (matches.length === 0) {
-    categoryListbox.classList.add('hidden');
-    return;
-  }
-
-  matches.forEach(cat => {
-    const li = document.createElement('li');
-    li.textContent = cat;
-    li.className = 'cursor-pointer px-3 py-2 hover:bg-[rgb(92,130,255)] hover:text-white';
-    li.addEventListener('click', () => {
-      inputCategorySearch.value = cat;
-      categoryListbox.classList.add('hidden');
-    });
-    categoryListbox.appendChild(li);
-  });
-
-  categoryListbox.classList.remove('hidden');
-}
 const categoryListbox = document.getElementById('category-listbox');
 const btnDiscard = document.getElementById('btn-discard');
+const modalCategory = document.getElementById('modal-category-created');
+const btnCloseCategoryModal = document.getElementById('btn-close-category-modal');
+const categoryCreatedMessage = document.getElementById('category-created-message');
+const confirmModal = document.getElementById('modal-delete-confirm');
+const btnConfirmDelete = document.getElementById('btn-confirm-delete');
+const btnCancelDelete = document.getElementById('btn-cancel-delete');
+const modalEditCategory = document.getElementById('modal-edit-category');
+const btnCancelEditCategory = document.getElementById('btn-cancel-edit-category');
+const btnSaveCategory = document.getElementById('btn-save-category');
+const btnDeleteCategory = document.getElementById('btn-delete-category');
+const inputEditCategoryName = document.getElementById('input-edit-category-name');
+const profileToggle = document.getElementById('profile-toggle');
+const profileMenu = document.getElementById('profile-menu');
 
 let words = [];
 let categories = [];
 let currentUser = null;
 let isSidebarExpanded = window.innerWidth >= 768;
 let unsubscribeFromWords = null;
+let currentSort = "alphabetical";
+let wordIdToDelete = null;
+let currentCategoryToEdit = null;
 
 // ===============================================================
 // 3. LÓGICA DE AUTENTICAÇÃO
@@ -649,6 +618,7 @@ onAuthStateChanged(auth, (user) => {
     userEmailDisplay.textContent = currentUser.email;
     userEmailDisplay.classList.remove('hidden');
     loadData();
+    corrigirPalavrasAntigasSemData(); 
   } else {
     currentUser = null;
     if (unsubscribeFromWords) unsubscribeFromWords();
@@ -667,33 +637,20 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
 
-  authFeedback.classList.add('hidden'); // Esconde a mensagem anterior
-  setTimeout(() => {
-  authFeedback.textContent = "";
   authFeedback.classList.add('hidden');
-}, 3000);
+  setTimeout(() => { authFeedback.classList.add('hidden'); }, 3000);
+
   try {
     await signInWithEmailAndPassword(auth, email, password);
-
-    // SUCESSO NO LOGIN!
     authFeedback.textContent = "🎉 Login efetuado com sucesso!";
-    authFeedback.classList.remove('text-red-500');
-    authFeedback.classList.add('text-green-500');
-    authFeedback.classList.remove('hidden');
-
-    // O onAuthStateChanged tratará de mudar de ecrã
-
+    authFeedback.className = 'text-center mt-4 text-green-500';
   } catch (error) {
-    // ERRO NO LOGIN
     if (error.code === 'auth/invalid-login-credentials') {
       authFeedback.textContent = "❌ Email ou senha inválidos.";
-
     } else {
       authFeedback.textContent = "Ocorreu um erro ao entrar.";
     }
-    authFeedback.classList.remove('text-green-500');
-    authFeedback.classList.add('text-red-500');
-    authFeedback.classList.remove('hidden');
+    authFeedback.className = 'text-center mt-4 text-red-500';
   }
 });
 
@@ -702,22 +659,13 @@ registerButton.addEventListener('click', async (e) => {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
 
-  authFeedback.classList.add('hidden'); // Esconde a mensagem anterior
+  authFeedback.classList.add('hidden');
 
   try {
     await createUserWithEmailAndPassword(auth, email, password);
-
-    // SUCESSO AO CRIAR CONTA!
     authFeedback.textContent = "✅ Conta criada! Você já está logado.";
-
-    authFeedback.classList.remove('text-red-500');
-    authFeedback.classList.add('text-green-500');
-    authFeedback.classList.remove('hidden');
-
-    // O onAuthStateChanged tratará de mudar de ecrã
-
+    authFeedback.className = 'text-center mt-4 text-green-500';
   } catch (error) {
-    // ERRO AO CRIAR CONTA
     if (error.code === 'auth/email-already-in-use') {
       authFeedback.textContent = "Este email já está registado. Tente entrar.";
     } else if (error.code === 'auth/weak-password') {
@@ -725,9 +673,7 @@ registerButton.addEventListener('click', async (e) => {
     } else {
       authFeedback.textContent = "Ocorreu um erro ao criar a conta.";
     }
-    authFeedback.classList.remove('text-green-500');
-    authFeedback.classList.add('text-red-500');
-    authFeedback.classList.remove('hidden');
+    authFeedback.className = 'text-center mt-4 text-red-500';
   }
 });
 
@@ -751,10 +697,10 @@ function loadData() {
       if(wordData.category) categorySet.add(wordData.category);
     });
     categories = Array.from(categorySet).sort();
-    words.sort((a,b) => a.word.localeCompare(b.word));
     renderLearnedWords();
   });
-} // <-- A função fecha aqui agora, corretamente.
+}
+
 async function addWord(newWordObject) {
   if (!currentUser) return;
   await addDoc(collection(db, "palavras"), {
@@ -775,8 +721,32 @@ async function deleteWord(wordId) {
   await deleteDoc(doc(db, "palavras", wordId));
 }
 
+async function corrigirPalavrasAntigasSemData() {
+  if (!currentUser) return;
+
+  const palavrasRef = collection(db, "palavras");
+  const snapshot = await getDocs(query(palavrasRef, where("userId", "==", currentUser.uid)));
+  const updates = [];
+
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    if (!data.createdAt) {
+      updates.push(updateDoc(doc(db, "palavras", docSnap.id), {
+        createdAt: serverTimestamp()
+      }));
+    }
+  });
+
+  if (updates.length > 0) {
+    await Promise.all(updates);
+    console.log(`✅ Corrigido: ${updates.length} palavras receberam createdAt.`);
+  } else {
+    console.log("✅ Nenhuma palavra sem createdAt foi encontrada.");
+  }
+}
+
 // ===============================================================
-// 5. LÓGICA DA APLICAÇÃO
+// 5. LÓGICA DA APLICAÇÃO E UI
 // ===============================================================
 
 // --- Formulários ---
@@ -788,9 +758,7 @@ formAddWord.addEventListener('submit', (e) => {
   document.getElementById('word-error').classList.toggle('hidden', !!wordValue);
   document.getElementById('meaning-error').classList.toggle('hidden', !!meaningValue);
 
-  if (!wordValue || !meaningValue) {
-    return;
-  }
+  if (!wordValue || !meaningValue) return;
   
   const newWord = {
     word: wordValue,
@@ -805,14 +773,6 @@ formAddWord.addEventListener('submit', (e) => {
   inputCategorySearch.value = '';
   hideForm();
 });
-// Mostrar Modal de categoria criada
-const modalCategory = document.getElementById('modal-category-created');
-const btnCloseCategoryModal = document.getElementById('btn-close-category-modal');
-const categoryCreatedMessage = document.getElementById('category-created-message');
-btnCloseCategoryModal.addEventListener('click', () => {
-  modalCategory.classList.add('hidden');
-});
-
 
 document.getElementById('form-edit-word').addEventListener('submit', (e) => {
   e.preventDefault();
@@ -826,23 +786,15 @@ document.getElementById('form-edit-word').addEventListener('submit', (e) => {
     category: form.querySelector('#edit-category').value.trim() || 'Sem Categoria',
   };
   if (!updatedData.word || !updatedData.meaning) {
-      alert("Palavra e significado são obrigatórios.");
-      return;
+    alert("Palavra e significado são obrigatórios.");
+    return;
   }
   updateWord(wordId, updatedData);
   document.getElementById('modal-edit-word').classList.add('hidden');
 });
 
-function hideForm() { 
-  formAddWord.classList.add('hidden'); 
-  btnShowForm.classList.remove('hidden'); 
-}
-
-function showForm() { 
-  formAddWord.classList.remove('hidden'); 
-  btnShowForm.classList.add('hidden'); 
-}
-
+function hideForm() { formAddWord.classList.add('hidden'); btnShowForm.classList.remove('hidden'); }
+function showForm() { formAddWord.classList.remove('hidden'); btnShowForm.classList.add('hidden'); }
 btnShowForm.addEventListener('click', showForm);
 btnDiscard.addEventListener('click', hideForm);
 
@@ -855,34 +807,29 @@ function updateSidebarState() {
     sidebarTitle.classList.add('hidden');
     sidebarTexts.forEach(text => text.classList.add('hidden', 'opacity-0'));
     if (isDesktop) {
-      if (isSidebarExpanded) {
+        if (isSidebarExpanded) {
+            sidebar.classList.add('w-64');
+            mainContent.classList.add('ml-64');
+            sidebarTitle.classList.remove('hidden');
+            sidebarTexts.forEach(text => text.classList.remove('hidden', 'opacity-0'));
+        } else {
+            sidebar.classList.add('w-20');
+            mainContent.classList.add('ml-20');
+        }
+    } else {
         sidebar.classList.add('w-64');
-        mainContent.classList.add('ml-64');
         sidebarTitle.classList.remove('hidden');
         sidebarTexts.forEach(text => text.classList.remove('hidden', 'opacity-0'));
-      } else {
-        sidebar.classList.add('w-20');
-        mainContent.classList.add('ml-20');
-      }
-    } else {
-      sidebar.classList.add('w-64');
-      sidebarTitle.classList.remove('hidden');
-      sidebarTexts.forEach(text => text.classList.remove('hidden', 'opacity-0'));
-      if (isSidebarExpanded) {
-        sidebar.classList.remove('-translate-x-full');
-        overlay.classList.remove('hidden');
-      } else {
-        sidebar.classList.add('-translate-x-full');
-      }
+        if (isSidebarExpanded) {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+        } else {
+            sidebar.classList.add('-translate-x-full');
+        }
     }
     checkboxHamburger.checked = isSidebarExpanded;
 }
-
-function toggleSidebar() { 
-  isSidebarExpanded = !isSidebarExpanded; 
-  updateSidebarState(); 
-}
-
+function toggleSidebar() { isSidebarExpanded = !isSidebarExpanded; updateSidebarState(); }
 function showPage(page) {
     pageHome.classList.add('hidden');
     pageLearned.classList.add('hidden');
@@ -890,17 +837,13 @@ function showPage(page) {
     if (page === 'learned') pageLearned.classList.remove('hidden');
     
     navButtons.forEach(btn => {
-      const isSelected = btn.dataset.page === page;
-      btn.classList.toggle('bg-[rgb(92,130,255)]', isSelected);
-      btn.classList.toggle('text-white', isSelected);
-      btn.classList.toggle('text-custom-blue', !isSelected);
+        const isSelected = btn.dataset.page === page;
+        btn.classList.toggle('bg-[rgb(92,130,255)]', isSelected);
+        btn.classList.toggle('text-white', isSelected);
+        btn.classList.toggle('text-custom-blue', !isSelected);
     });
-    if (window.innerWidth < 768) { 
-      isSidebarExpanded = false; 
-      updateSidebarState(); 
-    }
+    if (window.innerWidth < 768) { isSidebarExpanded = false; updateSidebarState(); }
 }
-
 btnHamburger.addEventListener('click', toggleSidebar);
 btnCloseSidebar.addEventListener('click', toggleSidebar);
 overlay.addEventListener('click', toggleSidebar);
@@ -910,57 +853,55 @@ navButtons.forEach(btn => { btn.addEventListener('click', () => showPage(btn.dat
 // --- Renderização e Modais ---
 function renderLearnedWords(searchTerm = "") {
   if (!learnedWordsContainer) return;
-
-  const filteredWords = words.filter(word =>
-  word.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  word.meaning?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  word.context?.toLowerCase().includes(searchTerm.toLowerCase())
-);
-
-
- 
-
-
-
-if (currentSort === "date") {
-  filteredWords.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
-} else {
-  filteredWords.sort((a, b) => a.word.localeCompare(b.word));
-}
-
-  const grouped = filteredWords.reduce((acc, w) => {
+  let processedWords = words.filter(word =>
+    word.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    word.meaning?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    word.context?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  if (currentSort === "date") {
+    processedWords.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  } else {
+    processedWords.sort((a, b) => a.word.localeCompare(b.word));
+  }
+  const grouped = processedWords.reduce((acc, w) => {
     const cat = w.category || 'Sem Categoria';
-    if (!acc[cat]) acc[cat] = [];
+    if (!acc[cat]) { acc[cat] = []; }
     acc[cat].push(w);
     return acc;
   }, {});
-
-  const sortedCats = Object.keys(grouped).sort();
-  learnedWordsContainer.innerHTML = sortedCats.map(cat => `
-          <div class="space-y-3">
-            <h3 class="text-xl font-extrabold text-custom-blue flex items-center gap-1">
-              <span>${cat}</span>
-              <button
-                class="text-sm text-gray-400 hover:text-white"
-                data-action="edit-category"
-                data-category="${cat}"
-                title="Editar categoria"
-              >
+  let categoryOrder;
+  if (currentSort === 'alphabetical') {
+    categoryOrder = Object.keys(grouped).sort();
+  } else {
+    categoryOrder = [...new Set(processedWords.map(w => w.category || 'Sem Categoria'))];
+  }
+  if (processedWords.length === 0) {
+    learnedWordsContainer.innerHTML = `<p class="text-center text-gray-400">Nenhuma palavra encontrada.</p>`;
+    return;
+  }
+  learnedWordsContainer.innerHTML = categoryOrder.map(cat => {
+    const wordsInCategory = grouped[cat];
+    return `
+      <div class="space-y-3">
+        <h3 class="text-xl font-extrabold text-custom-blue flex items-center gap-2">
+          <span>${cat}</span>
+          <button class="text-sm text-gray-400 hover:text-white" data-action="edit-category" data-category="${cat}" title="Editar categoria">
+            <i class="fas fa-pen"></i>
+          </button>
+        </h3>
+        <ul class="space-y-1">
+          ${wordsInCategory.map(w => `
+            <li data-word-id="${w.id}" data-action="details" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center cursor-pointer">
+              <span class="flex-1">${w.word}</span>
+              <button data-word-id="${w.id}" data-action="edit" class="ml-4 p-2 text-gray-400 hover:text-white">
                 <i class="fas fa-pen"></i>
               </button>
-            </h3>
-      <ul class="space-y-1">
-        ${grouped[cat].map(w => `
-          <li data-action="details" data-word-id="${w.id}" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center cursor-pointer">
-            <span class="flex-1">${w.word}</span>
-            <button data-action="edit" data-word-id="${w.id}" class="ml-4 p-2 text-gray-400 hover:text-white">
-              <i class="fas fa-pen"></i>
-            </button>
-          </li>
-        `).join('')}
-      </ul>
-    </div>
-  `).join('');
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+  }).join('');
 }
 
 function openModalWordDetails(wordId) {
@@ -968,10 +909,10 @@ function openModalWordDetails(wordId) {
   if (!word) return;
   modalWordTitle.textContent = word.word;
   modalWordContent.innerHTML = `
-      ${word.image ? `<img src="${word.image}" alt="Imagem de ${word.word}" class="w-full max-h-60 object-cover rounded-md mb-4">` : ''}
-      <p><strong class="font-semibold text-custom-blue">Significado:</strong><br>${word.meaning.replace(/\n/g, '<br>')}</p>
-      ${word.context ? `<p class="mt-2"><strong class="font-semibold text-custom-blue">Contexto/Exemplo:</strong><br>${word.context.replace(/\n/g, '<br>')}</p>` : ''}
-      <p class="mt-2 text-sm text-gray-400"><strong>Categoria:</strong> ${word.category || 'Nenhuma'}</p>
+    ${word.image ? `<img src="${word.image}" alt="Imagem de ${word.word}" class="w-full max-h-60 object-cover rounded-md mb-4">` : ''}
+    <p><strong class="font-semibold text-custom-blue">Significado:</strong><br>${word.meaning.replace(/\n/g, '<br>')}</p>
+    ${word.context ? `<p class="mt-2"><strong class="font-semibold text-custom-blue">Contexto/Exemplo:</strong><br>${word.context.replace(/\n/g, '<br>')}</p>` : ''}
+    <p class="mt-2 text-sm text-gray-400"><strong>Categoria:</strong> ${word.category || 'Nenhuma'}</p>
   `;
   modalWordDetails.classList.remove('hidden');
 }
@@ -980,7 +921,6 @@ function openEditModal(wordId) {
   const word = words.find(w => w.id === wordId);
   if (!word) return;
   const modal = document.getElementById('modal-edit-word');
-  
   modal.querySelector('#edit-id').value = word.id;
   modal.querySelector('#edit-word').value = word.word;
   modal.querySelector('#edit-meaning').value = word.meaning;
@@ -990,14 +930,20 @@ function openEditModal(wordId) {
   modal.classList.remove('hidden');
 }
 
-document.getElementById('btn-close-edit-modal').addEventListener('click', () => {
-    document.getElementById('modal-edit-word').classList.add('hidden');
+// --- Listeners de Eventos (Declarados uma única vez) ---
+togglePassword.addEventListener('click', () => {
+  const isPassword = passwordInput.type === 'password';
+  passwordInput.type = isPassword ? 'text' : 'password';
+  togglePassword.innerHTML = `<i class="fas ${isPassword ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
 });
-// Modal de confirmação de deleção
-const confirmModal = document.getElementById('modal-delete-confirm');
-const btnConfirmDelete = document.getElementById('btn-confirm-delete');
-const btnCancelDelete = document.getElementById('btn-cancel-delete');
-let wordIdToDelete = null;
+
+btnCloseCategoryModal.addEventListener('click', () => {
+  modalCategory.classList.add('hidden');
+});
+
+document.getElementById('btn-close-edit-modal').addEventListener('click', () => {
+  document.getElementById('modal-edit-word').classList.add('hidden');
+});
 
 document.getElementById('btn-delete-word').addEventListener('click', () => {
   wordIdToDelete = document.getElementById('edit-id').value;
@@ -1010,109 +956,69 @@ btnCancelDelete.addEventListener('click', () => {
 });
 
 document.getElementById('btn-cancel-edit').addEventListener('click', () => {
-    document.getElementById('modal-edit-word').classList.add('hidden');
+  document.getElementById('modal-edit-word').classList.add('hidden');
 });
+
 btnCloseModal.addEventListener('click', () => {
-    modalWordDetails.classList.add('hidden');
+  modalWordDetails.classList.add('hidden');
 });
-document.getElementById('btn-delete-word').addEventListener('click', () => {
-  const wordId = document.getElementById('edit-id').value;
-});
- let currentCategoryToEdit = null;
- // OUVINTE DE EVENTO ÚNICO PARA A LISTA DE PALAVRAS
+
 learnedWordsContainer.addEventListener('click', (e) => {
-  // Verifica se o clique foi em um item para ver detalhes
-  const detailsButton = e.target.closest('li[data-action="details"]');
-  if (detailsButton) {
-    openModalWordDetails(detailsButton.dataset.wordId);
-    return; // Para a execução aqui
-  }
-  
-  // Verifica se o clique foi no botão de editar palavra
-  const editWordButton = e.target.closest('button[data-action="edit"]');
-  if (editWordButton) {
-    openEditModal(editWordButton.dataset.wordId);
-    return; // Para a execução aqui
-  }
-  
-  // Verifica se o clique foi no botão de editar categoria
-  const editCategoryButton = e.target.closest('button[data-action="edit-category"]');
-  if (editCategoryButton) {
-    currentCategoryToEdit = editCategoryButton.dataset.category;
-    document.getElementById('input-edit-category-name').value = currentCategoryToEdit;
-    document.getElementById('modal-edit-category').classList.remove('hidden');
-    return; // Para a execução aqui
+  const target = e.target;
+  const action = target.closest('[data-action]')?.dataset.action;
+  const wordId = target.closest('[data-word-id]')?.dataset.wordId;
+  const category = target.closest('[data-category]')?.dataset.category;
+
+  if (action === 'details') { openModalWordDetails(wordId); } 
+  else if (action === 'edit') { openEditModal(wordId); } 
+  else if (action === 'edit-category') {
+    currentCategoryToEdit = category;
+    inputEditCategoryName.value = currentCategoryToEdit;
+    modalEditCategory.classList.remove('hidden');
   }
 });
-    // === BOTÕES DO MODAL DE EDIÇÃO DE CATEGORIA ===
-    const modalEditCategory = document.getElementById('modal-edit-category');
-    const btnCancelEditCategory = document.getElementById('btn-cancel-edit-category');
-    const btnSaveCategory = document.getElementById('btn-save-category');
-    const btnDeleteCategory = document.getElementById('btn-delete-category');
-    const inputEditCategoryName = document.getElementById('input-edit-category-name');
 
-    // Cancelar edição de categoria
-    btnCancelEditCategory.addEventListener('click', () => {
-      modalEditCategory.classList.add('hidden');
-      currentCategoryToEdit = null;
-    });
+btnCancelEditCategory.addEventListener('click', () => {
+  modalEditCategory.classList.add('hidden');
+  currentCategoryToEdit = null;
+});
 
-    // Salvar novo nome da categoria
-    btnSaveCategory.addEventListener('click', async () => {
-      const newName = inputEditCategoryName.value.trim();
-      if (!newName || !currentCategoryToEdit || newName === currentCategoryToEdit) return;
+btnSaveCategory.addEventListener('click', async () => {
+  const newName = inputEditCategoryName.value.trim();
+  if (!newName || !currentCategoryToEdit || newName === currentCategoryToEdit) return;
 
-      // Atualiza todas as palavras com essa categoria
-      const updates = words.filter(w => w.category === currentCategoryToEdit);
-      for (const word of updates) {
-        await updateWord(word.id, { category: newName });
-      }
+  const updates = words.filter(w => w.category === currentCategoryToEdit);
+  for (const word of updates) {
+    await updateWord(word.id, { category: newName });
+  }
+  modalEditCategory.classList.add('hidden');
+  currentCategoryToEdit = null;
+});
 
-      modalEditCategory.classList.add('hidden');
-      currentCategoryToEdit = null;
-    });
+btnDeleteCategory.addEventListener('click', () => {
+  modalEditCategory.classList.add('hidden');
+  confirmModal.classList.remove('hidden');
+  wordIdToDelete = '__CATEGORY__' + currentCategoryToEdit;
+});
 
-    // Clicar em "Deletar" no modal de categoria
-    btnDeleteCategory.addEventListener('click', () => {
-      modalEditCategory.classList.add('hidden');
-      confirmModal.classList.remove('hidden');
+btnConfirmDelete.addEventListener('click', async () => {
+  if (!wordIdToDelete) return;
 
-      // Usamos um identificador especial para diferenciar categoria de palavra
-      wordIdToDelete = '__CATEGORY__' + currentCategoryToEdit;
-    });
-        // LÓGICA UNIFICADA PARA DELETAR
-    btnConfirmDelete.addEventListener('click', async () => {
-      if (!wordIdToDelete) return;
+  if (wordIdToDelete.startsWith('__CATEGORY__')) {
+    const categoryName = wordIdToDelete.replace('__CATEGORY__', '');
+    const updates = words.filter(w => w.category === categoryName);
+    for (const word of updates) {
+      await updateWord(word.id, { category: 'Sem Categoria' });
+    }
+  } else {
+    await deleteWord(wordIdToDelete);
+  }
 
-      // Se for uma CATEGORIA...
-      if (wordIdToDelete.startsWith('__CATEGORY__')) {
-        const categoryName = wordIdToDelete.replace('__CATEGORY__', '');
-        const updates = words.filter(w => w.category === categoryName);
-        for (const word of updates) {
-          await updateWord(word.id, { category: 'Sem Categoria' });
-        }
-      } 
-      // Se for uma PALAVRA...
-      else {
-        await deleteWord(wordIdToDelete);
-      }
+  document.getElementById('modal-edit-word').classList.add('hidden');
+  confirmModal.classList.add('hidden');
+  wordIdToDelete = null;
+});
 
-      // Ações que acontecem em ambos os casos
-      document.getElementById('modal-edit-word').classList.add('hidden');
-      confirmModal.classList.add('hidden');
-      wordIdToDelete = null; // Limpa a variável
-    });
-
-// ===============================================================
-// 6. INICIALIZAÇÃO DA APLICAÇÃO
-// ===============================================================
-function initialize() {
-  updateSidebarState();
-  showPage('home');
-  // loadData() é chamado pelo onAuthStateChanged
-}
-  
-initialize();
 clearSearchButton?.addEventListener('click', () => {
   searchLearnedInput.value = "";
   renderLearnedWords();
@@ -1127,20 +1033,27 @@ sortLearnedSelect?.addEventListener('change', (e) => {
 searchLearnedInput?.addEventListener('input', (e) => {
   renderLearnedWords(e.target.value);
 });
-// Mostrar/esconder menu de perfil no mobile
-const profileToggle = document.getElementById('profile-toggle');
-const profileMenu = document.getElementById('profile-menu');
 
 profileToggle?.addEventListener('click', () => {
   profileMenu.classList.toggle('hidden');
 });
 
-// Fecha o menu ao clicar fora
 window.addEventListener('click', (e) => {
   if (!profileMenu.contains(e.target) && !profileToggle.contains(e.target)) {
     profileMenu.classList.add('hidden');
   }
 });
+
+// ===============================================================
+// 6. INICIALIZAÇÃO DA APLICAÇÃO
+// ===============================================================
+function initialize() {
+  updateSidebarState();
+  showPage('home');
+}
+initialize();
 </script>
+</body>
+</html>
 </body>
 </html>
