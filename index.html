@@ -716,25 +716,28 @@ logoutButton.addEventListener('click', () => { signOut(auth); });
 // ===============================================================
 // 4. LÓGICA DA BASE DE DADOS (FIRESTORE)
 // ===============================================================
+// APAGUE sua função loadData atual e COLE esta no lugar
 function loadData() {
-  if (!currentUser) return;
-  if (unsubscribeFromWords) unsubscribeFromWords();
+    if (!currentUser) return;
 
-  const q = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
-  
-  unsubscribeFromWords = onSnapshot(q, (querySnapshot) => {
-    words = [];
-    const categorySet = new Set();
-    querySnapshot.forEach((doc) => {
-      const wordData = doc.data();
-      words.push({ id: doc.id, ...wordData });
-      if(wordData.category) categorySet.add(wordData.category);
+    // Cancela "ouvintes" antigos para não acumular
+    if (unsubscribeFromWords) unsubscribeFromWords();
+    let unsubscribeFromCategories;
+    if (unsubscribeFromCategories) unsubscribeFromCategories();
+
+    // Ouve em tempo real as PALAVRAS
+    const wordsQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
+    unsubscribeFromWords = onSnapshot(wordsQuery, (snapshot) => {
+        words = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderLearnedWords(searchLearnedInput.value);
     });
-    categories = Array.from(categorySet).sort();
-    renderLearnedWords();
-  });
-}
 
+    // Ouve em tempo real as CATEGORIAS
+    const categoriesQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid));
+    unsubscribeFromCategories = onSnapshot(categoriesQuery, (snapshot) => {
+        categories = snapshot.docs.map(doc => doc.data().name).sort();
+    });
+}
 async function addWord(newWordObject) {
   if (!currentUser) return;
   await addDoc(collection(db, "palavras"), {
