@@ -514,7 +514,7 @@
         >
           Salvar
         </button>
-        
+
         <div
           id="modal-word-added"
           class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
@@ -714,31 +714,27 @@ logoutButton.addEventListener('click', () => { signOut(auth); });
 // ===============================================================
 // 4. LÓGICA DA BASE DE DADOS (FIRESTORE)
 // ===============================================================
-// APAGUE sua função loadData atual e COLE esta no lugar
+// VERSÃO AVANÇADA DA loadData (use apenas com a nova addCategory)
 function loadData() {
   if (!currentUser) return;
+
+  // Cancela "ouvintes" antigos para não acumular
   if (unsubscribeFromWords) unsubscribeFromWords();
+  let unsubscribeFromCategories;
+  if (unsubscribeFromCategories) unsubscribeFromCategories();
 
-  const q = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
-  
-  unsubscribeFromWords = onSnapshot(q, (querySnapshot) => {
-    words = [];
-    const categorySet = new Set(); // Um Set para evitar categorias duplicadas
-    
-    querySnapshot.forEach((doc) => {
-      const wordData = doc.data();
-      words.push({ id: doc.id, ...wordData });
-      // Adiciona a categoria da palavra ao Set (se ela existir)
-      if (wordData.category && wordData.category !== 'Sem Categoria') {
-        categorySet.add(wordData.category);
-      }
-    });
+  // Ouve em tempo real as PALAVRAS
+  const wordsQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
+  unsubscribeFromWords = onSnapshot(wordsQuery, (snapshot) => {
+      words = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderLearnedWords(searchLearnedInput.value);
+  });
 
-    // Converte o Set de volta para um array e o ordena
-    categories = Array.from(categorySet).sort();
-    
-    // Renderiza as palavras na tela
-    renderLearnedWords(searchLearnedInput.value);
+  // Ouve em tempo real as CATEGORIAS da nova coleção
+  const categoriesQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid));
+  unsubscribeFromCategories = onSnapshot(categoriesQuery, (snapshot) => {
+      // Pega apenas o nome de cada categoria e ordena
+      categories = snapshot.docs.map(doc => doc.data().name).sort();
   });
 }
 
@@ -746,6 +742,16 @@ async function updateWord(wordId, updatedData) {
   if (!currentUser) return;
   const wordRef = doc(db, "palavras", wordId);
   await updateDoc(wordRef, updatedData);
+}
+// FUNÇÃO NOVA PARA CRIAR CATEGORIAS DE FORMA INDEPENDENTE
+async function addCategory(categoryName) {
+  if (!currentUser) return;
+  // Adiciona a nova categoria à coleção 'categories'
+  await addDoc(collection(db, "categories"), {
+    name: categoryName,
+    userId: currentUser.uid,
+    createdAt: serverTimestamp()
+  });
 }
 
 async function deleteWord(wordId) {
@@ -1080,29 +1086,32 @@ btnCancelEditCategory.addEventListener('click', () => {
   currentCategoryToEdit = null;
 });
 
-// ---- SUBSTITUA O LISTENER DO BOTÃO CRIAR CATEGORIA POR ESTE ----
-btnCreateCategory.addEventListener('click', () => {
+// SUBSTITUA o listener do btnCreateCategory por este
+btnCreateCategory.addEventListener('click', async () => { // Adicionado 'async'
   const categoryName = inputCategorySearch.value.trim();
 
   if (!categoryName) {
-    alert("Por favor, digite o nome da nova categoria no campo.");
-    return;
+    return showAlert("Por favor, digite o nome da nova categoria.");
   }
 
   const categoryExists = categories.some(cat => cat.toLowerCase() === categoryName.toLowerCase());
 
   if (categoryExists) {
-    alert(`A categoria "${categoryName}" já existe! Selecione-a na lista.`);
-    categoryListbox.classList.add('hidden'); // Esconde a lista para não confundir
-    return;
+    return showAlert(`A categoria "${categoryName}" já existe!`);
   }
   
-  // Prepara e mostra o modal de confirmação
-  categoryCreatedMessage.textContent = `A categoria "${categoryName}" será usada para esta nova palavra.`;
-  // Garante que o título está correto
-  modalCategory.querySelector('h3').textContent = 'Usar Nova Categoria';
-  modalCategory.classList.remove('hidden');
-  categoryListbox.classList.add('hidden');
+  try {
+    // A mágica acontece aqui: a categoria é criada no banco IMEDIATAMENTE
+    await addCategory(categoryName);
+    
+    showAlert(`Categoria "${categoryName}" criada com sucesso!`, "Sucesso!");
+    inputCategorySearch.value = categoryName; // Mantém o nome no campo
+    categoryListbox.classList.add('hidden');
+
+  } catch (error) {
+    console.error("Erro ao criar categoria:", error);
+    showAlert("Não foi possível criar a categoria.");
+  }
 });
 
 btnSaveCategory.addEventListener('click', async () => {
