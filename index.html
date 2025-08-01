@@ -675,14 +675,6 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   setTimeout(() => { authFeedback.classList.add('hidden'); }, 3000);
 
   try {
-  console.log("Tentando criar categoria...");
-  await addCategory(categoryName);
-  console.log("Categoria criada com sucesso no Firebase!");
-
-  alert("TESTE: A categoria foi criada com sucesso!"); 
-  inputCategorySearch.value = categoryName;
-  categoryListbox.classList.add("hidden");
-  
 } catch (error) {
     if (error.code === 'auth/invalid-login-credentials') {
       authFeedback.textContent = "❌ Email ou senha inválidos.";
@@ -716,7 +708,12 @@ registerButton.addEventListener('click', async (e) => {
   }
 });
 
-logoutButton.addEventListener('click', () => { signOut(auth); });
+logoutButton.addEventLiawait addCategory(categoryName);
+console.log("Categoria criada com sucesso no Firebase!");
+alert("TESTE: A categoria foi criada com sucesso!"); 
+inputCategorySearch.value = categoryName;
+categoryListbox.classList.add("hidden");
+stener('click', () => { signOut(auth); });
 
 // ===============================================================
 // 4. LÓGICA DA BASE DE DADOS (FIRESTORE)
@@ -1160,35 +1157,31 @@ where("name", "==", categoryName)
 
 // Listener do botão "Criar Categoria"
 btnCreateCategory.addEventListener("click", async () => {
- const categoryName = inputCategorySearch.value.trim();
+  const categoryName = inputCategorySearch.value.trim();
 
- if (!categoryName) {
-  return showAlert("Por favor, digite o nome da nova categoria.");
- }
+  if (!categoryName) {
+    return showAlert("Por favor, digite o nome da nova categoria.");
+  }
 
- const categoryExists = categories.some(
-  (cat) => cat.toLowerCase() === categoryName.toLowerCase()
- );
+  const categoryExists = categories.some(
+    (cat) => cat.toLowerCase() === categoryName.toLowerCase()
+  );
 
- if (categoryExists) {
-  return showAlert(`A categoria "${categoryName}" já existe!`);
- }
+  if (categoryExists) {
+    return showAlert(`A categoria "${categoryName}" já existe!`);
+  }
 
- try {
-  console.log("Tentando criar categoria...");
-  await addCategory(categoryName);
-  console.log("Categoria criada com sucesso no Firebase!");
-  
-  // Se a linha acima apareceu no console, a próxima DEVE funcionar.
-  showAlert(`Categoria "${categoryName}" criada com sucesso!`, "Sucesso!");
-  
-  inputCategorySearch.value = categoryName;
-  categoryListbox.classList.add("hidden");
- } catch (error) {
- console.error("Falha ao tentar criar categoria:", error);
-  showAlert("Não foi possível criar a categoria.");
- }
+  try {
+    await addCategory(categoryName);
+    showAlert(`Categoria "${categoryName}" criada com sucesso!`, "Sucesso!");
+    inputCategorySearch.value = categoryName;
+    categoryListbox.classList.add("hidden");
+  } catch (error) {
+    console.error("Falha ao tentar criar categoria:", error);
+    showAlert("Não foi possível criar a categoria.");
+  }
 });
+
 
 // Listener do botão "Confirmar Exclusão" (versão corrigida e mais limpa)
 btnConfirmDelete.addEventListener("click", async () => {
