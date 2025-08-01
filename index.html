@@ -675,10 +675,15 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   setTimeout(() => { authFeedback.classList.add('hidden'); }, 3000);
 
   try {
-    await signInWithEmailAndPassword(auth, email, password);
-    authFeedback.textContent = "🎉 Login efetuado com sucesso!";
-    authFeedback.className = 'text-center mt-4 text-green-500';
-  } catch (error) {
+  console.log("Tentando criar categoria...");
+  await addCategory(categoryName);
+  console.log("Categoria criada com sucesso no Firebase!");
+
+  alert("TESTE: A categoria foi criada com sucesso!"); 
+  inputCategorySearch.value = categoryName;
+  categoryListbox.classList.add("hidden");
+  
+} catch (error) {
     if (error.code === 'auth/invalid-login-credentials') {
       authFeedback.textContent = "❌ Email ou senha inválidos.";
     } else {
@@ -749,16 +754,6 @@ async function updateWord(wordId, updatedData) {
   const wordRef = doc(db, "palavras", wordId);
   await updateDoc(wordRef, updatedData);
 }
-// FUNÇÃO NOVA PARA CRIAR CATEGORIAS DE FORMA INDEPENDENTE
-async function addCategory(categoryName) {
-  if (!currentUser) return;
-  // Adiciona a nova categoria à coleção 'categories'
-  await addDoc(collection(db, "categories"), {
-    name: categoryName,
-    userId: currentUser.uid,
-    createdAt: serverTimestamp()
-  });
-}
 async function addWord(newWordObject) {
   if (!currentUser) return;
   await addDoc(collection(db, "palavras"), {
@@ -766,31 +761,6 @@ async function addWord(newWordObject) {
     userId: currentUser.uid,
     createdAt: serverTimestamp()
   });
-}
-async function deleteCategory(categoryName) {
-    if (!currentUser) return;
-    
-    // 1. Encontra o documento da categoria para deletar
-    const catQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid), where("name", "==", categoryName));
-    const catSnapshot = await getDocs(catQuery);
-
-    if (catSnapshot.empty) {
-        console.error("Categoria não encontrada para deletar:", categoryName);
-        return;
-    }
-    
-    const categoryDoc = catSnapshot.docs[0];
-    await deleteDoc(categoryDoc.ref); // Deleta a categoria
-
-    // 2. (Opcional, mas recomendado) Encontra todas as palavras com essa categoria e as move para "Sem Categoria"
-    const wordsToUpdateQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid), where("category", "==", categoryName));
-    const wordsSnapshot = await getDocs(wordsToUpdateQuery);
-    
-    const updates = wordsSnapshot.docs.map(wordDoc => {
-        return updateDoc(wordDoc.ref, { category: 'Sem Categoria' });
-    });
-    
-    await Promise.all(updates);
 }
 
 async function deleteWord(wordId) {
@@ -1125,34 +1095,6 @@ btnCancelEditCategory.addEventListener('click', () => {
   currentCategoryToEdit = null;
 });
 
-// SUBSTITUA o listener do btnCreateCategory por este
-btnCreateCategory.addEventListener('click', async () => { // Adicionado 'async'
-  const categoryName = inputCategorySearch.value.trim();
-
-  if (!categoryName) {
-    return showAlert("Por favor, digite o nome da nova categoria.");
-  }
-
-  const categoryExists = categories.some(cat => cat.toLowerCase() === categoryName.toLowerCase());
-
-  if (categoryExists) {
-    return showAlert(`A categoria "${categoryName}" já existe!`);
-  }
-  
-  try {
-    // A mágica acontece aqui: a categoria é criada no banco IMEDIATAMENTE
-    await addCategory(categoryName);
-    
-    showAlert(`Categoria "${categoryName}" criada com sucesso!`, "Sucesso!");
-    inputCategorySearch.value = categoryName; // Mantém o nome no campo
-    categoryListbox.classList.add('hidden');
-
-  } catch (error) {
-    console.error("Erro ao criar categoria:", error);
-    showAlert("Não foi possível criar a categoria.");
-  }
-});
-
 btnSaveCategory.addEventListener('click', async () => {
   const newName = inputEditCategoryName.value.trim();
   if (!newName || !currentCategoryToEdit || newName === currentCategoryToEdit) return;
@@ -1170,38 +1112,116 @@ btnDeleteCategory.addEventListener('click', () => {
   confirmModal.classList.remove('hidden');
   wordIdToDelete = '__CATEGORY__' + currentCategoryToEdit;
 });
+// ===============================================================
+// INÍCIO DO BLOCO DE GERENCIAMENTO DE CATEGORIAS
+// ===============================================================
 
-// SUBSTITUA o seu listener do btnConfirmDelete por este
-btnConfirmDelete.addEventListener('click', async () => {
-  if (!wordIdToDelete) return; // Se nada foi marcado para deletar, sai
+// FUNÇÃO PARA ADICIONAR CATEGORIA AO FIREBASE
+async function addCategory(categoryName) {
+ if (!currentUser) throw new Error("Usuário não autenticado.");
+ await addDoc(collection(db, "categories"), {
+  name: categoryName,
+  userId: currentUser.uid,
+  createdAt: serverTimestamp(),
+ });
+}
 
-  // VERIFICA SE ESTAMOS DELETANDO UMA CATEGORIA
-  if (wordIdToDelete.startsWith('__CATEGORY__')) {
-    const categoryNameToDelete = wordIdToDelete.replace('__CATEGORY__', '');
-    try {
-        await deleteCategory(categoryNameToDelete);
-        showAlert(`Categoria "${categoryNameToDelete}" deletada com sucesso.`, "Sucesso");
-    } catch (error) {
-        console.error("Erro ao deletar categoria:", error);
-        showAlert("Ocorreu um erro ao deletar a categoria.");
-    }
-  } 
-  // SE NÃO, ESTAMOS DELETANDO UMA PALAVRA
-  else {
-    try {
-        await deleteWord(wordIdToDelete);
-        showAlert("Palavra deletada com sucesso.", "Sucesso");
-    } catch (error) {
-        console.error("Erro ao deletar palavra:", error);
-        showAlert("Ocorreu um erro ao deletar a palavra.");
-    }
-  }
+// FUNÇÃO PARA DELETAR CATEGORIA DO FIREBASE
+async function deleteCategory(categoryName) {
+ if (!currentUser) throw new Error("Usuário não autenticado.");
 
-  // Limpa tudo no final
-  document.getElementById('modal-edit-word').classList.add('hidden');
-  confirmModal.classList.add('hidden');
-  wordIdToDelete = null; // Reseta a variável de controle
+ const catQuery = query(
+ collection(db, "categories"),
+ where("userId", "==", currentUser.uid),
+where("name", "==", categoryName)
+ );
+ const catSnapshot = await getDocs(catQuery);
+
+ if (catSnapshot.empty) {
+  console.error("Categoria não encontrada para deletar:", categoryName);
+  return;
+ }
+
+ const categoryDoc = catSnapshot.docs[0];
+ await deleteDoc(categoryDoc.ref);
+ const wordsToUpdateQuery = query(
+  collection(db, "palavras"),
+  where("userId", "==", currentUser.uid),
+  where("category", "==", categoryName)
+ );
+ const wordsSnapshot = await getDocs(wordsToUpdateQuery);
+ const updates = wordsSnapshot.docs.map((wordDoc) =>
+  updateDoc(wordDoc.ref, { category: "Sem Categoria" })
+ );
+ await Promise.all(updates);
+}
+
+// --- LISTENERS DOS BOTÕES ---
+
+// Listener do botão "Criar Categoria"
+btnCreateCategory.addEventListener("click", async () => {
+ const categoryName = inputCategorySearch.value.trim();
+
+ if (!categoryName) {
+  return showAlert("Por favor, digite o nome da nova categoria.");
+ }
+
+ const categoryExists = categories.some(
+  (cat) => cat.toLowerCase() === categoryName.toLowerCase()
+ );
+
+ if (categoryExists) {
+  return showAlert(`A categoria "${categoryName}" já existe!`);
+ }
+
+ try {
+  console.log("Tentando criar categoria...");
+  await addCategory(categoryName);
+  console.log("Categoria criada com sucesso no Firebase!");
+  
+  // Se a linha acima apareceu no console, a próxima DEVE funcionar.
+  showAlert(`Categoria "${categoryName}" criada com sucesso!`, "Sucesso!");
+  
+  inputCategorySearch.value = categoryName;
+  categoryListbox.classList.add("hidden");
+ } catch (error) {
+ console.error("Falha ao tentar criar categoria:", error);
+  showAlert("Não foi possível criar a categoria.");
+ }
 });
+
+// Listener do botão "Confirmar Exclusão" (versão corrigida e mais limpa)
+btnConfirmDelete.addEventListener("click", async () => {
+ if (!wordIdToDelete) return;
+
+ if (wordIdToDelete.startsWith("__CATEGORY__")) {
+ const categoryNameToDelete = wordIdToDelete.replace("__CATEGORY__", "");
+  try {
+   await deleteCategory(categoryNameToDelete);
+  showAlert(`Categoria "${categoryNameToDelete}" deletada.`, "Sucesso");
+  } catch (error) {
+   console.error("Erro ao deletar categoria:", error);
+    showAlert("Ocorreu um erro ao deletar a categoria.");
+ }
+ } else {
+  try {
+  await deleteWord(wordIdToDelete);
+ showAlert("Palavra deletada com sucesso.", "Sucesso");
+  } catch (error) {
+   console.error("Erro ao deletar palavra:", error);
+   showAlert("Ocorreu um erro ao deletar a palavra.");
+  }
+ }
+
+ document.getElementById("modal-edit-word").classList.add("hidden");
+ confirmModal.classList.add("hidden");
+ wordIdToDelete = null;
+});
+
+
+// ===============================================================
+// FIM DO BLOCO DE GERENCIAMENTO DE CATEGORIAS
+// ===============================================================
 clearSearchButton?.addEventListener('click', () => {
   searchLearnedInput.value = "";
   renderLearnedWords();
