@@ -632,6 +632,7 @@ let categories = [];
 let currentUser = null;
 let isSidebarExpanded = window.innerWidth >= 768;
 let unsubscribeFromWords = null;
+let unsubscribeFromCategories = null;
 let currentSort = "alphabetical";
 let wordIdToDelete = null;
 let currentCategoryToEdit = null;
@@ -654,6 +655,7 @@ onAuthStateChanged(auth, (user) => {
   } else {
     currentUser = null;
     if (unsubscribeFromWords) unsubscribeFromWords();
+    if (unsubscribeFromCategories) unsubscribeFromCategories();
     authContainer.classList.remove('hidden');
     appContainer.classList.add('hidden');
     logoutButton.classList.add('hidden');
@@ -752,6 +754,31 @@ async function addCategory(categoryName) {
     userId: currentUser.uid,
     createdAt: serverTimestamp()
   });
+}
+async function deleteCategory(categoryName) {
+    if (!currentUser) return;
+    
+    // 1. Encontra o documento da categoria para deletar
+    const catQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid), where("name", "==", categoryName));
+    const catSnapshot = await getDocs(catQuery);
+
+    if (catSnapshot.empty) {
+        console.error("Categoria não encontrada para deletar:", categoryName);
+        return;
+    }
+    
+    const categoryDoc = catSnapshot.docs[0];
+    await deleteDoc(categoryDoc.ref); // Deleta a categoria
+
+    // 2. (Opcional, mas recomendado) Encontra todas as palavras com essa categoria e as move para "Sem Categoria"
+    const wordsToUpdateQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid), where("category", "==", categoryName));
+    const wordsSnapshot = await getDocs(wordsToUpdateQuery);
+    
+    const updates = wordsSnapshot.docs.map(wordDoc => {
+        return updateDoc(wordDoc.ref, { category: 'Sem Categoria' });
+    });
+    
+    await Promise.all(updates);
 }
 
 async function deleteWord(wordId) {
@@ -1132,24 +1159,37 @@ btnDeleteCategory.addEventListener('click', () => {
   wordIdToDelete = '__CATEGORY__' + currentCategoryToEdit;
 });
 
+// SUBSTITUA o seu listener do btnConfirmDelete por este
 btnConfirmDelete.addEventListener('click', async () => {
-  if (!wordIdToDelete) return;
+  if (!wordIdToDelete) return; // Se nada foi marcado para deletar, sai
 
+  // VERIFICA SE ESTAMOS DELETANDO UMA CATEGORIA
   if (wordIdToDelete.startsWith('__CATEGORY__')) {
-    const categoryName = wordIdToDelete.replace('__CATEGORY__', '');
-    const updates = words.filter(w => w.category === categoryName);
-    for (const word of updates) {
-      await updateWord(word.id, { category: 'Sem Categoria' });
+    const categoryNameToDelete = wordIdToDelete.replace('__CATEGORY__', '');
+    try {
+        await deleteCategory(categoryNameToDelete);
+        showAlert(`Categoria "${categoryNameToDelete}" deletada com sucesso.`, "Sucesso");
+    } catch (error) {
+        console.error("Erro ao deletar categoria:", error);
+        showAlert("Ocorreu um erro ao deletar a categoria.");
     }
-  } else {
-    await deleteWord(wordIdToDelete);
+  } 
+  // SE NÃO, ESTAMOS DELETANDO UMA PALAVRA
+  else {
+    try {
+        await deleteWord(wordIdToDelete);
+        showAlert("Palavra deletada com sucesso.", "Sucesso");
+    } catch (error) {
+        console.error("Erro ao deletar palavra:", error);
+        showAlert("Ocorreu um erro ao deletar a palavra.");
+    }
   }
 
+  // Limpa tudo no final
   document.getElementById('modal-edit-word').classList.add('hidden');
   confirmModal.classList.add('hidden');
-  wordIdToDelete = null;
+  wordIdToDelete = null; // Reseta a variável de controle
 });
-
 clearSearchButton?.addEventListener('click', () => {
   searchLearnedInput.value = "";
   renderLearnedWords();
