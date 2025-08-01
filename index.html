@@ -734,11 +734,16 @@ function loadData() {
 
   // Ouve em tempo real as CATEGORIAS da nova coleção
   const categoriesQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid));
-  unsubscribeFromCategories = onSnapshot(categoriesQuery, (snapshot) => {
-      // Pega apenas o nome de cada categoria e ordena
-      categories = snapshot.docs.map(doc => doc.data().name).sort();
-  });
-}
+unsubscribeFromCategories = onSnapshot(categoriesQuery, (snapshot) => {
+   // Pega apenas o nome de cada categoria e ordena
+  categories = snapshot.docs.map(doc => doc.data().name).sort();
+
+  // LINHAS NOVAS PARA DEPURAÇÃO:
+  // 1. Expõe a variável para o console poder acessá-la
+  window.debug_categories = categories; 
+  // 2. Mostra o conteúdo atual da variável automaticamente no console
+  console.log("CATEGORIAS CARREGADAS DO FIREBASE:", window.debug_categories); 
+});
 
 async function updateWord(wordId, updatedData) {
   if (!currentUser) return;
