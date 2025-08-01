@@ -155,1054 +155,6 @@
      <main
   id="main-content"
   class="flex-1 overflow-y-auto p-6 transition-all duration-300 ease-in-out"
->
-        <!-- Home Page -->
-        <section id="page-home" class="w-full max-w-3xl mx-auto pt-8">
-          <div class="flex flex-col items-center space-y-6">
-            <button
-              id="btn-show-form"
-              class="bg-gray-700 hover:bg-gray-600 text-[rgb(92,130,255)] font-semibold rounded-md px-8 py-3 focus:outline-none focus:ring-2 focus:ring-custom-blue transition-colors"
-              aria-expanded="false"
-              aria-controls="form-add-word"
-            >
-              Adicionar nova palavra
-            </button>
-          </div>
-
-          <form
-            id="form-add-word"
-            class="space-y-6 bg-gray-800 p-6 rounded-lg shadow-lg mt-10 hidden"
-            novalidate
-            aria-hidden="true"
-          >
-            <h2 class="text-3xl font-bold text-custom-blue mb-4 select-none text-center">
-              Adicionar uma nova palavra
-            </h2>
-            <div>
-              <label for="input-word" class="block mb-1 font-semibold text-gray-400"
-                >Palavra</label
-              >
-              <input
-                type="text"
-                id="input-word"
-                name="word"
-                placeholder="Digite a palavra"
-                required
-                class="w-full rounded-md bg-gray-700 border border-gray-600 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-custom-blue px-3 py-2"
-                autocomplete="off"
-                aria-describedby="word-error"
-              />
-              <p id="word-error" class="text-red-500 text-sm mt-1 hidden">
-                Por favor, insira uma palavra.
-              </p>
-            </div>
-
-            <div>
-              <label for="input-context" class="block mb-1 font-semibold text-gray-400"
-                >Contexto / Exemplo</label
-              >
-              <textarea
-                id="input-context"
-                name="context"
-                rows="3"
-                placeholder="Exemplo ou contexto da palavra"
-                class="w-full rounded-md bg-gray-700 border border-gray-600 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-custom-blue px-3 py-2 resize-none"
-                autocomplete="off"
-              ></textarea>
-            </div>
-
-            <div>
-              <label for="input-meaning" class="block mb-1 font-semibold text-gray-400"
-                >Significado</label
-              >
-              <textarea
-                id="input-meaning"
-                name="meaning"
-                rows="3"
-                placeholder="Significado da palavra"
-                class="w-full rounded-md bg-gray-700 border border-gray-600 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-custom-blue px-3 py-2 resize-none"
-                autocomplete="off"
-                required
-                aria-describedby="meaning-error"
-              ></textarea>
-              <p id="meaning-error" class="text-red-500 text-sm mt-1 hidden">
-                Por favor, insira o significado.
-              </p>
-            </div>
-
-            <div>
-              <label for="input-image" class="block mb-1 font-semibold text-gray-400"
-                >Imagem (URL)</label
-              >
-              <input
-                type="url"
-                id="input-image"
-                name="image"
-                placeholder="Cole a URL da imagem"
-                class="w-full rounded-md bg-gray-700 border border-gray-600 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-custom-blue px-3 py-2"
-                autocomplete="off"
-                aria-describedby="image-error"
-              />
-              <p id="image-error" class="text-red-500 text-sm mt-1 hidden">
-                Por favor, insira uma URL válida.
-              </p>
-            </div>
-
-            <div>
-              <label class="block mb-1 font-semibold text-gray-400">Categoria</label>
-              <div class="flex flex-col sm:flex-row gap-2">
-                <input
-                  type="text"
-                  id="input-category-search"
-                  placeholder="Pesquisar ou selecionar categoria"
-                  class="flex-1 rounded-md bg-gray-700 border border-gray-600 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-custom-blue focus:border-custom-blue px-3 py-2"
-                  autocomplete="off"
-                  aria-autocomplete="list"
-                  aria-controls="category-listbox"
-                  aria-expanded="false"
-                  role="combobox"
-                  aria-haspopup="listbox"
-                />
-                <button
-                  type="button"
-                  id="btn-create-category"
-                  class="bg-[rgb(92,130,255)] hover:bg-[rgb(72,110,230)] text-white font-semibold rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-custom-blue"
-                >
-                  Criar Categoria
-                </button>
-              </div>
-              <ul
-                id="category-listbox"
-                role="listbox"
-                class="max-h-40 overflow-y-auto mt-2 bg-gray-700 rounded-md border border-gray-600 text-gray-300 hidden"
-              ></ul>
-            </div>
-
-            <div class="flex space-x-4 justify-end">
-              <button
-                type="submit"
-                class="bg-[rgb(92,130,255)] hover:bg-[rgb(72,110,230)] text-white font-semibold rounded-md px-6 py-2 focus:outline-none focus:ring-2 focus:ring-custom-blue"
-              >
-                Adicionar Palavra
-              </button>
-              <button
-                type="reset"
-                id="btn-discard"
-                class="bg-gray-700 hover:bg-gray-600 text-gray-400 font-semibold rounded-md px-6 py-2 focus:outline-none focus:ring-2 focus:ring-custom-blue"
-              >
-                Descartar
-              </button>
-            </div>
-          </form>
-        </section>
-
-        <!-- Learned Words Page -->
-        <section id="page-learned" class="max-w-4xl mx-auto space-y-8 hidden">
-          <h2 class="text-3xl font-bold text-custom-blue mb-2 select-none">
-            Palavras Aprendidas
-   <!-- 🔄 Seletor de ordenação + campo de pesquisa -->
-<div class="flex flex-wrap items-center justify-between gap-4 mt-0 mb-3">
-  <!-- Campo de busca menor e mais compacto -->
-  <div class="relative w-full max-w-xs">
-    <input
-      type="text"
-      id="search-learned"
-      placeholder="🔍 Pesquisar..."
-      class="w-full pl-4 pr-8 py-1.5 rounded-md text-sm bg-gray-700 border border-gray-600 text-gray-300 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-custom-blue"
-      autocomplete="off"
-    />
-    <button
-      type="button"
-      id="clear-search"
-      class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-white"
-      aria-label="Limpar pesquisa"
-      title="Limpar"
-    >
-      <i class="fas fa-times"></i>
-    </button>
-  </div>
-
-  <!-- Seletor de ordenação compacto -->
-  <div class="flex items-center gap-2 text-sm">
-    <label for="sort-learned" class="text-gray-400">Ordenar:</label>
-    <select
-      id="sort-learned"
-      class="bg-gray-700 text-gray-200 border border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-custom-blue text-sm"
-    >
-      <option value="alphabetical">A-Z</option>
-      <option value="date">Mais recente</option>
-    </select>
-  </div>
-</div>
-          </h2>
-          <div id="learned-words-container" class="space-y-10">
-            <!-- Categories and words will be dynamically inserted here -->
-          </div>
-        </section>
-      </main>
-    </div>
-  </div>
- <div
-    id="modal-edit-word"
-    class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
-    role="dialog"
-    aria-modal="true"
-  >
-    <div class="bg-gray-800 rounded-lg max-w-lg w-full p-6 relative shadow-lg max-h-[90vh] overflow-y-auto">
-      <button
-        id="btn-close-edit-modal"
-        class="absolute top-4 right-4 text-gray-400 hover:text-custom-blue focus:outline-none focus:ring-2 focus:ring-custom-blue rounded"
-      >
-        <i class="fas fa-times fa-lg"></i>
-      </button>
-      <h3 class="text-2xl font-bold text-custom-blue mb-4">Editar Palavra</h3>
-      <form id="form-edit-word" class="space-y-4">
-        <input type="hidden" id="edit-id" />
-        <div>
-          <label class="block text-gray-400 font-semibold mb-1">Palavra</label>
-          <input id="edit-word" type="text" class="w-full px-3 py-2 rounded bg-gray-700 text-white" required />
-        </div>
-        <div>
-          <label class="block text-gray-400 font-semibold mb-1">Significado</label>
-          <textarea id="edit-meaning" class="w-full px-3 py-2 rounded bg-gray-700 text-white" rows="2" required></textarea>
-        </div>
-        <div>
-          <label class="block text-gray-400 font-semibold mb-1">Contexto (opcional)</label>
-          <textarea id="edit-context" class="w-full px-3 py-2 rounded bg-gray-700 text-white" rows="2"></textarea>
-        </div>
-        <div>
-          <label class="block text-gray-400 font-semibold mb-1">URL da Imagem (opcional)</label>
-          <input id="edit-image" type="url" class="w-full px-3 py-2 rounded bg-gray-700 text-white" />
-        </div>
-        <div>
-          <label class="block text-gray-400 font-semibold mb-1">Categoria</label>
-          <input id="edit-category" type="text" class="w-full px-3 py-2 rounded bg-gray-700 text-white" />
-        </div>
-
-              <div class="flex justify-between items-center mt-6">
-        <!-- Botão deletar -->
-        <button
-          type="button"
-          id="btn-delete-word"
-          class="px-4 py-2 bg-gray-700 hover:bg-red-600 text-red-400 font-semibold rounded-md"
-        >
-          <i class="fas fa-trash-alt"></i>
-          Deletar Palavra
-        </button>
-
-        <!-- Botões de ação -->
-        <div class="flex space-x-2">
-          <button
-            type="button"
-            id="btn-cancel-edit"
-            class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-400 font-semibold rounded-md"
-          >
-            Descartar
-          </button>
-          <button
-            type="submit"
-            class="px-4 py-2 bg-[rgb(92,130,255)] hover:bg-blue-600 rounded text-white"
-          >
-            Salvar
-          </button>
-        </div>
-      </div>
-      </form>
-    </div>
-  </div>
-
-  <div
-  id="modal-word-details"
-  class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 hidden" role="dialog"
-  aria-modal="true"
-  aria-labelledby="modal-word-title"
->
-    <div
-      class="bg-gray-800 rounded-lg max-w-lg w-full p-6 relative shadow-lg max-h-[90vh] overflow-y-auto"
-    >
-      <button
-        id="btn-close-modal"
-        aria-label="Fechar detalhes da palavra"
-        class="absolute top-4 right-4 text-gray-400 hover:text-[rgb(92,130,255)] focus:outline-none focus:ring-2 focus:ring-custom-blue rounded"
-      >
-        <i class="fas fa-times fa-lg"></i>
-      </button>
-      <h3 id="modal-word-title" class="text-2xl font-bold text-custom-blue mb-4"></h3>
-      <div id="modal-word-content" class="space-y-4 text-gray-300">
-        </div>
-    </div>
-  </div>
-  <!-- Modal de confirmação de deletar palavra -->
-  <div
-    id="modal-delete-confirm"
-    class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
-    role="dialog"
-    aria-modal="true"
-  >
-    <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 relative shadow-lg">
-      <h3 class="text-xl font-bold text-red-400 mb-4">Deletar Palavra</h3>
-      <p class="text-gray-300 mb-6">Tem certeza que deseja deletar esta palavra? Esta ação não poderá ser desfeita.</p>
-      <div class="flex justify-end gap-4">
-        <button
-          id="btn-cancel-delete"
-          class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded"
-        >
-          Cancelar
-        </button>
-        <button
-          id="btn-confirm-delete"
-          class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded"
-        >
-          Deletar
-        </button>
-      </div>
-    </div>
-  </div>
-    <!-- Modal de Confirmação de Categoria -->
-  <div
-    id="modal-category-created"
-    class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
-    role="dialog"
-    aria-modal="true"
-  >
-    <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-lg">
-      <h3 class="text-xl font-bold text-green-400 mb-4">Categoria Criada!</h3>
-      <p id="category-created-message" class="text-gray-300 mb-6"></p>
-      <div class="flex justify-end">
-        <button
-          id="btn-close-category-modal"
-          class="px-4 py-2 bg-custom-blue hover:bg-blue-600 text-white rounded"
-        >
-          OK
-        </button>
-      </div>
-    </div>
-  </div>
-  <!-- Modal de edição de categoria -->
-<div
-  id="modal-edit-category"
-  class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
-  role="dialog"
-  aria-modal="true"
->
-  <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-lg relative">
-    <h3 class="text-xl font-bold text-custom-blue mb-4">Editar Categoria</h3>
-    <input
-      id="input-edit-category-name"
-      type="text"
-      class="w-full bg-gray-700 border border-gray-600 text-white px-3 py-2 rounded mb-4"
-      placeholder="Novo nome da categoria"
-    />
-    <div class="flex justify-between items-center">
-      <button
-        id="btn-delete-category"
-        class="px-4 py-2 bg-gray-700 hover:bg-red-600 text-red-400 font-semibold rounded"
-      >
-        Deletar
-      </button>
-      <div class="space-x-2">
-        <button
-          id="btn-cancel-edit-category"
-          class="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-400 rounded"
-        >
-          Cancelar
-        </button>
-        <button
-          id="btn-save-category"
-          class="px-4 py-2 bg-[rgb(92,130,255)] hover:bg-blue-600 text-white rounded"
-        >
-          Salvar
-        </button>
-
-        <div
-          id="modal-word-added"
-          class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-lg">
-    <h3 class="text-xl font-bold text-green-400 mb-4">Sucesso!</h3>
-    <p class="text-gray-300 mb-6">Sua nova palavra foi adicionada ao dicionário.</p>
-    <div class="flex justify-end">
-      <button
-        id="btn-close-word-added-modal"
-        class="px-4 py-2 bg-custom-blue hover:bg-blue-600 text-white rounded"
-      >
-        OK
-      </button>
-    </div>
-  </div>
-</div>
-
-<div id="modal-alert" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 hidden" role="dialog" aria-modal="true">
-    <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-lg">
-        <h3 id="alert-title" class="text-xl font-bold text-yellow-400 mb-4">Atenção</h3>
-        <p id="alert-message" class="text-gray-300 mb-6">Mensagem de exemplo.</p>
-        <div class="flex justify-end">
-            <button id="btn-close-alert" class="px-4 py-2 bg-custom-blue hover:bg-blue-600 text-white rounded">
-                OK
-            </button>
-        </div>
-    </div>
-</div>
-<script type="module">
-  // ===============================================================
-// 1. CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE
-// ===============================================================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
-
-const firebaseConfig = {
-    apiKey: "AIzaSyBHBNmm9p-EwE9oQ5L22TgA95dgqEpKCu4", // ATENÇÃO: Proteja esta chave!
-    authDomain: "my-dictionary-7a591.firebaseapp.com",
-    projectId: "my-dictionary-7a591",
-    storageBucket: "my-dictionary-7a591.appspot.com",
-    messagingSenderId: "857389257735",
-    appId: "1:857389257735:web:bebefde9efccf3ddc946a2"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// ===============================================================
-// 2. ELEMENTOS DA UI E ESTADO DA APLICAÇÃO
-// ===============================================================
-const appContainer = document.getElementById('app');
-const authContainer = document.getElementById('auth-container');
-const loginForm = document.getElementById('login-form');
-const emailInput = document.getElementById('email');
-const passwordInput = document.getElementById('password');
-const togglePassword = document.getElementById('toggle-password');
-const registerButton = document.getElementById('register-button');
-const authFeedback = document.getElementById('auth-feedback');
-const logoutButton = document.getElementById('logout-button');
-const userEmailDisplay = document.getElementById('user-email');
-const btnHamburger = document.getElementById('btn-hamburger');
-const checkboxHamburger = document.getElementById('checkbox');
-const sidebar = document.getElementById('sidebar');
-const overlay = document.getElementById('overlay');
-const btnCloseSidebar = document.getElementById('btn-close-sidebar');
-const mainContent = document.getElementById('main-content');
-const pageHome = document.getElementById('page-home');
-const pageLearned = document.getElementById('page-learned');
-const navButtons = sidebar.querySelectorAll('button[data-page]');
-const formAddWord = document.getElementById('form-add-word');
-const btnShowForm = document.getElementById('btn-show-form');
-const learnedWordsContainer = document.getElementById('learned-words-container');
-const searchLearnedInput = document.getElementById('search-learned');
-const clearSearchButton = document.getElementById('clear-search');
-const sortLearnedSelect = document.getElementById('sort-learned');
-const inputCategorySearch = document.getElementById('input-category-search');
-const btnCreateCategory = document.getElementById('btn-create-category');
-const categoryListbox = document.getElementById('category-listbox');
-const confirmModal = document.getElementById('modal-delete-confirm');
-const btnConfirmDelete = document.getElementById('btn-confirm-delete');
-const btnCancelDelete = document.getElementById('btn-cancel-delete');
-const modalEditCategory = document.getElementById('modal-edit-category');
-const btnDeleteCategory = document.getElementById('btn-delete-category');
-const inputEditCategoryName = document.getElementById('input-edit-category-name');
-const modalAlert = document.getElementById('modal-alert');
-const alertTitle = document.getElementById('alert-title');
-const alertMessage = document.getElementById('alert-message');
-const btnCloseAlert = document.getElementById('btn-close-alert');
-const profileToggle = document.getElementById('profile-toggle');
-const profileMenu = document.getElementById('profile-menu');
-const btnDiscard = document.getElementById('btn-discard');
-const modalWordDetails = document.getElementById('modal-word-details');
-const btnCloseModal = document.getElementById('btn-close-modal');
-const modalWordTitle = document.getElementById('modal-word-title');
-const modalWordContent = document.getElementById('modal-word-content');
-const btnCancelEditCategory = document.getElementById('btn-cancel-edit-category');
-const btnSaveCategory = document.getElementById('btn-save-category');
-const modalCategory = document.getElementById('modal-category-created');
-const btnCloseCategoryModal = document.getElementById('btn-close-category-modal');
-const categoryCreatedMessage = document.getElementById('category-created-message');
-
-let words = [];
-let categories = [];
-let currentUser = null;
-let isSidebarExpanded = window.innerWidth >= 768;
-let unsubscribeFromWords = null;
-let unsubscribeFromCategories = null;
-let itemToDelete = { id: null, type: null };
-
-// ===============================================================
-// 3. LÓGICA DE AUTENTICAÇÃO E ESTADO GERAL
-// ===============================================================
-
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        currentUser = user;
-        authContainer.classList.add('hidden');
-        appContainer.classList.remove('hidden');
-        userEmailDisplay.textContent = currentUser.email;
-        loadData();
-        corrigirPalavrasAntigasSemData();
-    } else {
-        currentUser = null;
-        if (unsubscribeFromWords) unsubscribeFromWords();
-        if (unsubscribeFromCategories) unsubscribeFromCategories();
-        authContainer.classList.remove('hidden');
-        appContainer.classList.add('hidden');
-        words = [];
-        categories = [];
-        renderLearnedWords();
-    }
-});
-
-// ===============================================================
-// 4. FUNÇÕES DO BANCO DE DADOS (FIRESTORE)
-// ===============================================================
-
-function loadData() {
-    if (!currentUser) return;
-    if (unsubscribeFromWords) unsubscribeFromWords();
-    if (unsubscribeFromCategories) unsubscribeFromCategories();
-
-    const wordsQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
-    unsubscribeFromWords = onSnapshot(wordsQuery, (snapshot) => {
-        words = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderLearnedWords(searchLearnedInput.value);
-    });
-
-    const categoriesQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid));
-    unsubscribeFromCategories = onSnapshot(categoriesQuery, (snapshot) => {
-        categories = snapshot.docs.map(doc => doc.data().name).sort();
-        console.log("Categorias carregadas:", categories);
-    });
-}
-
-async function addWord(newWordObject) {
-    if (!currentUser) throw new Error("Usuário não autenticado.");
-    await addDoc(collection(db, "palavras"), {
-        ...newWordObject,
-        userId: currentUser.uid,
-        createdAt: serverTimestamp()
-    });
-}
-
-async function updateWord(wordId, updatedData) {
-    if (!currentUser) throw new Error("Usuário não autenticado.");
-    await updateDoc(doc(db, "palavras", wordId), updatedData);
-}
-
-async function deleteWord(wordId) {
-    if (!currentUser) throw new Error("Usuário não autenticado.");
-    await deleteDoc(doc(db, "palavras", wordId));
-}
-
-async function addCategory(categoryName) {
-    if (!currentUser) throw new Error("Usuário não autenticado.");
-    await addDoc(collection(db, "categories"), {
-        name: categoryName,
-        userId: currentUser.uid,
-        createdAt: serverTimestamp()
-    });
-}
-
-async function deleteCategory(categoryName) {
-    if (!currentUser) throw new Error("Usuário não autenticado.");
-    const catQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid), where("name", "==", categoryName));
-    const catSnapshot = await getDocs(catQuery);
-    if (catSnapshot.empty) return console.error("Categoria não encontrada:", categoryName);
-
-    await deleteDoc(catSnapshot.docs[0].ref);
-    const wordsToUpdateQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid), where("category", "==", categoryName));
-    const wordsSnapshot = await getDocs(wordsToUpdateQuery);
-    const updates = wordsSnapshot.docs.map(wordDoc => updateDoc(wordDoc.ref, { category: 'Sem Categoria' }));
-    await Promise.all(updates);
-}
-
-async function corrigirPalavrasAntigasSemData() {
-    if (!currentUser) return;
-    const q = query(collection(db, "palavras"), where("userId", "==", currentUser.uid), where("createdAt", "==", null));
-    const snapshot = await getDocs(q);
-    const updates = snapshot.docs.map(docSnap => updateDoc(docSnap.ref, { createdAt: serverTimestamp() }));
-    if (updates.length > 0) {
-        await Promise.all(updates);
-        console.log(`✅ Corrigido: ${updates.length} palavras sem data.`);
-    }
-}
-
-// ===============================================================
-// 5. FUNÇÕES DA INTERFACE (UI)
-// ===============================================================
-
-function showAlert(message, title = "Atenção") {
-    alertTitle.textContent = title;
-    alertMessage.textContent = message;
-    modalAlert.classList.remove('hidden');
-}
-
-function renderLearnedWords(searchTerm = "") {
-    if (!learnedWordsContainer) return;
-    let processedWords = words.filter(word =>
-        word.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        word.meaning?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        word.context?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    const currentSort = sortLearnedSelect.value;
-    if (currentSort === "date") {
-        processedWords.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-    } else {
-        processedWords.sort((a, b) => a.word.localeCompare(b.word));
-    }
-    const grouped = processedWords.reduce((acc, w) => {
-        const cat = w.category || 'Sem Categoria';
-        if (!acc[cat]) { acc[cat] = []; }
-        acc[cat].push(w);
-        return acc;
-    }, {});
-    let categoryOrder;
-    if (currentSort === 'alphabetical') {
-        categoryOrder = Object.keys(grouped).sort();
-    } else {
-        categoryOrder = [...new Set(processedWords.map(w => w.category || 'Sem Categoria'))];
-    }
-    if (processedWords.length === 0) {
-        learnedWordsContainer.innerHTML = `<p class="text-center text-gray-400">Nenhuma palavra encontrada.</p>`;
-        return;
-    }
-    learnedWordsContainer.innerHTML = categoryOrder.map(cat => {
-        const wordsInCategory = grouped[cat];
-        return `
-      <div class="space-y-3">
-        <h3 class="text-xl font-extrabold text-custom-blue flex items-center gap-2">
-          <span>${cat}</span>
-          <button class="text-sm text-gray-400 hover:text-white" data-action="edit-category" data-category="${cat}" title="Editar categoria">
-            <i class="fas fa-pen"></i>
-          </button>
-        </h3>
-        <ul class="space-y-1">
-          ${wordsInCategory.map(w => `
-            <li data-word-id="${w.id}" data-action="details" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center cursor-pointer">
-              <span class="flex-1">${w.word}</span>
-              <button data-word-id="${w.id}" data-action="edit" class="ml-4 p-2 text-gray-400 hover:text-white">
-                <i class="fas fa-pen"></i>
-              </button>
-            </li>
-          `).join('')}
-        </ul>
-      </div>
-    `;
-    }).join('');
-}
-
-function renderCategorySuggestions(searchTerm) {
-    if (!searchTerm) {
-        categoryListbox.classList.add('hidden');
-        return;
-    }
-    const filteredCategories = categories.filter(cat =>
-        cat.toLowerCase().startsWith(searchTerm.toLowerCase())
-    );
-    if (filteredCategories.length === 0) {
-        categoryListbox.classList.add('hidden');
-        return;
-    }
-    categoryListbox.innerHTML = filteredCategories.map(cat => `
-    <li class="px-3 py-2 cursor-pointer hover:bg-[rgb(92,130,255)]" tabindex="0">
-      ${cat}
-    </li>
-  `).join('');
-    categoryListbox.classList.remove('hidden');
-}
-
-function openModalWordDetails(wordId) {
-    const modal = document.getElementById('modal-word-details');
-    const word = words.find(w => w.id === wordId);
-    if (!word) return;
-    modal.querySelector('#modal-word-title').textContent = word.word;
-    modal.querySelector('#modal-word-content').innerHTML = `
-    ${word.image ? `<img src="${word.image}" alt="Imagem de ${word.word}" class="w-full max-h-60 object-cover rounded-md mb-4">` : ''}
-    <p><strong class="font-semibold text-custom-blue">Significado:</strong><br>${word.meaning.replace(/\n/g, '<br>')}</p>
-    ${word.context ? `<p class="mt-2"><strong class="font-semibold text-custom-blue">Contexto/Exemplo:</strong><br>${word.context.replace(/\n/g, '<br>')}</p>` : ''}
-    <p class="mt-2 text-sm text-gray-400"><strong>Categoria:</strong> ${word.category || 'Nenhuma'}</p>
-  `;
-    modal.classList.remove('hidden');
-}
-
-function openEditModal(wordId) {
-    const modal = document.getElementById('modal-edit-word');
-    const word = words.find(w => w.id === wordId);
-    if (!word) return;
-    modal.querySelector('#edit-id').value = word.id;
-    modal.querySelector('#edit-word').value = word.word;
-    modal.querySelector('#edit-meaning').value = word.meaning;
-    modal.querySelector('#edit-context').value = word.context || '';
-    modal.querySelector('#edit-image').value = word.image || '';
-    modal.querySelector('#edit-category').value = word.category || '';
-    modal.classList.remove('hidden');
-}
-
-function updateSidebarState() {
-    const isDesktop = window.innerWidth >= 768;
-    mainContent.classList.toggle('md:ml-64', isSidebarExpanded);
-    mainContent.classList.toggle('md:ml-20', !isSidebarExpanded);
-    sidebar.classList.toggle('w-64', isSidebarExpanded);
-    sidebar.classList.toggle('w-20', !isSidebarExpanded);
-    if (isDesktop) {
-        sidebar.classList.remove('-translate-x-full');
-        overlay.classList.add('hidden');
-    } else {
-        sidebar.classList.toggle('-translate-x-full', !isSidebarExpanded);
-        overlay.classList.toggle('hidden', !isSidebarExpanded);
-    }
-    document.querySelectorAll('.sidebar-text, .sidebar-title').forEach(el => {
-        el.classList.toggle('opacity-0', !isSidebarExpanded);
-        el.classList.toggle('hidden', !isSidebarExpanded);
-    });
-    checkboxHamburger.checked = isSidebarExpanded;
-}
-
-function showPage(page) {
-    pageHome.classList.toggle('hidden', page !== 'home');
-    pageLearned.classList.toggle('hidden', page !== 'learned');
-    if (window.innerWidth < 768 && isSidebarExpanded) {
-        isSidebarExpanded = false;
-        updateSidebarState();
-    }
-}
-
-// ===============================================================
-// 6. LISTENERS DE EVENTOS
-// ===============================================================
-
-// --- Autenticação ---
-loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    authFeedback.classList.add('hidden');
-    try {
-        await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
-    } catch (error) {
-        authFeedback.textContent = "❌ Email ou senha inválidos.";
-        authFeedback.classList.remove('hidden');
-    }
-});
-
-registerButton.addEventListener('click', async () => {
-    authFeedback.classList.add('hidden');
-    try {
-        await createUserWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
-    } catch (error) {
-        authFeedback.textContent = error.code === 'auth/email-already-in-use'
-            ? "Este email já está em uso."
-            : "A senha deve ter pelo menos 6 caracteres.";
-        authFeedback.classList.remove('hidden');
-    }
-});
-
-logoutButton.addEventListener('click', () => signOut(auth));
-
-togglePassword.addEventListener('click', () => {
-    const isPassword = passwordInput.type === 'password';
-    passwordInput.type = isPassword ? 'text' : 'password';
-    togglePassword.querySelector('i').classList.toggle('fa-eye', !isPassword);
-    togglePassword.querySelector('i').classList.toggle('fa-eye-slash', isPassword);
-});
-
-// --- Formulário de Adicionar Palavra ---
-formAddWord.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const newWord = {
-        word: document.getElementById('input-word').value.trim(),
-        meaning: document.getElementById('input-meaning').value.trim(),
-        context: document.getElementById('input-context').value.trim(),
-        image: document.getElementById('input-image').value.trim(),
-        category: inputCategorySearch.value.trim() || 'Sem Categoria',
-    };
-
-    if (!newWord.word || !newWord.meaning) {
-        return showAlert("Palavra e significado são obrigatórios.");
-    }
-
-    try {
-        await addWord(newWord);
-        formAddWord.reset();
-        document.getElementById('modal-word-added').classList.remove('hidden');
-    } catch (error) {
-        console.error("Erro ao adicionar palavra:", error);
-        showAlert("Ocorreu um erro ao salvar a palavra.");
-    }
-});
-
-document.getElementById('btn-close-word-added-modal').addEventListener('click', () => {
-    document.getElementById('modal-word-added').classList.add('hidden');
-});
-
-btnShowForm.addEventListener('click', () => formAddWord.classList.remove('hidden'));
-btnDiscard.addEventListener('click', () => formAddWord.classList.add('hidden'));
-
-// --- Gerenciamento de Categorias ---
-btnCreateCategory.addEventListener("click", async () => {
-    const categoryName = inputCategorySearch.value.trim();
-    if (!categoryName) return showAlert("Por favor, digite o nome da nova categoria.");
-
-    const categoryExists = categories.some(cat => cat.toLowerCase() === categoryName.toLowerCase());
-    if (categoryExists) return showAlert(`A categoria "${categoryName}" já existe!`);
-
-    try {
-        await addCategory(categoryName);
-        showAlert(`Categoria "${categoryName}" criada com sucesso!`, "Sucesso!");
-    } catch (error) {
-        console.error("Falha ao criar categoria:", error);
-        showAlert("Não foi possível criar a categoria.");
-    }
-});
-
-inputCategorySearch.addEventListener('input', () => renderCategorySuggestions(inputCategorySearch.value));
-
-categoryListbox.addEventListener('click', (e) => {
-    if (e.target.tagName === 'LI') {
-        inputCategorySearch.value = e.target.textContent.trim();
-        categoryListbox.classList.add('hidden');
-    }
-});
-
-// --- Exclusão (Palavras e Categorias) ---
-learnedWordsContainer.addEventListener('click', (e) => {
-    const target = e.target.closest('[data-action]');
-    if (!target) return;
-
-    const action = target.dataset.action;
-    const wordId = target.closest('[data-word-id]')?.dataset.wordId;
-    
-    if (action === 'details') openModalWordDetails(wordId);
-    else if (action === 'edit') openEditModal(wordId);
-    else if (action === 'edit-category') {
-        const category = target.dataset.category;
-        inputEditCategoryName.value = category;
-        modalEditCategory.classList.remove('hidden');
-    }
-});
-
-document.getElementById('btn-delete-word').addEventListener('click', () => {
-    itemToDelete = { id: document.getElementById('edit-id').value, type: 'word' };
-    confirmModal.classList.remove('hidden');
-});
-
-btnDeleteCategory.addEventListener('click', () => {
-    itemToDelete = { id: inputEditCategoryName.value, type: 'category' };
-    confirmModal.classList.remove('hidden');
-    modalEditCategory.classList.add('hidden');
-});
-
-btnConfirmDelete.addEventListener("click", async () => {
-    if (!itemToDelete.id || !itemToDelete.type) return;
-    try {
-        if (itemToDelete.type === "category") {
-            await deleteCategory(itemToDelete.id);
-            showAlert(`Categoria "${itemToDelete.id}" deletada.`, "Sucesso");
-        } else {
-            await deleteWord(itemToDelete.id);
-            showAlert("Palavra deletada com sucesso.", "Sucesso");
-        }
-    } catch (error) {
-        console.error(`Erro ao deletar ${itemToDelete.type}:`, error);
-        showAlert(`Ocorreu um erro ao deletar.`);
-    }
-    document.getElementById('modal-edit-word').classList.add('hidden');
-    confirmModal.classList.add("hidden");
-    itemToDelete = { id: null, type: null };
-});
-
-btnCancelDelete.addEventListener('click', () => {
-    confirmModal.classList.add('hidden');
-    itemToDelete = { id: null, type: null };
-});
-
-// --- Outros Listeners da UI ---
-btnCloseAlert.addEventListener('click', () => modalAlert.classList.add('hidden'));
-profileToggle.addEventListener('click', () => profileMenu.classList.toggle('hidden'));
-window.addEventListener('click', (e) => {
-    if (!profileMenu.contains(e.target) && !profileToggle.contains(e.target)) {
-        profileMenu.classList.add('hidden');
-    }
-    if (!inputCategorySearch.contains(e.target) && !categoryListbox.contains(e.target)) {
-        categoryListbox.classList.add('hidden');
-    }
-});
-btnCloseSidebar.addEventListener('click', () => { isSidebarExpanded = false; updateSidebarState(); });
-btnHamburger.addEventListener('click', () => { isSidebarExpanded = true; updateSidebarState(); });
-overlay.addEventListener('click', () => { isSidebarExpanded = false; updateSidebarState(); });
-window.addEventListener('resize', updateSidebarState);
-navButtons.forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
-clearSearchButton?.addEventListener('click', () => {
-    searchLearnedInput.value = "";
-    renderLearnedWords();
-});
-sortLearnedSelect?.addEventListener('change', () => renderLearnedWords(searchLearnedInput.value));
-searchLearnedInput?.addEventListener('input', (e) => renderLearnedWords(e.target.value));
-
-// ===============================================================
-// 7. INICIALIZAÇÃO DA APLICAÇÃO
-// ===============================================================
-function initialize() {
-    updateSidebarState();
-    showPage('home');
-}
-initialize();
-</script>
-</body>
-</html>      <!DOCTYPE html>
-<html lang="pt-BR" class="scroll-smooth">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MY DICTIONARY</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
-    <style>
-    .sidebar-text {
-      transition: opacity 0.2s ease-in-out;
-    }
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-    /* Botão Hamburger personalizado */
-    #checkbox {
-      display: none;
-    }
-    .toggle {
-      position: relative;
-      width: 40px;
-      height: 40px;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      justify-content: center;
-      gap: 10px;
-      transition-duration: .5s;
-    }
-    .bars {
-      width: 100%;
-      height: 4px;
-      background-color: rgb(92, 130, 255);
-      border-radius: 4px;
-      transition-duration: .5s;
-    }
-    #bar1 {
-      width: 50%;
-    }
-    #bar2 {
-      width: 75%;
-      transition-duration: .8s;
-    }
-</style>
-  </head>
-  <body class="bg-gray-900 text-gray-300 min-h-screen flex flex-col">
-    <div id="auth-container" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center">
-  <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-sm">
-    <h2 class="text-2xl font-bold text-center text-custom-blue mb-6">Meu Dicionário</h2>
-    <form id="login-form" class="space-y-4">
-      <div>
-        <label for="email" class="block text-gray-400">Email</label>
-        <input type="email" id="email" class="w-full bg-gray-700 rounded px-3 py-2 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-custom-blue" required>
-      </div>
-     <div>
-  <label for="password" class="block text-gray-400">Senha</label>
-  <div class="relative">
-    <input type="password" id="password" class="w-full bg-gray-700 rounded px-3 py-2 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-custom-blue pr-10" required>
-    <button type="button" id="toggle-password" class="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white focus:outline-none">
-      <i class="fas fa-eye"></i>
-    </button>
-  </div>
-</div>
-      <div class="flex gap-2">
-  <button id="login-button" type="submit" class="flex-1 bg-custom-blue text-white font-bold py-2 rounded">Entrar</button>
-  <button id="register-button" type="button" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded">Criar Conta</button>
-</div>
-    </form>
-  <p id="auth-feedback" class="text-center mt-4 hidden"></p>
-  </div>
-</div>
-    <div id="app" class="flex-1 flex flex-col hidden">
-      <!-- Header com botão hamburger customizado -->
-      <header class="flex items-center justify-between bg-gray-800 px-4 py-3 shadow-md">
-  <button id="btn-hamburger" class="md:hidden text-custom-blue text-2xl focus:outline-none">
-    <i class="fas fa-bars"></i>
-  </button>
-
-  <h1 class="text-xl font-bold select-none text-gray-300 flex-1 text-center md:text-left">Meu Dicionário</h1>
-
-  <div class="relative">
-    <button id="profile-toggle" class="text-custom-blue text-2xl focus:outline-none">
-      <i class="fas fa-user-circle"></i>
-    </button>
-    <div id="profile-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-gray-800 text-white rounded shadow-md z-50 p-3 space-y-2">
-      <p id="user-email" class="text-sm text-gray-300 truncate"></p>
-      <button id="logout-button" class="text-xs text-red-500 hover:text-red-400 w-full text-left">Sair</button>
-    </div>
-  </div>
-</header>
-    <div class="flex flex-1 overflow-hidden">
-      <!-- Sidebar / Menu -->
-      <nav
-        id="sidebar"
-         class="fixed inset-y-0 left-0 z-30 bg-gray-800 shadow-lg transform -translate-x-full transition-all duration-300 ease-in-out md:shadow-none"
-        aria-label="Menu principal"
-      >
-        <div class="px-6 py-6 border-b border-gray-700 flex items-center gap-4">
-
-          <div id="sidebar-toggle-container">
-          <input id="checkbox" type="checkbox">
-          <label class="toggle" for="checkbox">
-            <div id="bar1" class="bars"></div>
-            <div id="bar2" class="bars"></div>
-            <div id="bar3" class="bars"></div>
-          </label>
-        </div>
-            <h2 class="sidebar-title text-2xl italic font-extrabold text-custom-blue select-none tracking-wide drop-shadow-lg">
-              Menu
-            </h2>
-            <button
-              id="btn-close-sidebar"  
-              aria-label="Fechar menu"
-              class="text-gray-400 hover:text-custom-blue md:hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-custom-blue rounded"
-            >
-            
-              <i class="fas fa-times fa-lg"></i>
-            </button>
-          </div>
-          <ul class="flex flex-col px-4 py-2 space-y-1 overflow-y-auto flex-1">
-            <li>
-             <button
-                data-page="home"
-                class="w-full flex items-center px-3 py-2 rounded-md hover:bg-[rgb(92,130,255)] hover:text-white focus:outline-none focus:bg-[rgb(92,130,255)] font-semibold"
-              >
-                <i class="fas fa-home w-8 text-center"></i>
-                <span class="sidebar-text">Tela Inicial</span>
-              </button>
-            </li>
-            <li>
-              <button
-                data-page="learned"
-                class="w-full flex items-center px-3 py-2 rounded-md hover:bg-[rgb(92,130,255)] hover:text-white focus:outline-none focus:bg-[rgb(92,130,255)] font-semibold text-custom-blue"
-              >
-                <i class="fas fa-book-open w-8 text-center"></i>
-                <span class="sidebar-text">Palavras Aprendidas</span>
-              </button>
-            </li>
-          </ul>
-        </div>
-      </nav>
-
-      <!-- Overlay for mobile sidebar -->
-      <div
-        id="overlay"
-        class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden md:hidden"
-        tabindex="-1"
-        aria-hidden="true"
-      ></div>
-
-      <!-- Main content -->
-     <main
-  id="main-content"
-  class="flex-1 overflow-y-auto p-6 transition-all duration-300 ease-in-out"
   ...
 >
         <!-- Home Page -->
@@ -1562,7 +514,6 @@ initialize();
         >
           Salvar
         </button>
-
         <div
           id="modal-word-added"
           class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
@@ -1570,19 +521,22 @@ initialize();
           aria-modal="true"
         >
           <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-lg">
-    <h3 class="text-xl font-bold text-green-400 mb-4">Sucesso!</h3>
-    <p class="text-gray-300 mb-6">Sua nova palavra foi adicionada ao dicionário.</p>
-    <div class="flex justify-end">
-      <button
-        id="btn-close-word-added-modal"
-        class="px-4 py-2 bg-custom-blue hover:bg-blue-600 text-white rounded"
-      >
-        OK
-      </button>
+            <h3 class="text-xl font-bold text-green-400 mb-4">Sucesso!</h3>
+            <p class="text-gray-300 mb-6">Sua nova palavra foi adicionada ao dicionário.</p>
+            <div class="flex justify-end">
+              <button
+                id="btn-close-word-added-modal"
+                class="px-4 py-2 bg-custom-blue hover:bg-blue-600 text-white rounded"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
-
 <div id="modal-alert" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 hidden" role="dialog" aria-modal="true">
     <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-lg">
         <h3 id="alert-title" class="text-xl font-bold text-yellow-400 mb-4">Atenção</h3>
@@ -1680,7 +634,6 @@ let categories = [];
 let currentUser = null;
 let isSidebarExpanded = window.innerWidth >= 768;
 let unsubscribeFromWords = null;
-let unsubscribeFromCategories = null;
 let currentSort = "alphabetical";
 let wordIdToDelete = null;
 let currentCategoryToEdit = null;
@@ -1703,7 +656,6 @@ onAuthStateChanged(auth, (user) => {
   } else {
     currentUser = null;
     if (unsubscribeFromWords) unsubscribeFromWords();
-    if (unsubscribeFromCategories) unsubscribeFromCategories();
     authContainer.classList.remove('hidden');
     appContainer.classList.add('hidden');
     logoutButton.classList.add('hidden');
@@ -1723,7 +675,10 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   setTimeout(() => { authFeedback.classList.add('hidden'); }, 3000);
 
   try {
-} catch (error) {
+    await signInWithEmailAndPassword(auth, email, password);
+    authFeedback.textContent = "🎉 Login efetuado com sucesso!";
+    authFeedback.className = 'text-center mt-4 text-green-500';
+  } catch (error) {
     if (error.code === 'auth/invalid-login-credentials') {
       authFeedback.textContent = "❌ Email ou senha inválidos.";
     } else {
@@ -1761,38 +716,27 @@ logoutButton.addEventListener('click', () => { signOut(auth); });
 // ===============================================================
 // 4. LÓGICA DA BASE DE DADOS (FIRESTORE)
 // ===============================================================
-// VERSÃO AVANÇADA DA loadData (use apenas com a nova addCategory)
-
+// APAGUE sua função loadData atual e COLE esta no lugar
 function loadData() {
- if (!currentUser) return;
+    if (!currentUser) return;
 
- // Cancela "ouvintes" antigos para não acumular
-if (unsubscribeFromWords) unsubscribeFromWords();
- // A linha "let unsubscribeFromCategories" foi REMOVIDA daqui.
-  // Usamos a global agora.
- if (unsubscribeFromCategories) unsubscribeFromCategories(); 
+    // Cancela "ouvintes" antigos para não acumular
+    if (unsubscribeFromWords) unsubscribeFromWords();
+    let unsubscribeFromCategories;
+    if (unsubscribeFromCategories) unsubscribeFromCategories();
 
- // Ouve em tempo real as PALAVRAS
- const wordsQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
- unsubscribeFromWords = onSnapshot(wordsQuery, (snapshot) => {
-   words = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-   renderLearnedWords(searchLearnedInput.value);
- });
+    // Ouve em tempo real as PALAVRAS
+    const wordsQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
+    unsubscribeFromWords = onSnapshot(wordsQuery, (snapshot) => {
+        words = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderLearnedWords(searchLearnedInput.value);
+    });
 
- // Ouve em tempo real as CATEGORIAS da nova coleção
- const categoriesQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid));
- unsubscribeFromCategories = onSnapshot(categoriesQuery, (snapshot) => {
- // Pega apenas o nome de cada categoria e ordena
- categories = snapshot.docs.map(doc => doc.data().name).sort();
-      // Linha de depuração para nos ajudar
-      console.log("Categorias carregadas:", categories);
- });
-}
-
-async function updateWord(wordId, updatedData) {
-  if (!currentUser) return;
-  const wordRef = doc(db, "palavras", wordId);
-  await updateDoc(wordRef, updatedData);
+    // Ouve em tempo real as CATEGORIAS
+    const categoriesQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid));
+    unsubscribeFromCategories = onSnapshot(categoriesQuery, (snapshot) => {
+        categories = snapshot.docs.map(doc => doc.data().name).sort();
+    });
 }
 async function addWord(newWordObject) {
   if (!currentUser) return;
@@ -1801,6 +745,12 @@ async function addWord(newWordObject) {
     userId: currentUser.uid,
     createdAt: serverTimestamp()
   });
+}
+
+async function updateWord(wordId, updatedData) {
+  if (!currentUser) return;
+  const wordRef = doc(db, "palavras", wordId);
+  await updateDoc(wordRef, updatedData);
 }
 
 async function deleteWord(wordId) {
@@ -1877,7 +827,6 @@ window.addEventListener('click', (e) => {
   }
 });
 // --- Formulários ---
-// ---- SUBSTITUA O LISTENER DO FORMULÁRIO DE ADICIONAR PALAVRA POR ESTE ----
 formAddWord.addEventListener('submit', async (e) => { // A palavra 'async' é essencial
   e.preventDefault();
   const wordValue = inputWord.value.trim();
@@ -2135,6 +1084,28 @@ btnCancelEditCategory.addEventListener('click', () => {
   currentCategoryToEdit = null;
 });
 
+// SUBSTITUA O LISTENER DO BOTÃO CRIAR CATEGORIA POR ESTE
+btnCreateCategory.addEventListener('click', async () => {
+  const newCatName = inputCategorySearch.value.trim();
+  if (!newCatName) return;
+
+  // Chama a função que salva no banco de dados
+  const newCategory = await addCategory(newCatName);
+
+  if (newCategory) {
+    // Se a categoria foi criada com sucesso, mostra o modal de confirmação
+    inputCategorySearch.value = newCatName;
+    modalCategory.querySelector('h3').textContent = 'Categoria Criada!';
+    categoryCreatedMessage.textContent = `A categoria "${newCatName}" foi criada com sucesso.`;
+    modalCategory.classList.remove('hidden');
+  } else {
+    // Se a categoria já existe, dá um feedback visual de erro
+    inputCategorySearch.classList.add('ring-2', 'ring-red-500');
+    setTimeout(() => {
+      inputCategorySearch.classList.remove('ring-2', 'ring-red-500');
+    }, 1500);
+  }
+});
 btnSaveCategory.addEventListener('click', async () => {
   const newName = inputEditCategoryName.value.trim();
   if (!newName || !currentCategoryToEdit || newName === currentCategoryToEdit) return;
@@ -2152,116 +1123,25 @@ btnDeleteCategory.addEventListener('click', () => {
   confirmModal.classList.remove('hidden');
   wordIdToDelete = '__CATEGORY__' + currentCategoryToEdit;
 });
-// ===============================================================
-// INÍCIO DO BLOCO DE GERENCIAMENTO DE CATEGORIAS
-// ===============================================================
 
-// FUNÇÃO PARA ADICIONAR CATEGORIA AO FIREBASE
-async function addCategory(categoryName) {
- if (!currentUser) throw new Error("Usuário não autenticado.");
- await addDoc(collection(db, "categories"), {
-  name: categoryName,
-  userId: currentUser.uid,
-  createdAt: serverTimestamp(),
- });
-}
+btnConfirmDelete.addEventListener('click', async () => {
+  if (!wordIdToDelete) return;
 
-// FUNÇÃO PARA DELETAR CATEGORIA DO FIREBASE
-async function deleteCategory(categoryName) {
- if (!currentUser) throw new Error("Usuário não autenticado.");
-
- const catQuery = query(
- collection(db, "categories"),
- where("userId", "==", currentUser.uid),
-where("name", "==", categoryName)
- );
- const catSnapshot = await getDocs(catQuery);
-
- if (catSnapshot.empty) {
-  console.error("Categoria não encontrada para deletar:", categoryName);
-  return;
- }
-
- const categoryDoc = catSnapshot.docs[0];
- await deleteDoc(categoryDoc.ref);
- const wordsToUpdateQuery = query(
-  collection(db, "palavras"),
-  where("userId", "==", currentUser.uid),
-  where("category", "==", categoryName)
- );
- const wordsSnapshot = await getDocs(wordsToUpdateQuery);
- const updates = wordsSnapshot.docs.map((wordDoc) =>
-  updateDoc(wordDoc.ref, { category: "Sem Categoria" })
- );
- await Promise.all(updates);
-}
-
-// --- LISTENERS DOS BOTÕES ---
-
-// Listener do botão "Criar Categoria"
-btnCreateCategory.addEventListener("click", async () => {
- const categoryName = inputCategorySearch.value.trim();
-
- if (!categoryName) {
-  return showAlert("Por favor, digite o nome da nova categoria.");
- }
-
- const categoryExists = categories.some(
-  (cat) => cat.toLowerCase() === categoryName.toLowerCase()
- );
-
- if (categoryExists) {
-  return showAlert(`A categoria "${categoryName}" já existe!`);
- }
-
- try {
-  console.log("Tentando criar categoria...");
-  await addCategory(categoryName);
-  console.log("Categoria criada com sucesso no Firebase!");
-  
-  // Se a linha acima apareceu no console, a próxima DEVE funcionar.
-  showAlert(`Categoria "${categoryName}" criada com sucesso!`, "Sucesso!");
-  
-  inputCategorySearch.value = categoryName;
-  categoryListbox.classList.add("hidden");
- } catch (error) {
- console.error("Falha ao tentar criar categoria:", error);
-  showAlert("Não foi possível criar a categoria.");
- }
-});
-
-// Listener do botão "Confirmar Exclusão" (versão corrigida e mais limpa)
-btnConfirmDelete.addEventListener("click", async () => {
- if (!wordIdToDelete) return;
-
- if (wordIdToDelete.startsWith("__CATEGORY__")) {
- const categoryNameToDelete = wordIdToDelete.replace("__CATEGORY__", "");
-  try {
-   await deleteCategory(categoryNameToDelete);
-  showAlert(`Categoria "${categoryNameToDelete}" deletada.`, "Sucesso");
-  } catch (error) {
-   console.error("Erro ao deletar categoria:", error);
-    showAlert("Ocorreu um erro ao deletar a categoria.");
- }
- } else {
-  try {
-  await deleteWord(wordIdToDelete);
- showAlert("Palavra deletada com sucesso.", "Sucesso");
-  } catch (error) {
-   console.error("Erro ao deletar palavra:", error);
-   showAlert("Ocorreu um erro ao deletar a palavra.");
+  if (wordIdToDelete.startsWith('__CATEGORY__')) {
+    const categoryName = wordIdToDelete.replace('__CATEGORY__', '');
+    const updates = words.filter(w => w.category === categoryName);
+    for (const word of updates) {
+      await updateWord(word.id, { category: 'Sem Categoria' });
+    }
+  } else {
+    await deleteWord(wordIdToDelete);
   }
- }
 
- document.getElementById("modal-edit-word").classList.add("hidden");
- confirmModal.classList.add("hidden");
- wordIdToDelete = null;
+  document.getElementById('modal-edit-word').classList.add('hidden');
+  confirmModal.classList.add('hidden');
+  wordIdToDelete = null;
 });
 
-
-// ===============================================================
-// FIM DO BLOCO DE GERENCIAMENTO DE CATEGORIAS
-// ===============================================================
 clearSearchButton?.addEventListener('click', () => {
   searchLearnedInput.value = "";
   renderLearnedWords();
@@ -2298,4 +1178,4 @@ function initialize() {
 initialize();
 </script>
 </body>
-</html>    
+</html>
