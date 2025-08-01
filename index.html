@@ -514,6 +514,7 @@
         >
           Salvar
         </button>
+        
         <div
           id="modal-word-added"
           class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
@@ -521,22 +522,19 @@
           aria-modal="true"
         >
           <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-lg">
-            <h3 class="text-xl font-bold text-green-400 mb-4">Sucesso!</h3>
-            <p class="text-gray-300 mb-6">Sua nova palavra foi adicionada ao dicionário.</p>
-            <div class="flex justify-end">
-              <button
-                id="btn-close-word-added-modal"
-                class="px-4 py-2 bg-custom-blue hover:bg-blue-600 text-white rounded"
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <h3 class="text-xl font-bold text-green-400 mb-4">Sucesso!</h3>
+    <p class="text-gray-300 mb-6">Sua nova palavra foi adicionada ao dicionário.</p>
+    <div class="flex justify-end">
+      <button
+        id="btn-close-word-added-modal"
+        class="px-4 py-2 bg-custom-blue hover:bg-blue-600 text-white rounded"
+      >
+        OK
+      </button>
     </div>
   </div>
 </div>
+
 <div id="modal-alert" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 hidden" role="dialog" aria-modal="true">
     <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-lg">
         <h3 id="alert-title" class="text-xl font-bold text-yellow-400 mb-4">Atenção</h3>
@@ -718,32 +716,29 @@ logoutButton.addEventListener('click', () => { signOut(auth); });
 // ===============================================================
 // APAGUE sua função loadData atual e COLE esta no lugar
 function loadData() {
-    if (!currentUser) return;
-
-    // Cancela "ouvintes" antigos para não acumular
-    if (unsubscribeFromWords) unsubscribeFromWords();
-    let unsubscribeFromCategories;
-    if (unsubscribeFromCategories) unsubscribeFromCategories();
-
-    // Ouve em tempo real as PALAVRAS
-    const wordsQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
-    unsubscribeFromWords = onSnapshot(wordsQuery, (snapshot) => {
-        words = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderLearnedWords(searchLearnedInput.value);
-    });
-
-    // Ouve em tempo real as CATEGORIAS
-    const categoriesQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid));
-    unsubscribeFromCategories = onSnapshot(categoriesQuery, (snapshot) => {
-        categories = snapshot.docs.map(doc => doc.data().name).sort();
-    });
-}
-async function addWord(newWordObject) {
   if (!currentUser) return;
-  await addDoc(collection(db, "palavras"), {
-    ...newWordObject,
-    userId: currentUser.uid,
-    createdAt: serverTimestamp()
+  if (unsubscribeFromWords) unsubscribeFromWords();
+
+  const q = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
+  
+  unsubscribeFromWords = onSnapshot(q, (querySnapshot) => {
+    words = [];
+    const categorySet = new Set(); // Um Set para evitar categorias duplicadas
+    
+    querySnapshot.forEach((doc) => {
+      const wordData = doc.data();
+      words.push({ id: doc.id, ...wordData });
+      // Adiciona a categoria da palavra ao Set (se ela existir)
+      if (wordData.category && wordData.category !== 'Sem Categoria') {
+        categorySet.add(wordData.category);
+      }
+    });
+
+    // Converte o Set de volta para um array e o ordena
+    categories = Array.from(categorySet).sort();
+    
+    // Renderiza as palavras na tela
+    renderLearnedWords(searchLearnedInput.value);
   });
 }
 
