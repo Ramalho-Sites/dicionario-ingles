@@ -65,7 +65,7 @@
   </div>
 </div>
       <div class="flex gap-2">
-  <button id="login-button" type="button" class="flex-1 bg-custom-blue text-white font-bold py-2 rounded">Entrar</button>
+  <button id="login-button" type="submit" class="flex-1 bg-custom-blue text-white font-bold py-2 rounded">Entrar</button>
   <button id="register-button" type="button" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded">Criar Conta</button>
 </div>
     </form>
@@ -638,7 +638,31 @@ let unsubscribeFromWords = null;
 // ===============================================================
 // 3. LÓGICA DE AUTENTICAÇÃO
 // ===============================================================
-  loginButton.addEventListener('click', async (e) => {
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    authContainer.classList.add('hidden');
+    appContainer.classList.remove('hidden');
+    authFeedback.textContent = "";
+    authFeedback.classList.add('hidden');
+    logoutButton.classList.remove('hidden');
+    userEmailDisplay.textContent = currentUser.email;
+    userEmailDisplay.classList.remove('hidden');
+    loadData();
+  } else {
+    currentUser = null;
+    if (unsubscribeFromWords) unsubscribeFromWords();
+    authContainer.classList.remove('hidden');
+    appContainer.classList.add('hidden');
+    logoutButton.classList.add('hidden');
+    userEmailDisplay.textContent = "";
+    userEmailDisplay.classList.add('hidden');
+    words = [];
+    renderLearnedWords();
+  }
+});
+
+document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
@@ -883,76 +907,62 @@ overlay.addEventListener('click', toggleSidebar);
 window.addEventListener('resize', updateSidebarState);
 navButtons.forEach(btn => { btn.addEventListener('click', () => showPage(btn.dataset.page)); });
 
+// --- Renderização e Modais ---
 function renderLearnedWords(searchTerm = "") {
   if (!learnedWordsContainer) return;
 
-  // 1. Filtra as palavras baseado na pesquisa
-  let processedWords = words.filter(word =>
-    word.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    word.meaning?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    word.context?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredWords = words.filter(word =>
+  word.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  word.meaning?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  word.context?.toLowerCase().includes(searchTerm.toLowerCase())
+);
 
-  // 2. Ordena a lista inteira de palavras de acordo com a seleção
-  if (currentSort === "date") {
-    processedWords.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-  } else {
-    processedWords.sort((a, b) => a.word.localeCompare(b.word));
-  }
 
-  // 3. Agrupa as palavras (já ordenadas) por categoria
-  const grouped = processedWords.reduce((acc, w) => {
+ 
+
+
+
+if (currentSort === "date") {
+  filteredWords.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
+} else {
+  filteredWords.sort((a, b) => a.word.localeCompare(b.word));
+}
+
+  const grouped = filteredWords.reduce((acc, w) => {
     const cat = w.category || 'Sem Categoria';
-    if (!acc[cat]) {
-      acc[cat] = [];
-    }
+    if (!acc[cat]) acc[cat] = [];
     acc[cat].push(w);
     return acc;
   }, {});
 
-  // 4. Decide a ordem em que as categorias devem aparecer
-  let categoryOrder;
-  if (currentSort === 'alphabetical') {
-    categoryOrder = Object.keys(grouped).sort();
-  } else {
-    categoryOrder = [...new Set(processedWords.map(w => w.category || 'Sem Categoria'))];
-  }
-
-  // 5. Gera o HTML final
-  if (processedWords.length === 0) {
-    learnedWordsContainer.innerHTML = `<p class="text-center text-gray-400">Nenhuma palavra encontrada.</p>`;
-    return;
-  }
-  
-  learnedWordsContainer.innerHTML = categoryOrder.map(cat => {
-    const wordsInCategory = grouped[cat];
-    return `
-      <div class="space-y-3">
-        <h3 class="text-xl font-extrabold text-custom-blue flex items-center gap-2">
-          <span>${cat}</span>
-          <button
-            class="text-sm text-gray-400 hover:text-white"
-            data-action="edit-category"
-            data-category="${cat}"
-            title="Editar categoria"
-          >
-            <i class="fas fa-pen"></i>
-          </button>
-        </h3>
-        <ul class="space-y-1">
-          ${wordsInCategory.map(w => `
-            <li data-word-id="${w.id}" data-action="details" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center cursor-pointer">
-              <span class="flex-1">${w.word}</span>
-              <button data-word-id="${w.id}" data-action="edit" class="ml-4 p-2 text-gray-400 hover:text-white">
+  const sortedCats = Object.keys(grouped).sort();
+  learnedWordsContainer.innerHTML = sortedCats.map(cat => `
+          <div class="space-y-3">
+            <h3 class="text-xl font-extrabold text-custom-blue flex items-center gap-1">
+              <span>${cat}</span>
+              <button
+                class="text-sm text-gray-400 hover:text-white"
+                data-action="edit-category"
+                data-category="${cat}"
+                title="Editar categoria"
+              >
                 <i class="fas fa-pen"></i>
               </button>
-            </li>
-          `).join('')}
-        </ul>
-      </div>
-    `;
-  }).join('');
+            </h3>
+      <ul class="space-y-1">
+        ${grouped[cat].map(w => `
+          <li data-action="details" data-word-id="${w.id}" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center cursor-pointer">
+            <span class="flex-1">${w.word}</span>
+            <button data-action="edit" data-word-id="${w.id}" class="ml-4 p-2 text-gray-400 hover:text-white">
+              <i class="fas fa-pen"></i>
+            </button>
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+  `).join('');
 }
+
 function openModalWordDetails(wordId) {
   const word = words.find(w => w.id === wordId);
   if (!word) return;
@@ -1008,79 +1018,34 @@ btnCloseModal.addEventListener('click', () => {
 document.getElementById('btn-delete-word').addEventListener('click', () => {
   const wordId = document.getElementById('edit-id').value;
 });
-
-let currentCategoryToEdit = null;
-
-// OUVINTE DE EVENTO ÚNICO PARA A LISTA DE PALAVRAS E MODAIS
+ let currentCategoryToEdit = null;
+ // OUVINTE DE EVENTO ÚNICO PARA A LISTA DE PALAVRAS
 learnedWordsContainer.addEventListener('click', (e) => {
-  const target = e.target;
-  const action = target.closest('[data-action]')?.dataset.action;
-  const wordId = target.closest('[data-word-id]')?.dataset.wordId;
-  const category = target.closest('[data-category]')?.dataset.category;
-
-  if (action === 'details') {
-    openModalWordDetails(wordId);
-  } else if (action === 'edit') {
-    openEditModal(wordId);
-  } else if (action === 'edit-category') {
-    currentCategoryToEdit = category;
+  // Verifica se o clique foi em um item para ver detalhes
+  const detailsButton = e.target.closest('li[data-action="details"]');
+  if (detailsButton) {
+    openModalWordDetails(detailsButton.dataset.wordId);
+    return; // Para a execução aqui
+  }
+  
+  // Verifica se o clique foi no botão de editar palavra
+  const editWordButton = e.target.closest('button[data-action="edit"]');
+  if (editWordButton) {
+    openEditModal(editWordButton.dataset.wordId);
+    return; // Para a execução aqui
+  }
+  
+  // Verifica se o clique foi no botão de editar categoria
+  const editCategoryButton = e.target.closest('button[data-action="edit-category"]');
+  if (editCategoryButton) {
+    currentCategoryToEdit = editCategoryButton.dataset.category;
     document.getElementById('input-edit-category-name').value = currentCategoryToEdit;
     document.getElementById('modal-edit-category').classList.remove('hidden');
+    return; // Para a execução aqui
   }
 });
-
-// === BOTÕES DO MODAL DE EDIÇÃO DE CATEGORIA ===
-const modalEditCategory = document.getElementById('modal-edit-category');
-const btnCancelEditCategory = document.getElementById('btn-cancel-edit-category');
-const btnSaveCategory = document.getElementById('btn-save-category');
-const btnDeleteCategory = document.getElementById('btn-delete-category');
-const inputEditCategoryName = document.getElementById('input-edit-category-name');
-
-// Cancelar edição de categoria
-btnCancelEditCategory.addEventListener('click', () => {
-  modalEditCategory.classList.add('hidden');
-  currentCategoryToEdit = null;
-});
-
-// Salvar novo nome da categoria
-btnSaveCategory.addEventListener('click', async () => {
-  const newName = inputEditCategoryName.value.trim();
-  if (!newName || !currentCategoryToEdit || newName === currentCategoryToEdit) return;
-
-  const updates = words.filter(w => w.category === currentCategoryToEdit);
-  for (const word of updates) {
-    await updateWord(word.id, { category: newName });
-  }
-
-  modalEditCategory.classList.add('hidden');
-  currentCategoryToEdit = null;
-});
-
-// Clicar em "Deletar" no modal de categoria
-btnDeleteCategory.addEventListener('click', () => {
-  modalEditCategory.classList.add('hidden');
-  confirmModal.classList.remove('hidden');
-  wordIdToDelete = '__CATEGORY__' + currentCategoryToEdit;
-});
-
-// LÓGICA UNIFICADA PARA DELETAR
-btnConfirmDelete.addEventListener('click', async () => {
-  if (!wordIdToDelete) return;
-
-  if (wordIdToDelete.startsWith('__CATEGORY__')) {
-    const categoryName = wordIdToDelete.replace('__CATEGORY__', '');
-    const updates = words.filter(w => w.category === categoryName);
-    for (const word of updates) {
-      await updateWord(word.id, { category: 'Sem Categoria' });
-    }
-  } else {
-    await deleteWord(wordIdToDelete);
-  }
-
-  document.getElementById('modal-edit-word').classList.add('hidden');
-  confirmModal.classList.add('hidden');
-  wordIdToDelete = null;
-});
+    // === BOTÕES DO MODAL DE EDIÇÃO DE CATEGORIA ===
+    const modalEditCategory = document.getElementById('modal-edit-category');
     const btnCancelEditCategory = document.getElementById('btn-cancel-edit-category');
     const btnSaveCategory = document.getElementById('btn-save-category');
     const btnDeleteCategory = document.getElementById('btn-delete-category');
@@ -1137,71 +1102,23 @@ btnConfirmDelete.addEventListener('click', async () => {
       confirmModal.classList.add('hidden');
       wordIdToDelete = null; // Limpa a variável
     });
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    currentUser = user;
-    authContainer.classList.add('hidden');
-    appContainer.classList.remove('hidden');
-    authFeedback.textContent = "";
-    authFeedback.classList.add('hidden');
-    logoutButton.classList.remove('hidden');
-    userEmailDisplay.textContent = currentUser.email;
-    userEmailDisplay.classList.remove('hidden');
-    loadData();
-    corrigirPalavrasAntigasSemData(); // <-- ADICIONE A CHAMADA AQUI
-    showPage('home');
-  } else {
-    currentUser = null;
-    if (unsubscribeFromWords) unsubscribeFromWords();
-    authContainer.classList.remove('hidden');
-    appContainer.classList.add('hidden');
-    logoutButton.classList.add('hidden');
-    userEmailDisplay.textContent = "";
-    userEmailDisplay.classList.add('hidden');
-    words = [];
-    renderLearnedWords();
-  }
-});
+
 // ===============================================================
 // 6. INICIALIZAÇÃO DA APLICAÇÃO
 // ===============================================================
 function initialize() {
   updateSidebarState();
   showPage('home');
+  // loadData() é chamado pelo onAuthStateChanged
 }
+  
 initialize();
 clearSearchButton?.addEventListener('click', () => {
   searchLearnedInput.value = "";
   renderLearnedWords();
   searchLearnedInput.focus();
 });
-import { getDocs } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
-async function corrigirPalavrasAntigasSemData() {
-  if (!currentUser) return;
-
-  const palavrasRef = collection(db, "palavras");
-  const snapshot = await getDocs(query(palavrasRef, where("userId", "==", currentUser.uid)));
-
-  const updates = [];
-
-  snapshot.forEach(docSnap => {
-    const data = docSnap.data();
-    if (!data.createdAt) {
-      updates.push(updateDoc(doc(db, "palavras", docSnap.id), {
-        createdAt: serverTimestamp()
-      }));
-    }
-  });
-
-  if (updates.length > 0) {
-    await Promise.all(updates);
-    console.log(`✅ Corrigido: ${updates.length} palavras receberam createdAt.`);
-  } else {
-    console.log("✅ Nenhuma palavra sem createdAt foi encontrada.");
-  }
-}
-// Chamar a função automaticamente quando o usuário logar
 sortLearnedSelect?.addEventListener('change', (e) => {
   currentSort = e.target.value;
   renderLearnedWords(searchLearnedInput.value);
