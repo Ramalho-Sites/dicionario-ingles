@@ -514,7 +514,6 @@
         >
           Salvar
         </button>
-
         <div
           id="modal-word-added"
           class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
@@ -522,19 +521,22 @@
           aria-modal="true"
         >
           <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-lg">
-    <h3 class="text-xl font-bold text-green-400 mb-4">Sucesso!</h3>
-    <p class="text-gray-300 mb-6">Sua nova palavra foi adicionada ao dicionário.</p>
-    <div class="flex justify-end">
-      <button
-        id="btn-close-word-added-modal"
-        class="px-4 py-2 bg-custom-blue hover:bg-blue-600 text-white rounded"
-      >
-        OK
-      </button>
+            <h3 class="text-xl font-bold text-green-400 mb-4">Sucesso!</h3>
+            <p class="text-gray-300 mb-6">Sua nova palavra foi adicionada ao dicionário.</p>
+            <div class="flex justify-end">
+              <button
+                id="btn-close-word-added-modal"
+                class="px-4 py-2 bg-custom-blue hover:bg-blue-600 text-white rounded"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
-
 <div id="modal-alert" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 hidden" role="dialog" aria-modal="true">
     <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-lg">
         <h3 id="alert-title" class="text-xl font-bold text-yellow-400 mb-4">Atenção</h3>
@@ -632,7 +634,6 @@ let categories = [];
 let currentUser = null;
 let isSidebarExpanded = window.innerWidth >= 768;
 let unsubscribeFromWords = null;
-let unsubscribeFromCategories = null;
 let currentSort = "alphabetical";
 let wordIdToDelete = null;
 let currentCategoryToEdit = null;
@@ -655,7 +656,6 @@ onAuthStateChanged(auth, (user) => {
   } else {
     currentUser = null;
     if (unsubscribeFromWords) unsubscribeFromWords();
-    if (unsubscribeFromCategories) unsubscribeFromCategories();
     authContainer.classList.remove('hidden');
     appContainer.classList.add('hidden');
     logoutButton.classList.add('hidden');
@@ -676,7 +676,8 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
 
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    // Login bem-sucedido — o onAuthStateChanged cuidará do resto.
+    authFeedback.textContent = "🎉 Login efetuado com sucesso!";
+    authFeedback.className = 'text-center mt-4 text-green-500';
   } catch (error) {
     if (error.code === 'auth/invalid-login-credentials') {
       authFeedback.textContent = "❌ Email ou senha inválidos.";
@@ -684,10 +685,8 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
       authFeedback.textContent = "Ocorreu um erro ao entrar.";
     }
     authFeedback.className = 'text-center mt-4 text-red-500';
-    authFeedback.classList.remove('hidden');
   }
 });
-
 
 registerButton.addEventListener('click', async (e) => {
   e.preventDefault();
@@ -712,48 +711,32 @@ registerButton.addEventListener('click', async (e) => {
   }
 });
 
-logoutButton.addEventLiawait addCategory(categoryName);
-console.log("Categoria criada com sucesso no Firebase!");
-alert("TESTE: A categoria foi criada com sucesso!"); 
-inputCategorySearch.value = categoryName;
-categoryListbox.classList.add("hidden");
-stener('click', () => { signOut(auth); });
+logoutButton.addEventListener('click', () => { signOut(auth); });
 
 // ===============================================================
 // 4. LÓGICA DA BASE DE DADOS (FIRESTORE)
 // ===============================================================
-// VERSÃO AVANÇADA DA loadData (use apenas com a nova addCategory)
-
+// APAGUE sua função loadData atual e COLE esta no lugar
 function loadData() {
- if (!currentUser) return;
+    if (!currentUser) return;
 
- // Cancela "ouvintes" antigos para não acumular
-if (unsubscribeFromWords) unsubscribeFromWords();
- // A linha "let unsubscribeFromCategories" foi REMOVIDA daqui.
-  // Usamos a global agora.
- if (unsubscribeFromCategories) unsubscribeFromCategories(); 
+    // Cancela "ouvintes" antigos para não acumular
+    if (unsubscribeFromWords) unsubscribeFromWords();
+    let unsubscribeFromCategories;
+    if (unsubscribeFromCategories) unsubscribeFromCategories();
 
- // Ouve em tempo real as PALAVRAS
- const wordsQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
- unsubscribeFromWords = onSnapshot(wordsQuery, (snapshot) => {
-   words = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-   renderLearnedWords(searchLearnedInput.value);
- });
+    // Ouve em tempo real as PALAVRAS
+    const wordsQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
+    unsubscribeFromWords = onSnapshot(wordsQuery, (snapshot) => {
+        words = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderLearnedWords(searchLearnedInput.value);
+    });
 
- // Ouve em tempo real as CATEGORIAS da nova coleção
- const categoriesQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid));
- unsubscribeFromCategories = onSnapshot(categoriesQuery, (snapshot) => {
- // Pega apenas o nome de cada categoria e ordena
- categories = snapshot.docs.map(doc => doc.data().name).sort();
-      // Linha de depuração para nos ajudar
-      console.log("Categorias carregadas:", categories);
- });
-}
-
-async function updateWord(wordId, updatedData) {
-  if (!currentUser) return;
-  const wordRef = doc(db, "palavras", wordId);
-  await updateDoc(wordRef, updatedData);
+    // Ouve em tempo real as CATEGORIAS
+    const categoriesQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid));
+    unsubscribeFromCategories = onSnapshot(categoriesQuery, (snapshot) => {
+        categories = snapshot.docs.map(doc => doc.data().name).sort();
+    });
 }
 async function addWord(newWordObject) {
   if (!currentUser) return;
@@ -762,6 +745,12 @@ async function addWord(newWordObject) {
     userId: currentUser.uid,
     createdAt: serverTimestamp()
   });
+}
+
+async function updateWord(wordId, updatedData) {
+  if (!currentUser) return;
+  const wordRef = doc(db, "palavras", wordId);
+  await updateDoc(wordRef, updatedData);
 }
 
 async function deleteWord(wordId) {
@@ -838,7 +827,6 @@ window.addEventListener('click', (e) => {
   }
 });
 // --- Formulários ---
-// ---- SUBSTITUA O LISTENER DO FORMULÁRIO DE ADICIONAR PALAVRA POR ESTE ----
 formAddWord.addEventListener('submit', async (e) => { // A palavra 'async' é essencial
   e.preventDefault();
   const wordValue = inputWord.value.trim();
@@ -1096,6 +1084,28 @@ btnCancelEditCategory.addEventListener('click', () => {
   currentCategoryToEdit = null;
 });
 
+// SUBSTITUA O LISTENER DO BOTÃO CRIAR CATEGORIA POR ESTE
+btnCreateCategory.addEventListener('click', async () => {
+  const newCatName = inputCategorySearch.value.trim();
+  if (!newCatName) return;
+
+  // Chama a função que salva no banco de dados
+  const newCategory = await addCategory(newCatName);
+
+  if (newCategory) {
+    // Se a categoria foi criada com sucesso, mostra o modal de confirmação
+    inputCategorySearch.value = newCatName;
+    modalCategory.querySelector('h3').textContent = 'Categoria Criada!';
+    categoryCreatedMessage.textContent = `A categoria "${newCatName}" foi criada com sucesso.`;
+    modalCategory.classList.remove('hidden');
+  } else {
+    // Se a categoria já existe, dá um feedback visual de erro
+    inputCategorySearch.classList.add('ring-2', 'ring-red-500');
+    setTimeout(() => {
+      inputCategorySearch.classList.remove('ring-2', 'ring-red-500');
+    }, 1500);
+  }
+});
 btnSaveCategory.addEventListener('click', async () => {
   const newName = inputEditCategoryName.value.trim();
   if (!newName || !currentCategoryToEdit || newName === currentCategoryToEdit) return;
@@ -1113,112 +1123,25 @@ btnDeleteCategory.addEventListener('click', () => {
   confirmModal.classList.remove('hidden');
   wordIdToDelete = '__CATEGORY__' + currentCategoryToEdit;
 });
-// ===============================================================
-// INÍCIO DO BLOCO DE GERENCIAMENTO DE CATEGORIAS
-// ===============================================================
 
-// FUNÇÃO PARA ADICIONAR CATEGORIA AO FIREBASE
-async function addCategory(categoryName) {
- if (!currentUser) throw new Error("Usuário não autenticado.");
- await addDoc(collection(db, "categories"), {
-  name: categoryName,
-  userId: currentUser.uid,
-  createdAt: serverTimestamp(),
- });
-}
+btnConfirmDelete.addEventListener('click', async () => {
+  if (!wordIdToDelete) return;
 
-// FUNÇÃO PARA DELETAR CATEGORIA DO FIREBASE
-async function deleteCategory(categoryName) {
- if (!currentUser) throw new Error("Usuário não autenticado.");
-
- const catQuery = query(
- collection(db, "categories"),
- where("userId", "==", currentUser.uid),
-where("name", "==", categoryName)
- );
- const catSnapshot = await getDocs(catQuery);
-
- if (catSnapshot.empty) {
-  console.error("Categoria não encontrada para deletar:", categoryName);
-  return;
- }
-
- const categoryDoc = catSnapshot.docs[0];
- await deleteDoc(categoryDoc.ref);
- const wordsToUpdateQuery = query(
-  collection(db, "palavras"),
-  where("userId", "==", currentUser.uid),
-  where("category", "==", categoryName)
- );
- const wordsSnapshot = await getDocs(wordsToUpdateQuery);
- const updates = wordsSnapshot.docs.map((wordDoc) =>
-  updateDoc(wordDoc.ref, { category: "Sem Categoria" })
- );
- await Promise.all(updates);
-}
-
-// --- LISTENERS DOS BOTÕES ---
-
-// Listener do botão "Criar Categoria"
-btnCreateCategory.addEventListener("click", async () => {
-  const categoryName = inputCategorySearch.value.trim();
-
-  if (!categoryName) {
-    return showAlert("Por favor, digite o nome da nova categoria.");
+  if (wordIdToDelete.startsWith('__CATEGORY__')) {
+    const categoryName = wordIdToDelete.replace('__CATEGORY__', '');
+    const updates = words.filter(w => w.category === categoryName);
+    for (const word of updates) {
+      await updateWord(word.id, { category: 'Sem Categoria' });
+    }
+  } else {
+    await deleteWord(wordIdToDelete);
   }
 
-  const categoryExists = categories.some(
-    (cat) => cat.toLowerCase() === categoryName.toLowerCase()
-  );
-
-  if (categoryExists) {
-    return showAlert(`A categoria "${categoryName}" já existe!`);
-  }
-
-  try {
-    await addCategory(categoryName);
-    showAlert(`Categoria "${categoryName}" criada com sucesso!`, "Sucesso!");
-    inputCategorySearch.value = categoryName;
-    categoryListbox.classList.add("hidden");
-  } catch (error) {
-    console.error("Falha ao tentar criar categoria:", error);
-    showAlert("Não foi possível criar a categoria.");
-  }
+  document.getElementById('modal-edit-word').classList.add('hidden');
+  confirmModal.classList.add('hidden');
+  wordIdToDelete = null;
 });
 
-
-// Listener do botão "Confirmar Exclusão" (versão corrigida e mais limpa)
-btnConfirmDelete.addEventListener("click", async () => {
- if (!wordIdToDelete) return;
-
- if (wordIdToDelete.startsWith("__CATEGORY__")) {
- const categoryNameToDelete = wordIdToDelete.replace("__CATEGORY__", "");
-  try {
-   await deleteCategory(categoryNameToDelete);
-  showAlert(`Categoria "${categoryNameToDelete}" deletada.`, "Sucesso");
-  } catch (error) {
-   console.error("Erro ao deletar categoria:", error);
-    showAlert("Ocorreu um erro ao deletar a categoria.");
- }
- } else {
-  try {
-  await deleteWord(wordIdToDelete);
- showAlert("Palavra deletada com sucesso.", "Sucesso");
-  } catch (error) {
-   console.error("Erro ao deletar palavra:", error);
-   showAlert("Ocorreu um erro ao deletar a palavra.");
-  }
- }
-
- document.getElementById("modal-edit-word").classList.add("hidden");
- confirmModal.classList.add("hidden");
- wordIdToDelete = null;
-});
-
-
-// ===============================================================
-// FIM DO BLOCO DE GERENCIAMENTO DE CATEGORIAS
-// ===============================================================
 clearSearchButton?.addEventListener('click', () => {
   searchLearnedInput.value = "";
   renderLearnedWords();
