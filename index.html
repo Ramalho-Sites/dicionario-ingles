@@ -638,7 +638,7 @@ let unsubscribeFromWords = null;
 // ===============================================================
 // 3. LÓGICA DE AUTENTICAÇÃO
 // ===============================================================
-document.getElementById("login-form").addEventListener("submit", async (e) => {
+  loginButton.addEventListener('click', async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
@@ -1147,8 +1147,9 @@ onAuthStateChanged(auth, (user) => {
     logoutButton.classList.remove('hidden');
     userEmailDisplay.textContent = currentUser.email;
     userEmailDisplay.classList.remove('hidden');
-    loadData(); // <-- carrega palavras e categorias
-    showPage('home'); // <-- garante que está na home
+    loadData();
+    corrigirPalavrasAntigasSemData(); // <-- ADICIONE A CHAMADA AQUI
+    showPage('home');
   } else {
     currentUser = null;
     if (unsubscribeFromWords) unsubscribeFromWords();
