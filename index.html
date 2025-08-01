@@ -755,6 +755,14 @@ async function addCategory(categoryName) {
     createdAt: serverTimestamp()
   });
 }
+async function addWord(newWordObject) {
+  if (!currentUser) return;
+  await addDoc(collection(db, "palavras"), {
+    ...newWordObject,
+    userId: currentUser.uid,
+    createdAt: serverTimestamp()
+  });
+}
 async function deleteCategory(categoryName) {
     if (!currentUser) return;
     
