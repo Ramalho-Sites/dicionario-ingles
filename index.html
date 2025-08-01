@@ -65,7 +65,7 @@
   </div>
 </div>
       <div class="flex gap-2">
-  <button id="login-button" type="submit" class="flex-1 bg-custom-blue text-white font-bold py-2 rounded">Entrar</button>
+  <button id="login-button" type="button" class="flex-1 bg-custom-blue text-white font-bold py-2 rounded">Entrar</button>
   <button id="register-button" type="button" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 rounded">Criar Conta</button>
 </div>
     </form>
@@ -638,7 +638,7 @@ let unsubscribeFromWords = null;
 // ===============================================================
 // 3. LÓGICA DE AUTENTICAÇÃO
 // ===============================================================
-  document.getElementById("login-form").addEventListener("submit", async (e) => {
+  loginButton.addEventListener('click', async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
