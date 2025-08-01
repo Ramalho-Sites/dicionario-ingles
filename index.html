@@ -938,17 +938,17 @@ if (currentSort === "date") {
   const sortedCats = Object.keys(grouped).sort();
   learnedWordsContainer.innerHTML = sortedCats.map(cat => `
           <div class="space-y-3">
-            <h3 class="text-xl font-extrabold text-custom-blue flex items-center justify-between">
-        <span>${cat}</span>
-        <button
-          class="ml-2 text-sm text-gray-400 hover:text-white"
-          data-action="edit-category"
-          data-category="${cat}"
-          title="Editar categoria"
-        >
-          <i class="fas fa-pen"></i>
-        </button>
-      </h3>
+            <h3 class="text-xl font-extrabold text-custom-blue flex items-center gap-1">
+              <span>${cat}</span>
+              <button
+                class="text-sm text-gray-400 hover:text-white"
+                data-action="edit-category"
+                data-category="${cat}"
+                title="Editar categoria"
+              >
+                <i class="fas fa-pen"></i>
+              </button>
+            </h3>
       <ul class="space-y-1">
         ${grouped[cat].map(w => `
           <li data-action="details" data-word-id="${w.id}" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center cursor-pointer">
