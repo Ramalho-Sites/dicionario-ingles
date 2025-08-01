@@ -675,15 +675,19 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   setTimeout(() => { authFeedback.classList.add('hidden'); }, 3000);
 
   try {
-} catch (error) {
+    await signInWithEmailAndPassword(auth, email, password);
+    // Login bem-sucedido — o onAuthStateChanged cuidará do resto.
+  } catch (error) {
     if (error.code === 'auth/invalid-login-credentials') {
       authFeedback.textContent = "❌ Email ou senha inválidos.";
     } else {
       authFeedback.textContent = "Ocorreu um erro ao entrar.";
     }
     authFeedback.className = 'text-center mt-4 text-red-500';
+    authFeedback.classList.remove('hidden');
   }
 });
+
 
 registerButton.addEventListener('click', async (e) => {
   e.preventDefault();
