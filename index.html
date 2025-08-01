@@ -1084,12 +1084,10 @@ btnCancelEditCategory.addEventListener('click', () => {
   currentCategoryToEdit = null;
 });
 
+// SUBSTITUA O LISTENER DO BOTÃO CRIAR CATEGORIA POR ESTE
 btnCreateCategory.addEventListener('click', async () => {
   const newCatName = inputCategorySearch.value.trim();
-  if (!categoryName) {
-        showAlert("Por favor, digite o nome da nova categoria no campo."); // <-- LINHA NOVA
-        return;
-    }
+  if (!newCatName) return;
 
   // Chama a função que salva no banco de dados
   const newCategory = await addCategory(newCatName);
