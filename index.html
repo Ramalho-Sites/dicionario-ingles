@@ -139,16 +139,6 @@
                 <span class="sidebar-text">Palavras Aprendidas</span>
               </button>
             </li>
-            <li>
-      <button
-        data-page="categories"
-        class="w-full flex items-center px-3 py-2 rounded-md hover:bg-[rgb(92,130,255)] hover:text-white focus:outline-none focus:bg-[rgb(92,130,255)] font-semibold"
-      >
-        <i class="fas fa-tags w-8 text-center"></i>
-        <span class="sidebar-text">Minhas Categorias</span>
-      </button>
-    </li>
-
           </ul>
         </div>
       </nav>
@@ -350,13 +340,6 @@
             <!-- Categories and words will be dynamically inserted here -->
           </div>
         </section>
-         <section id="page-categories" class="max-w-4xl mx-auto space-y-8 hidden">
-            <h2 class="text-3xl font-bold text-custom-blue mb-2 select-none">
-              Minhas Categorias
-            </h2>
-            <div id="categories-container" class="space-y-4">
-              </div>
-        </section>
       </main>
     </div>
   </div>
@@ -535,26 +518,6 @@
     </div>
   </div>
 </div>
-<!-- Modal de Confirmação de Categoria -->
-<div
-  id="modal-category-created"
-  class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
-  role="dialog"
-  aria-modal="true"
->
-  <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-lg">
-    <h3 class="text-xl font-bold text-green-400 mb-4">Categoria Criada!</h3>
-    <p class="text-gray-300 mb-6">A nova categoria foi criada com sucesso.</p>
-    <div class="flex justify-end">
-      <button
-        id="btn-close-category-modal"
-        class="px-4 py-2 bg-custom-blue hover:bg-blue-600 text-white rounded"
-      >
-        OK
-      </button>
-    </div>
-  </div>
-</div>
 
 <script type="module">
 // ===============================================================
@@ -565,12 +528,12 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, on
 import { getFirestore, collection, addDoc, query, where, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBHBNmm9p-EwE9oQ5L22TgA95dgqEpKCu4", // ATENÇÃO: Proteja esta chave!
-    authDomain: "my-dictionary-7a591.firebaseapp.com",
-    projectId: "my-dictionary-7a591",
-    storageBucket: "my-dictionary-7a591.appspot.com",
-    messagingSenderId: "857389257735",
-    appId: "1:857389257735:web:bebefde9efccf3ddc946a2"
+  apiKey: "AIzaSyBHBNmm9p-EwE9oQ5L22TgA95dgqEpKCu4", // ATENÇÃO: Proteja esta chave!
+  authDomain: "my-dictionary-7a591.firebaseapp.com",
+  projectId: "my-dictionary-7a591",
+  storageBucket: "my-dictionary-7a591.appspot.com",
+  messagingSenderId: "857389257735",
+  appId: "1:857389257735:web:bebefde9efccf3ddc946a2"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -631,15 +594,12 @@ const btnDeleteCategory = document.getElementById('btn-delete-category');
 const inputEditCategoryName = document.getElementById('input-edit-category-name');
 const profileToggle = document.getElementById('profile-toggle');
 const profileMenu = document.getElementById('profile-menu');
-const pageCategories = document.getElementById('page-categories');
-const categoriesContainer = document.getElementById('categories-container');
 
 let words = [];
 let categories = [];
 let currentUser = null;
 let isSidebarExpanded = window.innerWidth >= 768;
 let unsubscribeFromWords = null;
-let unsubscribeFromCategories = null;
 let currentSort = "alphabetical";
 let wordIdToDelete = null;
 let currentCategoryToEdit = null;
@@ -648,72 +608,73 @@ let currentCategoryToEdit = null;
 // 3. LÓGICA DE AUTENTICAÇÃO
 // ===============================================================
 onAuthStateChanged(auth, (user) => {
-    if (user) {
-        currentUser = user;
-        authContainer.classList.add('hidden');
-        appContainer.classList.remove('hidden');
-        authFeedback.textContent = "";
-        authFeedback.classList.add('hidden');
-        logoutButton.classList.remove('hidden');
-        userEmailDisplay.textContent = currentUser.email;
-        userEmailDisplay.classList.remove('hidden');
-        loadData();
-        corrigirPalavrasAntigasSemData();
-        showPage('home');
-    } else {
-        currentUser = null;
-        if (unsubscribeFromWords) unsubscribeFromWords();
-        if (unsubscribeFromCategories) unsubscribeFromCategories();
-        authContainer.classList.remove('hidden');
-        appContainer.classList.add('hidden');
-        logoutButton.classList.add('hidden');
-        userEmailDisplay.textContent = "";
-        userEmailDisplay.classList.add('hidden');
-        words = [];
-        categories = [];
-        renderLearnedWords();
-    }
+  if (user) {
+    currentUser = user;
+    authContainer.classList.add('hidden');
+    appContainer.classList.remove('hidden');
+    authFeedback.textContent = "";
+    authFeedback.classList.add('hidden');
+    logoutButton.classList.remove('hidden');
+    userEmailDisplay.textContent = currentUser.email;
+    userEmailDisplay.classList.remove('hidden');
+    loadData();
+    corrigirPalavrasAntigasSemData(); // <-- ADICIONE ESTA LINHA
+  } else {
+    currentUser = null;
+    if (unsubscribeFromWords) unsubscribeFromWords();
+    authContainer.classList.remove('hidden');
+    appContainer.classList.add('hidden');
+    logoutButton.classList.add('hidden');
+    userEmailDisplay.textContent = "";
+    userEmailDisplay.classList.add('hidden');
+    words = [];
+    renderLearnedWords();
+  }
 });
 
 document.getElementById("login-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    authFeedback.classList.add('hidden');
-    setTimeout(() => { authFeedback.classList.add('hidden'); }, 3000);
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
-        authFeedback.textContent = "🎉 Login efetuado com sucesso!";
-        authFeedback.className = 'text-center mt-4 text-green-500';
-    } catch (error) {
-        if (error.code === 'auth/invalid-login-credentials') {
-            authFeedback.textContent = "❌ Email ou senha inválidos.";
-        } else {
-            authFeedback.textContent = "Ocorreu um erro ao entrar.";
-        }
-        authFeedback.className = 'text-center mt-4 text-red-500';
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  authFeedback.classList.add('hidden');
+  setTimeout(() => { authFeedback.classList.add('hidden'); }, 3000);
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    authFeedback.textContent = "🎉 Login efetuado com sucesso!";
+    authFeedback.className = 'text-center mt-4 text-green-500';
+  } catch (error) {
+    if (error.code === 'auth/invalid-login-credentials') {
+      authFeedback.textContent = "❌ Email ou senha inválidos.";
+    } else {
+      authFeedback.textContent = "Ocorreu um erro ao entrar.";
     }
+    authFeedback.className = 'text-center mt-4 text-red-500';
+  }
 });
 
 registerButton.addEventListener('click', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    authFeedback.classList.add('hidden');
-    try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        authFeedback.textContent = "✅ Conta criada! Você já está logado.";
-        authFeedback.className = 'text-center mt-4 text-green-500';
-    } catch (error) {
-        if (error.code === 'auth/email-already-in-use') {
-            authFeedback.textContent = "Este email já está registado. Tente entrar.";
-        } else if (error.code === 'auth/weak-password') {
-            authFeedback.textContent = "A senha precisa de ter pelo menos 6 caracteres.";
-        } else {
-            authFeedback.textContent = "Ocorreu um erro ao criar a conta.";
-        }
-        authFeedback.className = 'text-center mt-4 text-red-500';
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  authFeedback.classList.add('hidden');
+
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+    authFeedback.textContent = "✅ Conta criada! Você já está logado.";
+    authFeedback.className = 'text-center mt-4 text-green-500';
+  } catch (error) {
+    if (error.code === 'auth/email-already-in-use') {
+      authFeedback.textContent = "Este email já está registado. Tente entrar.";
+    } else if (error.code === 'auth/weak-password') {
+      authFeedback.textContent = "A senha precisa de ter pelo menos 6 caracteres.";
+    } else {
+      authFeedback.textContent = "Ocorreu um erro ao criar a conta.";
     }
+    authFeedback.className = 'text-center mt-4 text-red-500';
+  }
 });
 
 logoutButton.addEventListener('click', () => { signOut(auth); });
@@ -722,157 +683,227 @@ logoutButton.addEventListener('click', () => { signOut(auth); });
 // 4. LÓGICA DA BASE DE DADOS (FIRESTORE)
 // ===============================================================
 function loadData() {
-    if (!currentUser) return;
-    if (unsubscribeFromWords) unsubscribeFromWords();
-    if (unsubscribeFromCategories) unsubscribeFromCategories();
+  if (!currentUser) return;
+  if (unsubscribeFromWords) unsubscribeFromWords();
 
-    const wordsQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
-    unsubscribeFromWords = onSnapshot(wordsQuery, (querySnapshot) => {
-        words = [];
-        querySnapshot.forEach((doc) => {
-            words.push({ id: doc.id, ...doc.data() });
-        });
-        renderLearnedWords();
+  const q = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
+  
+  unsubscribeFromWords = onSnapshot(q, (querySnapshot) => {
+    words = [];
+    const categorySet = new Set();
+    querySnapshot.forEach((doc) => {
+      const wordData = doc.data();
+      words.push({ id: doc.id, ...wordData });
+      if(wordData.category) categorySet.add(wordData.category);
     });
-
-    const categoriesQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid));
-    unsubscribeFromCategories = onSnapshot(categoriesQuery, (querySnapshot) => {
-        categories = [];
-        querySnapshot.forEach((doc) => {
-            categories.push(doc.data().name);
-        });
-        categories.sort();
-    });
+    categories = Array.from(categorySet).sort();
+    renderLearnedWords();
+  });
 }
 
 async function addWord(newWordObject) {
-    if (!currentUser) return;
-    await addDoc(collection(db, "palavras"), { ...newWordObject, userId: currentUser.uid, createdAt: serverTimestamp() });
+  if (!currentUser) return;
+  await addDoc(collection(db, "palavras"), {
+    ...newWordObject,
+    userId: currentUser.uid,
+    createdAt: serverTimestamp()
+  });
 }
 
 async function updateWord(wordId, updatedData) {
-    if (!currentUser) return;
-    const wordRef = doc(db, "palavras", wordId);
-    await updateDoc(wordRef, updatedData);
+  if (!currentUser) return;
+  const wordRef = doc(db, "palavras", wordId);
+  await updateDoc(wordRef, updatedData);
 }
 
 async function deleteWord(wordId) {
-    if (!currentUser) return;
-    await deleteDoc(doc(db, "palavras", wordId));
-}
-
-async function addCategory(categoryName) {
-    if (!currentUser) return null;
-    const categoriesRef = collection(db, "categories");
-    const q = query(categoriesRef, where("userId", "==", currentUser.uid), where("name", "==", categoryName));
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) return null;
-    const newCategory = { name: categoryName, userId: currentUser.uid, createdAt: serverTimestamp() };
-    await addDoc(categoriesRef, newCategory);
-    return newCategory;
+  if (!currentUser) return;
+  await deleteDoc(doc(db, "palavras", wordId));
 }
 
 async function corrigirPalavrasAntigasSemData() {
-    if (!currentUser) return;
-    const palavrasRef = collection(db, "palavras");
-    const snapshot = await getDocs(query(palavrasRef, where("userId", "==", currentUser.uid)));
-    const updates = [];
-    snapshot.forEach(docSnap => {
-        if (!docSnap.data().createdAt) {
-            updates.push(updateDoc(doc(db, "palavras", docSnap.id), { createdAt: serverTimestamp() }));
-        }
-    });
-    if (updates.length > 0) {
-        await Promise.all(updates);
-        console.log(`✅ Corrigido: ${updates.length} palavras receberam createdAt.`);
+  if (!currentUser) return;
+
+  const palavrasRef = collection(db, "palavras");
+  const snapshot = await getDocs(query(palavrasRef, where("userId", "==", currentUser.uid)));
+  const updates = [];
+
+  snapshot.forEach(docSnap => {
+    const data = docSnap.data();
+    if (!data.createdAt) {
+      updates.push(updateDoc(doc(db, "palavras", docSnap.id), {
+        createdAt: serverTimestamp()
+      }));
     }
+  });
+
+  if (updates.length > 0) {
+    await Promise.all(updates);
+    console.log(`✅ Corrigido: ${updates.length} palavras receberam createdAt.`);
+  } else {
+    console.log("✅ Nenhuma palavra sem createdAt foi encontrada.");
+  }
 }
 
 // ===============================================================
 // 5. LÓGICA DA APLICAÇÃO E UI
 // ===============================================================
 
-// --- Funções de UI ---
+// --- Formulários ---
+formAddWord.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const wordValue = inputWord.value.trim();
+  const meaningValue = inputMeaning.value.trim();
+  
+  document.getElementById('word-error').classList.toggle('hidden', !!wordValue);
+  document.getElementById('meaning-error').classList.toggle('hidden', !!meaningValue);
+
+  if (!wordValue || !meaningValue) return;
+  
+  const newWord = {
+    word: wordValue,
+    meaning: meaningValue,
+    context: inputContext.value.trim(),
+    image: inputImage.value.trim(),
+    category: inputCategorySearch.value.trim() || 'Sem Categoria',
+  };
+
+  addWord(newWord);
+  formAddWord.reset();
+  inputCategorySearch.value = '';
+  hideForm();
+});
+
+document.getElementById('form-edit-word').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const wordId = form.querySelector('#edit-id').value;
+  const updatedData = {
+    word: form.querySelector('#edit-word').value.trim(),
+    meaning: form.querySelector('#edit-meaning').value.trim(),
+    context: form.querySelector('#edit-context').value.trim(),
+    image: form.querySelector('#edit-image').value.trim(),
+    category: form.querySelector('#edit-category').value.trim() || 'Sem Categoria',
+  };
+  if (!updatedData.word || !updatedData.meaning) {
+    alert("Palavra e significado são obrigatórios.");
+    return;
+  }
+  updateWord(wordId, updatedData);
+  document.getElementById('modal-edit-word').classList.add('hidden');
+});
+
+function hideForm() { formAddWord.classList.add('hidden'); btnShowForm.classList.remove('hidden'); }
+function showForm() { formAddWord.classList.remove('hidden'); btnShowForm.classList.add('hidden'); }
+btnShowForm.addEventListener('click', showForm);
+btnDiscard.addEventListener('click', hideForm);
+
+// --- Sidebar e Navegação ---
+function updateSidebarState() {
+    const isDesktop = window.innerWidth >= 768;
+    mainContent.classList.remove('ml-20', 'ml-64');
+    sidebar.classList.remove('w-20', 'w-64', '-translate-x-full');
+    overlay.classList.add('hidden');
+    sidebarTitle.classList.add('hidden');
+    sidebarTexts.forEach(text => text.classList.add('hidden', 'opacity-0'));
+    if (isDesktop) {
+        if (isSidebarExpanded) {
+            sidebar.classList.add('w-64');
+            mainContent.classList.add('ml-64');
+            sidebarTitle.classList.remove('hidden');
+            sidebarTexts.forEach(text => text.classList.remove('hidden', 'opacity-0'));
+        } else {
+            sidebar.classList.add('w-20');
+            mainContent.classList.add('ml-20');
+        }
+    } else {
+        sidebar.classList.add('w-64');
+        sidebarTitle.classList.remove('hidden');
+        sidebarTexts.forEach(text => text.classList.remove('hidden', 'opacity-0'));
+        if (isSidebarExpanded) {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+        } else {
+            sidebar.classList.add('-translate-x-full');
+        }
+    }
+    checkboxHamburger.checked = isSidebarExpanded;
+}
+function toggleSidebar() { isSidebarExpanded = !isSidebarExpanded; updateSidebarState(); }
 function showPage(page) {
     pageHome.classList.add('hidden');
     pageLearned.classList.add('hidden');
-    pageCategories.classList.add('hidden');
     if (page === 'home') pageHome.classList.remove('hidden');
     if (page === 'learned') pageLearned.classList.remove('hidden');
-    if (page === 'categories') {
-        pageCategories.classList.remove('hidden');
-        renderCategoriesPage();
-    }
+    
     navButtons.forEach(btn => {
         const isSelected = btn.dataset.page === page;
         btn.classList.toggle('bg-[rgb(92,130,255)]', isSelected);
         btn.classList.toggle('text-white', isSelected);
+        btn.classList.toggle('text-custom-blue', !isSelected);
     });
     if (window.innerWidth < 768) { isSidebarExpanded = false; updateSidebarState(); }
 }
+btnHamburger.addEventListener('click', toggleSidebar);
+btnCloseSidebar.addEventListener('click', toggleSidebar);
+overlay.addEventListener('click', toggleSidebar);
+window.addEventListener('resize', updateSidebarState);
+navButtons.forEach(btn => { btn.addEventListener('click', () => showPage(btn.dataset.page)); });
 
+// --- Renderização e Modais ---
 function renderLearnedWords(searchTerm = "") {
-    if (!learnedWordsContainer) return;
-    let processedWords = words.filter(word =>
-        word.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        word.meaning?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        word.context?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    if (currentSort === "date") {
-        processedWords.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-    } else {
-        processedWords.sort((a, b) => a.word.localeCompare(b.word));
-    }
-    const grouped = processedWords.reduce((acc, w) => {
-        const cat = w.category || 'Sem Categoria';
-        if (!acc[cat]) { acc[cat] = []; }
-        acc[cat].push(w);
-        return acc;
-    }, {});
-    let categoryOrder;
-    if (currentSort === 'alphabetical') {
-        categoryOrder = Object.keys(grouped).sort();
-    } else {
-        categoryOrder = [...new Set(processedWords.map(w => w.category || 'Sem Categoria'))];
-    }
-    if (processedWords.length === 0) {
-        learnedWordsContainer.innerHTML = `<p class="text-center text-gray-400">Nenhuma palavra encontrada.</p>`;
-        return;
-    }
-    learnedWordsContainer.innerHTML = categoryOrder.map(cat => {
-        const wordsInCategory = grouped[cat];
-        return `
-            <div class="space-y-3">
-                <h3 class="text-xl font-extrabold text-custom-blue flex items-center gap-2">
-                    <span>${cat}</span>
-                    <button class="text-sm text-gray-400 hover:text-white" data-action="edit-category" data-category="${cat}" title="Editar categoria"><i class="fas fa-pen"></i></button>
-                </h3>
-                <ul class="space-y-1">
-                    ${wordsInCategory.map(w => `
-                        <li data-word-id="${w.id}" data-action="details" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center cursor-pointer">
-                            <span class="flex-1">${w.word}</span>
-                            <button data-word-id="${w.id}" data-action="edit" class="ml-4 p-2 text-gray-400 hover:text-white"><i class="fas fa-pen"></i></button>
-                        </li>
-                    `).join('')}
-                </ul>
-            </div>
-        `;
-    }).join('');
+  if (!learnedWordsContainer) return;
+  let processedWords = words.filter(word =>
+    word.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    word.meaning?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    word.context?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  if (currentSort === "date") {
+    processedWords.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  } else {
+    processedWords.sort((a, b) => a.word.localeCompare(b.word));
+  }
+  const grouped = processedWords.reduce((acc, w) => {
+    const cat = w.category || 'Sem Categoria';
+    if (!acc[cat]) { acc[cat] = []; }
+    acc[cat].push(w);
+    return acc;
+  }, {});
+  let categoryOrder;
+  if (currentSort === 'alphabetical') {
+    categoryOrder = Object.keys(grouped).sort();
+  } else {
+    categoryOrder = [...new Set(processedWords.map(w => w.category || 'Sem Categoria'))];
+  }
+  if (processedWords.length === 0) {
+    learnedWordsContainer.innerHTML = `<p class="text-center text-gray-400">Nenhuma palavra encontrada.</p>`;
+    return;
+  }
+  learnedWordsContainer.innerHTML = categoryOrder.map(cat => {
+    const wordsInCategory = grouped[cat];
+    return `
+      <div class="space-y-3">
+        <h3 class="text-xl font-extrabold text-custom-blue flex items-center gap-2">
+          <span>${cat}</span>
+          <button class="text-sm text-gray-400 hover:text-white" data-action="edit-category" data-category="${cat}" title="Editar categoria">
+            <i class="fas fa-pen"></i>
+          </button>
+        </h3>
+        <ul class="space-y-1">
+          ${wordsInCategory.map(w => `
+            <li data-word-id="${w.id}" data-action="details" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center cursor-pointer">
+              <span class="flex-1">${w.word}</span>
+              <button data-word-id="${w.id}" data-action="edit" class="ml-4 p-2 text-gray-400 hover:text-white">
+                <i class="fas fa-pen"></i>
+              </button>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+  }).join('');
 }
 
-function renderCategoriesPage() {
-    if (!categoriesContainer) return;
-    if (categories.length === 0) {
-        categoriesContainer.innerHTML = `<p class="text-center text-gray-400">Nenhuma categoria criada ainda.</p>`;
-        return;
-    }
-    categoriesContainer.innerHTML = categories.map(cat => `
-        <div class="bg-gray-800 p-3 rounded-md flex justify-between items-center">
-            <span class="text-gray-300">${cat}</span>
-            <button data-action="edit-category" data-category="${cat}" class="p-2 text-gray-400 hover:text-white" title="Editar Categoria"><i class="fas fa-pen"></i></button>
-        </div>
-    `).join('');
-}
 function openModalWordDetails(wordId) {
   const word = words.find(w => w.id === wordId);
   if (!word) return;
@@ -897,6 +928,8 @@ function openEditModal(wordId) {
   modal.querySelector('#edit-image').value = word.image || '';
   modal.querySelector('#edit-category').value = word.category || '';
   modal.classList.remove('hidden');
+}
+
 // --- Listeners de Eventos (Declarados uma única vez) ---
 togglePassword.addEventListener('click', () => {
   const isPassword = passwordInput.type === 'password';
@@ -1020,7 +1053,5 @@ function initialize() {
 }
 initialize();
 </script>
-</body>
-</html>
 </body>
 </html>
