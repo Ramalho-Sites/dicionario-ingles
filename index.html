@@ -8,64 +8,43 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
     <style>
-      .sidebar-text {
-        transition: opacity 0.2s ease-in-out;
-      }
-      body {
-        font-family: 'Inter', sans-serif;
-      }
-      /* Botão Hamburger personalizado */
-      #checkbox {
-        display: none;
-      }
-
-      .toggle {
-        position: relative;
-        width: 40px;
-        height: 40px;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: center;
-        gap: 10px;
-        transition-duration: .5s;
-      }
-
-      .bars {
-        width: 100%;
-        height: 4px;
-        background-color: rgb(92, 130, 255); /* Esta é a linha principal que dá a cor azul */
-        border-radius: 4px;
-        transition-duration: .5s;
-      }
-
-      #bar1 {
-        width: 50%;
-      }
-
-      #bar2 {
-        width: 75%;
-      }
-      .bars {
-        width: 100%;
-        height: 4px;
-        background-color: rgb(92, 130, 255);
-        border-radius: 4px;
-      }
-
-      #bar2 {
-        transition-duration: .8s;
-      }
-
-      #bar1 {
-        width: 50%;
-      }
-
-      #bar2 {
-        width: 75%;
-      }
-    </style>
+    .sidebar-text {
+      transition: opacity 0.2s ease-in-out;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    /* Botão Hamburger personalizado */
+    #checkbox {
+      display: none;
+    }
+    .toggle {
+      position: relative;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 10px;
+      transition-duration: .5s;
+    }
+    .bars {
+      width: 100%;
+      height: 4px;
+      background-color: rgb(92, 130, 255);
+      border-radius: 4px;
+      transition-duration: .5s;
+    }
+    #bar1 {
+      width: 50%;
+    }
+    #bar2 {
+      width: 75%;
+      transition-duration: .8s;
+    }
+</style>
   </head>
   <body class="bg-gray-900 text-gray-300 min-h-screen flex flex-col">
     <div id="auth-container" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center">
@@ -762,12 +741,6 @@ function loadData() {
   if (unsubscribeFromWords) unsubscribeFromWords();
 
   const q = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
-  function loadData() {
-  console.log("loadData chamado"); // ✅
-
-  const q = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
-  ...
-}
   
   unsubscribeFromWords = onSnapshot(q, (querySnapshot) => {
     words = [];
@@ -781,8 +754,7 @@ function loadData() {
     words.sort((a,b) => a.word.localeCompare(b.word));
     renderLearnedWords();
   });
-}
-
+} // <-- A função fecha aqui agora, corretamente.
 async function addWord(newWordObject) {
   if (!currentUser) return;
   await addDoc(collection(db, "palavras"), {
@@ -944,65 +916,10 @@ function renderLearnedWords(searchTerm = "") {
   word.meaning?.toLowerCase().includes(searchTerm.toLowerCase()) ||
   word.context?.toLowerCase().includes(searchTerm.toLowerCase())
 );
-  let currentCategoryToEdit = null;
 
-learnedWordsContainer.addEventListener('click', (e) => {
-  const editBtn = e.target.closest('button[data-action="edit-category"]');
-  if (editBtn) {
-    currentCategoryToEdit = editBtn.dataset.category;
-    document.getElementById('input-edit-category-name').value = currentCategoryToEdit;
-    document.getElementById('modal-edit-category').classList.remove('hidden');
-  }
-});
-    // === BOTÕES DO MODAL DE EDIÇÃO DE CATEGORIA ===
-    const modalEditCategory = document.getElementById('modal-edit-category');
-    const btnCancelEditCategory = document.getElementById('btn-cancel-edit-category');
-    const btnSaveCategory = document.getElementById('btn-save-category');
-    const btnDeleteCategory = document.getElementById('btn-delete-category');
-    const inputEditCategoryName = document.getElementById('input-edit-category-name');
 
-    // Cancelar edição de categoria
-    btnCancelEditCategory.addEventListener('click', () => {
-      modalEditCategory.classList.add('hidden');
-      currentCategoryToEdit = null;
-    });
+ 
 
-    // Salvar novo nome da categoria
-    btnSaveCategory.addEventListener('click', async () => {
-      const newName = inputEditCategoryName.value.trim();
-      if (!newName || !currentCategoryToEdit || newName === currentCategoryToEdit) return;
-
-      // Atualiza todas as palavras com essa categoria
-      const updates = words.filter(w => w.category === currentCategoryToEdit);
-      for (const word of updates) {
-        await updateWord(word.id, { category: newName });
-      }
-
-      modalEditCategory.classList.add('hidden');
-      currentCategoryToEdit = null;
-    });
-
-    // Clicar em "Deletar" no modal de categoria
-    btnDeleteCategory.addEventListener('click', () => {
-      modalEditCategory.classList.add('hidden');
-      confirmModal.classList.remove('hidden');
-
-      // Usamos um identificador especial para diferenciar categoria de palavra
-      wordIdToDelete = '__CATEGORY__' + currentCategoryToEdit;
-    });
-
-    // Adaptar o modal de confirmação para aceitar categorias
-    btnConfirmDelete.addEventListener('click', async () => {
-      if (wordIdToDelete?.startsWith('__CATEGORY__')) {
-        const categoryName = wordIdToDelete.replace('__CATEGORY__', '');
-        
-        // Remove a categoria das palavras (muda para "Sem Categoria")
-        const updates = words.filter(w => w.category === categoryName);
-        for (const word of updates) {
-          await updateWord(word.id, { category: 'Sem Categoria' });
-        }
-
-        confirmModal.classList.add('hidden');
 
 
 if (currentSort === "date") {
@@ -1045,21 +962,6 @@ if (currentSort === "date") {
     </div>
   `).join('');
 }
-
-
-learnedWordsContainer.addEventListener('click', (e) => {
-    const target = e.target.closest('li[data-action="details"], button[data-action="edit"]');
-    if (!target) return;
-
-    const action = target.dataset.action;
-    const wordId = target.dataset.wordId;
-
-    if (action === 'details') {
-        openModalWordDetails(wordId);
-    } else if (action === 'edit') {
-        openEditModal(wordId);
-    }
-});
 
 function openModalWordDetails(wordId) {
   const word = words.find(w => w.id === wordId);
@@ -1107,15 +1009,6 @@ btnCancelDelete.addEventListener('click', () => {
   confirmModal.classList.add('hidden');
 });
 
-btnConfirmDelete.addEventListener('click', () => {
-  if (wordIdToDelete) {
-    deleteWord(wordIdToDelete);
-    document.getElementById('modal-edit-word').classList.add('hidden');
-    confirmModal.classList.add('hidden');
-    wordIdToDelete = null;
-  }
-});
-
 document.getElementById('btn-cancel-edit').addEventListener('click', () => {
     document.getElementById('modal-edit-word').classList.add('hidden');
 });
@@ -1125,6 +1018,90 @@ btnCloseModal.addEventListener('click', () => {
 document.getElementById('btn-delete-word').addEventListener('click', () => {
   const wordId = document.getElementById('edit-id').value;
 });
+ let currentCategoryToEdit = null;
+ // OUVINTE DE EVENTO ÚNICO PARA A LISTA DE PALAVRAS
+learnedWordsContainer.addEventListener('click', (e) => {
+  // Verifica se o clique foi em um item para ver detalhes
+  const detailsButton = e.target.closest('li[data-action="details"]');
+  if (detailsButton) {
+    openModalWordDetails(detailsButton.dataset.wordId);
+    return; // Para a execução aqui
+  }
+  
+  // Verifica se o clique foi no botão de editar palavra
+  const editWordButton = e.target.closest('button[data-action="edit"]');
+  if (editWordButton) {
+    openEditModal(editWordButton.dataset.wordId);
+    return; // Para a execução aqui
+  }
+  
+  // Verifica se o clique foi no botão de editar categoria
+  const editCategoryButton = e.target.closest('button[data-action="edit-category"]');
+  if (editCategoryButton) {
+    currentCategoryToEdit = editCategoryButton.dataset.category;
+    document.getElementById('input-edit-category-name').value = currentCategoryToEdit;
+    document.getElementById('modal-edit-category').classList.remove('hidden');
+    return; // Para a execução aqui
+  }
+});
+    // === BOTÕES DO MODAL DE EDIÇÃO DE CATEGORIA ===
+    const modalEditCategory = document.getElementById('modal-edit-category');
+    const btnCancelEditCategory = document.getElementById('btn-cancel-edit-category');
+    const btnSaveCategory = document.getElementById('btn-save-category');
+    const btnDeleteCategory = document.getElementById('btn-delete-category');
+    const inputEditCategoryName = document.getElementById('input-edit-category-name');
+
+    // Cancelar edição de categoria
+    btnCancelEditCategory.addEventListener('click', () => {
+      modalEditCategory.classList.add('hidden');
+      currentCategoryToEdit = null;
+    });
+
+    // Salvar novo nome da categoria
+    btnSaveCategory.addEventListener('click', async () => {
+      const newName = inputEditCategoryName.value.trim();
+      if (!newName || !currentCategoryToEdit || newName === currentCategoryToEdit) return;
+
+      // Atualiza todas as palavras com essa categoria
+      const updates = words.filter(w => w.category === currentCategoryToEdit);
+      for (const word of updates) {
+        await updateWord(word.id, { category: newName });
+      }
+
+      modalEditCategory.classList.add('hidden');
+      currentCategoryToEdit = null;
+    });
+
+    // Clicar em "Deletar" no modal de categoria
+    btnDeleteCategory.addEventListener('click', () => {
+      modalEditCategory.classList.add('hidden');
+      confirmModal.classList.remove('hidden');
+
+      // Usamos um identificador especial para diferenciar categoria de palavra
+      wordIdToDelete = '__CATEGORY__' + currentCategoryToEdit;
+    });
+        // LÓGICA UNIFICADA PARA DELETAR
+    btnConfirmDelete.addEventListener('click', async () => {
+      if (!wordIdToDelete) return;
+
+      // Se for uma CATEGORIA...
+      if (wordIdToDelete.startsWith('__CATEGORY__')) {
+        const categoryName = wordIdToDelete.replace('__CATEGORY__', '');
+        const updates = words.filter(w => w.category === categoryName);
+        for (const word of updates) {
+          await updateWord(word.id, { category: 'Sem Categoria' });
+        }
+      } 
+      // Se for uma PALAVRA...
+      else {
+        await deleteWord(wordIdToDelete);
+      }
+
+      // Ações que acontecem em ambos os casos
+      document.getElementById('modal-edit-word').classList.add('hidden');
+      confirmModal.classList.add('hidden');
+      wordIdToDelete = null; // Limpa a variável
+    });
 
 // ===============================================================
 // 6. INICIALIZAÇÃO DA APLICAÇÃO
@@ -1140,13 +1117,6 @@ clearSearchButton?.addEventListener('click', () => {
   searchLearnedInput.value = "";
   renderLearnedWords();
   searchLearnedInput.focus();
-});
-onAuthStateChanged(auth, (user) => {
-  console.log("onAuthStateChanged →", user); // ✅
-
-  if (user) {
-    ...
-  }
 });
 
 sortLearnedSelect?.addEventListener('change', (e) => {
