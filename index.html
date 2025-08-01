@@ -537,6 +537,17 @@
     </div>
   </div>
 </div>
+<div id="modal-alert" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 hidden" role="dialog" aria-modal="true">
+    <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-lg">
+        <h3 id="alert-title" class="text-xl font-bold text-yellow-400 mb-4">Atenção</h3>
+        <p id="alert-message" class="text-gray-300 mb-6">Mensagem de exemplo.</p>
+        <div class="flex justify-end">
+            <button id="btn-close-alert" class="px-4 py-2 bg-custom-blue hover:bg-blue-600 text-white rounded">
+                OK
+            </button>
+        </div>
+    </div>
+</div>
 
 <script type="module">
 // ===============================================================
@@ -613,6 +624,10 @@ const btnDeleteCategory = document.getElementById('btn-delete-category');
 const inputEditCategoryName = document.getElementById('input-edit-category-name');
 const profileToggle = document.getElementById('profile-toggle');
 const profileMenu = document.getElementById('profile-menu');
+const modalAlert = document.getElementById('modal-alert');
+const alertTitle = document.getElementById('alert-title');
+const alertMessage = document.getElementById('alert-message');
+const btnCloseAlert = document.getElementById('btn-close-alert');
 
 let words = [];
 let categories = [];
@@ -858,13 +873,19 @@ document.getElementById('form-edit-word').addEventListener('submit', (e) => {
     image: form.querySelector('#edit-image').value.trim(),
     category: form.querySelector('#edit-category').value.trim() || 'Sem Categoria',
   };
-  if (!updatedData.word || !updatedData.meaning) {
-    alert("Palavra e significado são obrigatórios.");
-    return;
-  }
+   if (!updatedData.word || !updatedData.meaning) {
+        showAlert("Palavra e significado são obrigatórios."); // <-- LINHA NOVA
+        return;
+    }
   updateWord(wordId, updatedData);
   document.getElementById('modal-edit-word').classList.add('hidden');
 });
+// Adicione esta função junto com showPage, renderLearnedWords, etc.
+function showAlert(message, title = "Atenção") {
+    alertTitle.textContent = title;
+    alertMessage.textContent = message;
+    modalAlert.classList.remove('hidden');
+}
 
 function hideForm() { formAddWord.classList.add('hidden'); btnShowForm.classList.remove('hidden'); }
 function showForm() { formAddWord.classList.remove('hidden'); btnShowForm.classList.add('hidden'); }
@@ -1028,6 +1049,10 @@ btnCancelDelete.addEventListener('click', () => {
   confirmModal.classList.add('hidden');
 });
 
+btnCloseAlert.addEventListener('click', () => {
+    modalAlert.classList.add('hidden');
+});
+
 document.getElementById('btn-cancel-edit').addEventListener('click', () => {
   document.getElementById('modal-edit-word').classList.add('hidden');
 });
@@ -1058,7 +1083,10 @@ btnCancelEditCategory.addEventListener('click', () => {
 
 btnCreateCategory.addEventListener('click', async () => {
   const newCatName = inputCategorySearch.value.trim();
-  if (!newCatName) return;
+  if (!categoryName) {
+        showAlert("Por favor, digite o nome da nova categoria no campo."); // <-- LINHA NOVA
+        return;
+    }
 
   // Chama a função que salva no banco de dados
   const newCategory = await addCategory(newCatName);
@@ -1137,6 +1165,7 @@ window.addEventListener('click', (e) => {
     profileMenu.classList.add('hidden');
   }
 });
+
 
 // ===============================================================
 // 6. INICIALIZAÇÃO DA APLICAÇÃO
