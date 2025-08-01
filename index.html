@@ -514,28 +514,28 @@
         >
           Salvar
         </button>
+        <div
+          id="modal-word-added"
+          class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-lg">
+            <h3 class="text-xl font-bold text-green-400 mb-4">Sucesso!</h3>
+            <p class="text-gray-300 mb-6">Sua nova palavra foi adicionada ao dicionário.</p>
+            <div class="flex justify-end">
+              <button
+                id="btn-close-word-added-modal"
+                class="px-4 py-2 bg-custom-blue hover:bg-blue-600 text-white rounded"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-  <div
-  id="modal-word-added"
-  class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden"
-  role="dialog"
-  aria-modal="true"
->
-  <div class="bg-gray-800 rounded-lg max-w-sm w-full p-6 shadow-lg">
-    <h3 class="text-xl font-bold text-green-400 mb-4">Sucesso!</h3>
-    <p class="text-gray-300 mb-6">Sua nova palavra foi adicionada ao dicionário.</p>
-    <div class="flex justify-end">
-      <button
-        id="btn-close-word-added-modal"
-        class="px-4 py-2 bg-custom-blue hover:bg-blue-600 text-white rounded"
-      >
-        OK
-      </button>
-    </div>
-  </div>
-</div>
 </div>
 
 <script type="module">
