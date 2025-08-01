@@ -923,7 +923,10 @@ function renderLearnedWords(searchTerm = "") {
 
 
 if (currentSort === "date") {
-  filteredWords.sort((a, b) => b.createdAt?.seconds - a.createdAt?.seconds);
+  filteredWords.sort((a, b) => {
+  if (!a.createdAt || !b.createdAt) return 0;
+  return b.createdAt.seconds - a.createdAt.seconds;
+});
 } else {
   filteredWords.sort((a, b) => a.word.localeCompare(b.word));
 }
@@ -938,7 +941,7 @@ if (currentSort === "date") {
   const sortedCats = Object.keys(grouped).sort();
   learnedWordsContainer.innerHTML = sortedCats.map(cat => `
           <div class="space-y-3">
-            <h3 class="text-xl font-extrabold text-custom-blue flex items-center gap-1.5">
+            <h3 class="text-xl font-extrabold text-custom-blue flex items-center gap-2">
               <span>${cat}</span>
               <button
                 class="text-sm text-gray-400 hover:text-white"
