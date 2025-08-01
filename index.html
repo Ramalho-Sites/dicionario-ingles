@@ -638,30 +638,6 @@ let unsubscribeFromWords = null;
 // ===============================================================
 // 3. LÓGICA DE AUTENTICAÇÃO
 // ===============================================================
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    currentUser = user;
-    authContainer.classList.add('hidden');
-    appContainer.classList.remove('hidden');
-    authFeedback.textContent = "";
-    authFeedback.classList.add('hidden');
-    logoutButton.classList.remove('hidden');
-    userEmailDisplay.textContent = currentUser.email;
-    userEmailDisplay.classList.remove('hidden');
-    loadData();
-  } else {
-    currentUser = null;
-    if (unsubscribeFromWords) unsubscribeFromWords();
-    authContainer.classList.remove('hidden');
-    appContainer.classList.add('hidden');
-    logoutButton.classList.add('hidden');
-    userEmailDisplay.textContent = "";
-    userEmailDisplay.classList.add('hidden');
-    words = [];
-    renderLearnedWords();
-  }
-});
-
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
@@ -1161,16 +1137,37 @@ btnConfirmDelete.addEventListener('click', async () => {
       confirmModal.classList.add('hidden');
       wordIdToDelete = null; // Limpa a variável
     });
-
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    authContainer.classList.add('hidden');
+    appContainer.classList.remove('hidden');
+    authFeedback.textContent = "";
+    authFeedback.classList.add('hidden');
+    logoutButton.classList.remove('hidden');
+    userEmailDisplay.textContent = currentUser.email;
+    userEmailDisplay.classList.remove('hidden');
+    loadData(); // <-- carrega palavras e categorias
+    showPage('home'); // <-- garante que está na home
+  } else {
+    currentUser = null;
+    if (unsubscribeFromWords) unsubscribeFromWords();
+    authContainer.classList.remove('hidden');
+    appContainer.classList.add('hidden');
+    logoutButton.classList.add('hidden');
+    userEmailDisplay.textContent = "";
+    userEmailDisplay.classList.add('hidden');
+    words = [];
+    renderLearnedWords();
+  }
+});
 // ===============================================================
 // 6. INICIALIZAÇÃO DA APLICAÇÃO
 // ===============================================================
 function initialize() {
   updateSidebarState();
   showPage('home');
-  // loadData() é chamado pelo onAuthStateChanged
 }
-  
 initialize();
 clearSearchButton?.addEventListener('click', () => {
   searchLearnedInput.value = "";
@@ -1204,31 +1201,6 @@ async function corrigirPalavrasAntigasSemData() {
   }
 }
 // Chamar a função automaticamente quando o usuário logar
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    currentUser = user;
-    authContainer.classList.add('hidden');
-    appContainer.classList.remove('hidden');
-    authFeedback.textContent = "";
-    authFeedback.classList.add('hidden');
-    logoutButton.classList.remove('hidden');
-    userEmailDisplay.textContent = currentUser.email;
-    userEmailDisplay.classList.remove('hidden');
-    loadData();
-    corrigirPalavrasAntigasSemData(); // <-- ADICIONAMOS A CHAMADA AQUI
-  } else {
-    currentUser = null;
-    if (unsubscribeFromWords) unsubscribeFromWords();
-    authContainer.classList.remove('hidden');
-    appContainer.classList.add('hidden');
-    logoutButton.classList.add('hidden');
-    userEmailDisplay.textContent = "";
-    userEmailDisplay.classList.add('hidden');
-    words = [];
-    renderLearnedWords();
-  }
-});
-
 sortLearnedSelect?.addEventListener('change', (e) => {
   currentSort = e.target.value;
   renderLearnedWords(searchLearnedInput.value);
