@@ -1055,31 +1055,28 @@ btnCancelEditCategory.addEventListener('click', () => {
   modalEditCategory.classList.add('hidden');
   currentCategoryToEdit = null;
 });
-// ---- SUBSTITUA O LISTENER DO BOTÃO CRIAR CATEGORIA POR ESTE ----
-btnCreateCategory.addEventListener('click', () => {
-  const categoryName = inputCategorySearch.value.trim();
 
-  if (!categoryName) {
-    alert("Por favor, digite o nome da nova categoria no campo.");
-    return;
+btnCreateCategory.addEventListener('click', async () => {
+  const newCatName = inputCategorySearch.value.trim();
+  if (!newCatName) return;
+
+  // Chama a função que salva no banco de dados
+  const newCategory = await addCategory(newCatName);
+
+  if (newCategory) {
+    // Se a categoria foi criada com sucesso, mostra o modal de confirmação
+    inputCategorySearch.value = newCatName;
+    modalCategory.querySelector('h3').textContent = 'Categoria Criada!';
+    categoryCreatedMessage.textContent = `A categoria "${newCatName}" foi criada com sucesso.`;
+    modalCategory.classList.remove('hidden');
+  } else {
+    // Se a categoria já existe, dá um feedback visual de erro
+    inputCategorySearch.classList.add('ring-2', 'ring-red-500');
+    setTimeout(() => {
+      inputCategorySearch.classList.remove('ring-2', 'ring-red-500');
+    }, 1500);
   }
-
-  const categoryExists = categories.some(cat => cat.toLowerCase() === categoryName.toLowerCase());
-
-  if (categoryExists) {
-    alert(`A categoria "${categoryName}" já existe! Selecione-a na lista.`);
-    categoryListbox.classList.add('hidden'); // Esconde a lista para não confundir
-    return;
-  }
-  
-  // Prepara e mostra o modal de confirmação
-  categoryCreatedMessage.textContent = `A categoria "${categoryName}" será usada para esta nova palavra.`;
-  // Garante que o título está correto
-  modalCategory.querySelector('h3').textContent = 'Usar Nova Categoria';
-  modalCategory.classList.remove('hidden');
-  categoryListbox.classList.add('hidden');
 });
-
 btnSaveCategory.addEventListener('click', async () => {
   const newName = inputEditCategoryName.value.trim();
   if (!newName || !currentCategoryToEdit || newName === currentCategoryToEdit) return;
