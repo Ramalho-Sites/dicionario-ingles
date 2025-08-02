@@ -939,6 +939,11 @@ function showPage(page) {
         btn.classList.toggle('text-white', isSelected);
         btn.classList.toggle('text-custom-blue', !isSelected);
     });
+
+    // Garante que o modal da categoria nunca apareça em outras páginas
+    modalCategory.classList.add('hidden');
+
+
     if (window.innerWidth < 768) { isSidebarExpanded = false; updateSidebarState(); }
 }
 btnHamburger.addEventListener('click', toggleSidebar);
@@ -1098,6 +1103,7 @@ btnCreateCategory.addEventListener('click', async () => {
     modalCategory.querySelector('h3').textContent = 'Categoria Criada!';
     categoryCreatedMessage.textContent = `A categoria "${newCatName}" foi criada com sucesso.`;
     modalCategory.classList.remove('hidden');
+    categoryListbox.classList.add('hidden');
   } else {
     // Se a categoria já existe, dá um feedback visual de erro
     inputCategorySearch.classList.add('ring-2', 'ring-red-500');
