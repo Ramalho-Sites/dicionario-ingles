@@ -1050,13 +1050,19 @@ function openModalWordDetails(wordId) {
   const word = words.find(w => w.id === wordId);
   if (!word) return;
   modalWordTitle.textContent = word.word;
-  modalWordContent.innerHTML = `
-    ${word.image ? `<img src="${word.image}" alt="Imagem de ${word.word}" class="w-full max-h-60 object-cover rounded-md mb-4">` : ''}
-    <p><strong class="font-semibold text-custom-blue">Significado:</strong><br>${word.meaning.replace(/\n/g, '<br>')}</p>
-    ${word.context ? `<p class="mt-2"><strong class="font-semibold text-custom-blue">Contexto/Exemplo:</strong><br>${word.context.replace(/\n/g, '<br>')}</p>` : ''}
-    <p class="mt-2 text-sm text-gray-400"><strong>Categoria:</strong> ${word.category || 'Nenhuma'}</p>
-  `;
-  modalWordDetails.classList.remove('hidden');
+  modalWordContent.innerHTML = '';
+
+const meaningP = document.createElement('p');
+meaningP.innerHTML = `<strong class="font-semibold text-custom-blue">Significado:</strong><br>`;
+meaningP.append(document.createTextNode(word.meaning));
+modalWordContent.append(meaningP);
+
+if (word.context) {
+  const contextP = document.createElement('p');
+  contextP.classList.add('mt-2');
+  contextP.innerHTML = `<strong class="font-semibold text-custom-blue">Contexto/Exemplo:</strong><br>`;
+  contextP.append(document.createTextNode(word.context));
+  modalWordContent.append(contextP);
 }
 
 function openEditModal(wordId) {
