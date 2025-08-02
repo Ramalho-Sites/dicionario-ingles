@@ -987,23 +987,36 @@ function renderLearnedWords(searchTerm = "") {
     word.meaning?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     word.context?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  if (currentSort === "date") {
-    processedWords.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-  } else {
-    processedWords.sort((a, b) => a.word.localeCompare(b.word));
-  }
-  const grouped = processedWords.reduce((acc, w) => {
-    const cat = w.category || 'Sem Categoria';
-    if (!acc[cat]) { acc[cat] = []; }
-    acc[cat].push(w);
-    return acc;
-  }, {});
+  // AONDE MUDAR: Dentro da função `renderLearnedWords`
+
+// A ordenação deve ser feita AQUI, antes do agrupamento.
+if (currentSort === "date") {
+  // Ordena do mais recente para o mais antigo.
+  processedWords.sort((a, b) => {
+    // Garante que palavras sem data sejam tratadas.
+    const dateA = a.createdAt?.seconds || 0;
+    const dateB = b.createdAt?.seconds || 0;
+    return dateB - dateA;
+  });
+} else {
+  // Ordenação alfabética (A-Z).
+  processedWords.sort((a, b) => a.word.localeCompare(b.word));
+}
+
+// O agrupamento por categoria vem logo em seguida.
+const grouped = processedWords.reduce((acc, w) => {
+  const cat = w.category || 'Sem Categoria';
+  if (!acc[cat]) { acc[cat] = []; }
+  acc[cat].push(w);
+  return acc;
+}, {});
   let categoryOrder;
-  if (currentSort === 'alphabetical') {
-    categoryOrder = Object.keys(grouped).sort();
-  } else {
-    categoryOrder = [...new Set(processedWords.map(w => w.category || 'Sem Categoria'))];
-  }
+if (currentSort === 'alphabetical') {
+  // Ordena as categorias alfabeticamente.
+  categoryOrder = Object.keys(grouped).sort();
+} else { 
+  categoryOrder = [...new Set(processedWords.map(w => w.category || 'Sem Categoria'))];
+}
   if (processedWords.length === 0) {
     learnedWordsContainer.innerHTML = `<p class="text-center text-gray-400">Nenhuma palavra encontrada.</p>`;
     return;
