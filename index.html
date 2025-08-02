@@ -785,8 +785,15 @@ async function corrigirPalavrasAntigasSemData() {
 // ===============================================================
 // 5. LÓGICA DA APLICAÇÃO E UI
 // ===============================================================
-// ---- INÍCIO DO BLOCO DE AUTOCOMPLETE DE CATEGORIA ----
+function isDuplicate(list, newItemName, currentItemName = null) {
+  const normalizedNewName = newItemName.trim().toLowerCase();
+  const normalizedCurrentName = currentItemName ? currentItemName.trim().toLowerCase() : null;
 
+  return list.some(item => {
+    const normalizedItem = typeof item === 'string' ? item.toLowerCase() : item.word.toLowerCase();
+    return normalizedItem === normalizedNewName && normalizedItem !== normalizedCurrentName;
+  });
+}
 function renderCategorySuggestions(searchTerm) {
   if (!searchTerm) {
     categoryListbox.classList.add('hidden');
@@ -835,19 +842,30 @@ formAddWord.addEventListener('submit', async (e) => { // A palavra 'async' é es
   document.getElementById('word-error').classList.toggle('hidden', !!wordValue);
   document.getElementById('meaning-error').classList.toggle('hidden', !!meaningValue);
 
-  if (!wordValue || !meaningValue) return;
-  
-  const newWord = {
-    word: wordValue,
-    meaning: meaningValue,
-    context: inputContext.value.trim(),
-    image: inputImage.value.trim(),
-    category: inputCategorySearch.value.trim() || 'Sem Categoria',
-  };
+ // ... (código anterior) ...
 
-  try {
-    // 1. ESPERA a palavra ser salva no Firebase. O 'await' pausa a execução aqui.
-    await addWord(newWord); 
+if (!wordValue || !meaningValue) return;
+
+// VERIFICAÇÃO DE DUPLICIDADE
+// -------------------------------------------------------------
+if (isDuplicate(words, wordValue)) {
+  showAlert(`A palavra "${wordValue}" já existe no seu dicionário.`, "Palavra duplicada");
+  return;
+}
+// -------------------------------------------------------------
+
+const newWord = {
+  word: wordValue,
+  meaning: meaningValue,
+  context: inputContext.value.trim(),
+  image: inputImage.value.trim(),
+  category: inputCategorySearch.value.trim() || 'Sem Categoria',
+};
+
+try {
+  await addWord(newWord);
+
+// ... (restante do código) ...
     
     // 2. SÓ DEPOIS que a palavra foi salva com sucesso, o código continua.
     formAddWord.reset();
@@ -880,6 +898,11 @@ document.getElementById('form-edit-word').addEventListener('submit', (e) => {
         showAlert("Palavra e significado são obrigatórios."); // <-- LINHA NOVA
         return;
     }
+    const originalWord = words.find(w => w.id === wordId);
+if (originalWord && updatedData.word !== originalWord.word && isDuplicate(words, updatedData.word, originalWord.word)) {
+  showAlert(`A palavra "${updatedData.word}" já existe no seu dicionário.`, "Palavra duplicada");
+  return;
+}
   updateWord(wordId, updatedData);
   document.getElementById('modal-edit-word').classList.add('hidden');
 });
@@ -1096,16 +1119,14 @@ btnCreateCategory.addEventListener('click', async () => {
     showAlert("Digite um nome de categoria válido.");
     return;
   }
-
-  // Verifica se a categoria já existe
-  const exists = categories.includes(newCatName.toLowerCase());
-  if (exists) {
-    inputCategorySearch.classList.add('ring-2', 'ring-red-500');
-    setTimeout(() => {
-      inputCategorySearch.classList.remove('ring-2', 'ring-red-500');
-    }, 1500);
+  
+  // VERIFICAÇÃO DE DUPLICIDADE
+  // -------------------------------------------------------------
+  if (isDuplicate(categories, newCatName)) {
+    showAlert(`A categoria "${newCatName}" já existe.`, "Nome duplicado");
     return;
   }
+  // -------------------------------------------------------------
 
   try {
     await addDoc(collection(db, "categories"), {
@@ -1116,7 +1137,6 @@ btnCreateCategory.addEventListener('click', async () => {
     inputCategorySearch.value = "";
     categoryListbox.classList.add('hidden');
 
-    // ✅ Mostra o modal de categoria criada com estilo
     categoryCreatedMessage.textContent = `A categoria "${newCatName}" foi criada com sucesso.`;
     modalCategory.classList.remove('hidden');
 
