@@ -928,24 +928,28 @@ function updateSidebarState() {
 }
 function toggleSidebar() { isSidebarExpanded = !isSidebarExpanded; updateSidebarState(); }
 function showPage(page) {
-    pageHome.classList.add('hidden');
-    pageLearned.classList.add('hidden');
-    if (page === 'home') pageHome.classList.remove('hidden');
-    if (page === 'learned') pageLearned.classList.remove('hidden');
-    
-    navButtons.forEach(btn => {
-        const isSelected = btn.dataset.page === page;
-        btn.classList.toggle('bg-[rgb(92,130,255)]', isSelected);
-        btn.classList.toggle('text-white', isSelected);
-        btn.classList.toggle('text-custom-blue', !isSelected);
-    });
+  pageHome.classList.add('hidden');
+  pageLearned.classList.add('hidden');
 
-    // Garante que o modal da categoria nunca apareça em outras páginas
-    modalCategory.classList.add('hidden');
+  if (page === 'home') pageHome.classList.remove('hidden');
+  if (page === 'learned') pageLearned.classList.remove('hidden');
 
+  navButtons.forEach(btn => {
+    const isSelected = btn.dataset.page === page;
+    btn.classList.toggle('bg-[rgb(92,130,255)]', isSelected);
+    btn.classList.toggle('text-white', isSelected);
+    btn.classList.toggle('text-custom-blue', !isSelected);
+  });
 
-    if (window.innerWidth < 768) { isSidebarExpanded = false; updateSidebarState(); }
+  // 🧼 Fecha o modal de categoria ao trocar de tela
+  modalCategory.classList.add('hidden');
+
+  if (window.innerWidth < 768) {
+    isSidebarExpanded = false;
+    updateSidebarState();
+  }
 }
+
 btnHamburger.addEventListener('click', toggleSidebar);
 btnCloseSidebar.addEventListener('click', toggleSidebar);
 overlay.addEventListener('click', toggleSidebar);
@@ -1039,10 +1043,6 @@ togglePassword.addEventListener('click', () => {
   togglePassword.innerHTML = `<i class="fas ${isPassword ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
 });
 
-btnCloseCategoryModal.addEventListener('click', () => {
-  modalCategory.classList.add('hidden');
-});
-
 document.getElementById('btn-close-edit-modal').addEventListener('click', () => {
   document.getElementById('modal-edit-word').classList.add('hidden');
 });
@@ -1092,26 +1092,43 @@ btnCancelEditCategory.addEventListener('click', () => {
 // SUBSTITUA O LISTENER DO BOTÃO CRIAR CATEGORIA POR ESTE
 btnCreateCategory.addEventListener('click', async () => {
   const newCatName = inputCategorySearch.value.trim();
-  if (!newCatName) return;
+  if (!newCatName) {
+    showAlert("Digite um nome de categoria válido.");
+    return;
+  }
 
-  // Chama a função que salva no banco de dados
-  const newCategory = await addCategory(newCatName);
-
-  if (newCategory) {
-    // Se a categoria foi criada com sucesso, mostra o modal de confirmação
-    inputCategorySearch.value = newCatName;
-    modalCategory.querySelector('h3').textContent = 'Categoria Criada!';
-    categoryCreatedMessage.textContent = `A categoria "${newCatName}" foi criada com sucesso.`;
-    modalCategory.classList.remove('hidden');
-    categoryListbox.classList.add('hidden');
-  } else {
-    // Se a categoria já existe, dá um feedback visual de erro
+  // Verifica se a categoria já existe
+  const exists = categories.includes(newCatName.toLowerCase());
+  if (exists) {
     inputCategorySearch.classList.add('ring-2', 'ring-red-500');
     setTimeout(() => {
       inputCategorySearch.classList.remove('ring-2', 'ring-red-500');
     }, 1500);
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "categories"), {
+      name: newCatName,
+      userId: currentUser.uid
+    });
+
+    inputCategorySearch.value = "";
+    categoryListbox.classList.add('hidden');
+
+    // ✅ Mostra o modal de categoria criada com estilo
+    categoryCreatedMessage.textContent = `A categoria "${newCatName}" foi criada com sucesso.`;
+    modalCategory.classList.remove('hidden');
+
+  } catch (error) {
+    console.error("Erro ao criar categoria:", error);
+    showAlert("Erro ao criar categoria. Tente novamente.");
   }
 });
+    btnCloseCategoryModal.addEventListener('click', () => {
+      modalCategory.classList.add('hidden');
+    });
+
 btnSaveCategory.addEventListener('click', async () => {
   const newName = inputEditCategoryName.value.trim();
   if (!newName || !currentCategoryToEdit || newName === currentCategoryToEdit) return;
@@ -1172,7 +1189,6 @@ window.addEventListener('click', (e) => {
     profileMenu.classList.add('hidden');
   }
 });
-
 
 // ===============================================================
 // 6. INICIALIZAÇÃO DA APLICAÇÃO
