@@ -1,4 +1,3 @@
-<script type="module">
 // ===============================================================
 // 1. CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE
 // ===============================================================
@@ -673,4 +672,3 @@ function initialize() {
   showPage('home');
 }
 initialize();
-</script>
