@@ -84,6 +84,19 @@ let currentCategoryToEdit = null;
 // ===============================================================
 onAuthStateChanged(auth, (user) => {
   if (user) {
+    const MAX_SESSION_HOURS = 24;
+    const lastLogin = localStorage.getItem("lastLoginTime");
+    const now = Date.now();
+
+    if (!lastLogin || (now - lastLogin) > MAX_SESSION_HOURS * 60 * 60 * 1000) {
+      // passou de 24h → desloga
+      signOut(auth).then(() => {
+        localStorage.removeItem("lastLoginTime");
+        console.log("⚠️ Sessão expirada. Faça login novamente.");
+      });
+      return; // impede que continue carregando app
+    }
+    
     currentUser = user;
     authContainer.classList.add('hidden');
     appContainer.classList.remove('hidden');
@@ -107,6 +120,8 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
@@ -117,6 +132,7 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
 
   try {
     await signInWithEmailAndPassword(auth, email, password);
+    localStorage.setItem("lastLoginTime", Date.now());
     authFeedback.textContent = "🎉 Login efetuado com sucesso!";
     authFeedback.className = 'text-center mt-4 text-green-500';
   } catch (error) {
@@ -138,6 +154,7 @@ registerButton.addEventListener('click', async (e) => {
 
   try {
     await createUserWithEmailAndPassword(auth, email, password);
+    localStorage.setItem("lastLoginTime", Date.now());
     authFeedback.textContent = "✅ Conta criada! Você já está logado.";
     authFeedback.className = 'text-center mt-4 text-green-500';
   } catch (error) {
