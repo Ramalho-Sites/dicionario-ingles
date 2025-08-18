@@ -11,7 +11,6 @@
     .toggle {
       position: relative;
       width: 40px;
-      top: -10px;
       height: 40px;
       cursor: pointer;
       display: flex;
