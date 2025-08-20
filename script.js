@@ -605,15 +605,62 @@ btnCreateCategory.addEventListener('click', async () => {
 
 btnSaveCategory.addEventListener('click', async () => {
   const newName = inputEditCategoryName.value.trim();
-  if (!newName || !currentCategoryToEdit || newName === currentCategoryToEdit) return;
 
-  const updates = words.filter(w => w.category === currentCategoryToEdit);
-  for (const word of updates) {
-    await updateWord(word.id, { category: newName });
+  if (!newName || !currentCategoryToEdit) {
+    showAlert("Digite um nome de categoria válido.");
+    return;
   }
-  modalEditCategory.classList.add('hidden');
-  currentCategoryToEdit = null;
+
+  if (newName === currentCategoryToEdit) {
+    // Se não mudou nada, apenas fecha o modal
+    modalEditCategory.classList.add('hidden');
+    return;
+  }
+
+  // Verifica duplicidade
+  if (categories.includes(newName)) {
+    showAlert(`Já existe a categoria "${newName}".`, "Nome duplicado");
+    return;
+  }
+
+  try {
+    // 1. Criar a nova categoria no Firestore
+    await addDoc(collection(db, "categories"), {
+      name: newName,
+      userId: currentUser.uid
+    });
+
+    // 2. Atualizar todas as palavras da categoria antiga para a nova
+    const updates = words.filter(w => w.category === currentCategoryToEdit);
+    for (const word of updates) {
+      await updateWord(word.id, { category: newName });
+    }
+
+    // 3. Apagar a categoria antiga
+    const catQuery = query(
+      collection(db, "categories"),
+      where("userId", "==", currentUser.uid),
+      where("name", "==", currentCategoryToEdit)
+    );
+    const snap = await getDocs(catQuery);
+    for (const docSnap of snap.docs) {
+      await deleteDoc(docSnap.ref);
+    }
+
+    // 4. Fechar modal e limpar estado
+    modalEditCategory.classList.add('hidden');
+    currentCategoryToEdit = null;
+
+    // 5. Mostrar mensagem de sucesso
+    categoryCreatedMessage.textContent = `Categoria "${currentCategoryToEdit}" renomeada para "${newName}".`;
+    modalCategory.classList.remove('hidden');
+
+  } catch (error) {
+    console.error("Erro ao renomear categoria:", error);
+    showAlert("Erro ao renomear categoria. Tente novamente.");
+  }
 });
+
 
 btnDeleteCategory.addEventListener('click', () => {
   modalEditCategory.classList.add('hidden');
