@@ -12,6 +12,13 @@
   <link rel="stylesheet" href="style.css">
   <body class="bg-gray-900 text-gray-300 min-h-screen flex flex-col">
     <div id="auth-container" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center">
+  <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-sm">
+    <h2 class="text-2xl font-bold text-center text-custom-blue mb-6">Meu Dicionário</h2>
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label for="email" class="block text-gray-400">Email</label>
+        <input type="email" id="email" class="w-full bg-gray-700 rounded px-3 py-2 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-custom-blue" required>
+      </div>
       <div id="verify-email-container" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center hidden">
   <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-sm text-center">
     <h2 class="text-2xl font-bold text-yellow-400 mb-4">Verifique seu E-mail</h2>
@@ -28,13 +35,6 @@
     <p id="verify-feedback" class="text-center mt-4 h-5"></p>
   </div>
 </div>
-  <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-sm">
-    <h2 class="text-2xl font-bold text-center text-custom-blue mb-6">Meu Dicionário</h2>
-    <form id="login-form" class="space-y-4">
-      <div>
-        <label for="email" class="block text-gray-400">Email</label>
-        <input type="email" id="email" class="w-full bg-gray-700 rounded px-3 py-2 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-custom-blue" required>
-      </div>
      <div>
   <label for="password" class="block text-gray-400">Senha</label>
   <div class="relative">

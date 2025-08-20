@@ -122,6 +122,29 @@ onAuthStateChanged(auth, (user) => {
     renderLearnedWords();
   }
 });
+// ▼▼▼ COLE ESTE BLOCO DE CÓDIGO AQUI ▼▼▼
+
+document.getElementById("login-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  authFeedback.classList.add('hidden');
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    // A função onAuthStateChanged cuidará de mostrar a tela certa (app ou verificação)
+  } catch (error) {
+    if (error.code === 'auth/invalid-login-credentials' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+      authFeedback.textContent = "❌ Email ou senha inválidos.";
+    } else {
+      authFeedback.textContent = "Ocorreu um erro ao entrar.";
+    }
+    authFeedback.className = 'text-center mt-4 text-red-500';
+  }
+});
+
+// ▲▲▲ FIM DO BLOCO ▲▲▲
 
 // ▲▲▲ FIM DO BLOCO ▲▲▲
 
