@@ -603,63 +603,72 @@ btnCreateCategory.addEventListener('click', async () => {
       modalCategory.classList.add('hidden');
     });
 
+
 btnSaveCategory.addEventListener('click', async () => {
   const newName = inputEditCategoryName.value.trim();
+  const oldName = currentCategoryToEdit; // Guarda o nome antigo antes de ser limpo
 
-  if (!newName || !currentCategoryToEdit) {
-    showAlert("Digite um nome de categoria válido.");
-    return;
-  }
-
-  if (newName === currentCategoryToEdit) {
-    // Se não mudou nada, apenas fecha o modal
+  // 1. Validação inicial
+  if (!newName || !oldName || newName === oldName) {
     modalEditCategory.classList.add('hidden');
     return;
   }
-
-  // Verifica duplicidade
-  if (categories.includes(newName)) {
-    showAlert(`Já existe a categoria "${newName}".`, "Nome duplicado");
-    return;
-  }
+  
+  // 2. Verifica se a nova categoria já existe na lista local
+  const newCategoryAlreadyExists = isDuplicate(categories, newName);
 
   try {
-    // 1. Criar a nova categoria no Firestore
-    await addDoc(collection(db, "categories"), {
-      name: newName,
-      userId: currentUser.uid
+    // 3. Atualiza todas as palavras que usavam a categoria antiga
+    //    (Busca no Firestore para garantir que todas sejam atualizadas)
+    const wordsToUpdateQuery = query(
+      collection(db, "palavras"),
+      where("userId", "==", currentUser.uid),
+      where("category", "==", oldName)
+    );
+    const wordsSnapshot = await getDocs(wordsToUpdateQuery);
+    
+    const updatePromises = [];
+    wordsSnapshot.forEach(docSnap => {
+      updatePromises.push(updateDoc(docSnap.ref, { category: newName }));
     });
+    
+    // Espera todas as palavras serem atualizadas de uma só vez (mais eficiente)
+    await Promise.all(updatePromises);
 
-    // 2. Atualizar todas as palavras da categoria antiga para a nova
-    const updates = words.filter(w => w.category === currentCategoryToEdit);
-    for (const word of updates) {
-      await updateWord(word.id, { category: newName });
-    }
-
-    // 3. Apagar a categoria antiga
-    const catQuery = query(
+    // 4. Encontra e deleta o documento da categoria ANTIGA da coleção 'categories'
+    const oldCategoryQuery = query(
       collection(db, "categories"),
       where("userId", "==", currentUser.uid),
-      where("name", "==", currentCategoryToEdit)
+      where("name", "==", oldName)
     );
-    const snap = await getDocs(catQuery);
-    for (const docSnap of snap.docs) {
-      await deleteDoc(docSnap.ref);
+    const oldCategorySnapshot = await getDocs(oldCategoryQuery);
+    
+    const deletePromises = [];
+    oldCategorySnapshot.forEach(docSnap => {
+      deletePromises.push(deleteDoc(docSnap.ref));
+    });
+    
+    await Promise.all(deletePromises);
+
+    // 5. Se a nova categoria NÃO existia antes, cria um novo documento para ela
+    if (!newCategoryAlreadyExists) {
+      await addDoc(collection(db, "categories"), {
+        name: newName,
+        userId: currentUser.uid
+      });
     }
 
-    // 4. Fechar modal e limpar estado
+    // 6. Feedback para o usuário e limpeza da UI
+    showAlert(`Categoria "${oldName}" foi renomeada para "${newName}".`, "Sucesso!");
     modalEditCategory.classList.add('hidden');
     currentCategoryToEdit = null;
 
-    // 5. Mostrar mensagem de sucesso
-    categoryCreatedMessage.textContent = `Categoria "${currentCategoryToEdit}" renomeada para "${newName}".`;
-    modalCategory.classList.remove('hidden');
-
   } catch (error) {
     console.error("Erro ao renomear categoria:", error);
-    showAlert("Erro ao renomear categoria. Tente novamente.");
+    showAlert("Ocorreu um erro ao renomear a categoria. Tente novamente.", "Erro");
   }
 });
+
 
 
 btnDeleteCategory.addEventListener('click', () => {
