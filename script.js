@@ -2,7 +2,7 @@
 // 1. CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE
 // ===============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendEmailVerification } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, where, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
 import { firebaseConfig } from './firebase-config.js';
@@ -82,75 +82,107 @@ let currentCategoryToEdit = null;
 // ===============================================================
 // 3. LÓGICA DE AUTENTICAÇÃO
 // ===============================================================
+// ▼▼▼ SUBSTITUA A FUNÇÃO onAuthStateChanged INTEIRA POR ESTA ▼▼▼
+
 onAuthStateChanged(auth, (user) => {
+  // Pega a nova tela de verificação
+  const verifyEmailContainer = document.getElementById('verify-email-container');
+
   if (user) {
-    currentUser = user;
-    authContainer.classList.add('hidden');
-    appContainer.classList.remove('hidden');
-    authFeedback.textContent = "";
-    authFeedback.classList.add('hidden');
-    logoutButton.classList.remove('hidden');
-    userEmailDisplay.textContent = currentUser.email;
-    userEmailDisplay.classList.remove('hidden');
-    loadData();
-    corrigirPalavrasAntigasSemData(); // <-- ADICIONE ESTA LINHA
+    if (user.emailVerified) {
+      // --- CASO 1: Usuário logado E VERIFICADO ---
+      currentUser = user;
+      authContainer.classList.add('hidden');
+      verifyEmailContainer.classList.add('hidden'); // Esconde a tela de verificação
+      appContainer.classList.remove('hidden');
+      
+      userEmailDisplay.textContent = currentUser.email;
+      loadData();
+      corrigirPalavrasAntigasSemData();
+
+    } else {
+      // --- CASO 2: Usuário logado, MAS NÃO VERIFICADO ---
+      currentUser = null;
+      authContainer.classList.add('hidden');
+      appContainer.classList.add('hidden');
+      verifyEmailContainer.classList.remove('hidden'); // Mostra a tela de verificação
+      
+      document.getElementById('verification-email-display').textContent = user.email;
+    }
   } else {
+    // --- CASO 3: Ninguém logado ---
     currentUser = null;
     if (unsubscribeFromWords) unsubscribeFromWords();
+    
     authContainer.classList.remove('hidden');
     appContainer.classList.add('hidden');
-    logoutButton.classList.add('hidden');
-    userEmailDisplay.textContent = "";
-    userEmailDisplay.classList.add('hidden');
+    verifyEmailContainer.classList.add('hidden');
+    
     words = [];
     renderLearnedWords();
   }
 });
 
-document.getElementById("login-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
+// ▲▲▲ FIM DO BLOCO ▲▲▲
 
-  authFeedback.classList.add('hidden');
-  setTimeout(() => { authFeedback.classList.add('hidden'); }, 3000);
+// ▼▼▼ ADICIONE ESTE NOVO BLOCO DE CÓDIGO ▼▼▼
 
+// --- Listeners para a tela de Verificação de E-mail ---
+document.getElementById('resend-verification-button').addEventListener('click', async () => {
+  const feedbackEl = document.getElementById('verify-feedback');
+  feedbackEl.textContent = 'Enviando...';
+  feedbackEl.className = 'text-center mt-4 h-5 text-gray-400';
+  
   try {
-    await signInWithEmailAndPassword(auth, email, password);
-    authFeedback.textContent = "🎉 Login efetuado com sucesso!";
-    authFeedback.className = 'text-center mt-4 text-green-500';
-  } catch (error) {
-    if (error.code === 'auth/invalid-login-credentials') {
-      authFeedback.textContent = "❌ Email ou senha inválidos.";
-    } else {
-      authFeedback.textContent = "Ocorreu um erro ao entrar.";
+    if (auth.currentUser) {
+      await sendEmailVerification(auth.currentUser);
+      feedbackEl.textContent = '✅ E-mail reenviado com sucesso!';
+      feedbackEl.className = 'text-center mt-4 h-5 text-green-500';
     }
-    authFeedback.className = 'text-center mt-4 text-red-500';
+  } catch (error) {
+    feedbackEl.textContent = '❌ Tente novamente em alguns instantes.';
+    feedbackEl.className = 'text-center mt-4 h-5 text-red-500';
   }
+  setTimeout(() => { feedbackEl.textContent = ''; }, 5000);
 });
+
+document.getElementById('back-to-login-button').addEventListener('click', () => {
+  signOut(auth);
+});
+
+// ▲▲▲ FIM DO BLOCO ▲▲▲
+
+// ▼▼▼ SUBSTITUA O LISTENER 'click' DO registerButton POR ESTE ▼▼▼
 
 registerButton.addEventListener('click', async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
-
-  authFeedback.classList.add('hidden');
+  authFeedback.className = 'text-center mt-4 hidden';
 
   try {
-    await createUserWithEmailAndPassword(auth, email, password);
-    authFeedback.textContent = "✅ Conta criada! Você já está logado.";
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    await sendEmailVerification(userCredential.user);
+    
+    // Desloga o usuário para forçá-lo a verificar o e-mail antes de entrar
+    await signOut(auth);
+
+    authFeedback.textContent = "✅ Conta criada! Verifique seu e-mail para ativá-la.";
     authFeedback.className = 'text-center mt-4 text-green-500';
+
   } catch (error) {
     if (error.code === 'auth/email-already-in-use') {
-      authFeedback.textContent = "Este email já está registado. Tente entrar.";
+      authFeedback.textContent = "Este email já está registrado. Tente entrar.";
     } else if (error.code === 'auth/weak-password') {
-      authFeedback.textContent = "A senha precisa de ter pelo menos 6 caracteres.";
+      authFeedback.textContent = "A senha precisa ter pelo menos 6 caracteres.";
     } else {
       authFeedback.textContent = "Ocorreu um erro ao criar a conta.";
     }
     authFeedback.className = 'text-center mt-4 text-red-500';
   }
 });
+
+// ▲▲▲ FIM DO BLOCO ▲▲▲
 
 logoutButton.addEventListener('click', () => { signOut(auth); });
 
