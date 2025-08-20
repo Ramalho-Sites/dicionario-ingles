@@ -19,22 +19,6 @@
         <label for="email" class="block text-gray-400">Email</label>
         <input type="email" id="email" class="w-full bg-gray-700 rounded px-3 py-2 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-custom-blue" required>
       </div>
-      <div id="verify-email-container" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center hidden">
-  <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-sm text-center">
-    <h2 class="text-2xl font-bold text-yellow-400 mb-4">Verifique seu E-mail</h2>
-    <p class="text-gray-300 mb-6">
-      Enviamos um link de verificação para <strong id="verification-email-display" class="text-white"></strong>. Por favor, clique no link para ativar sua conta.
-    </p>
-    <p class="text-sm text-gray-400 mb-6">
-      (Se não encontrar, verifique sua caixa de spam)
-    </p>
-    <div class="flex flex-col gap-3">
-      <button id="resend-verification-button" class="w-full bg-custom-blue text-white font-bold py-2 rounded hover:bg-blue-600">Reenviar E-mail</button>
-      <button id="back-to-login-button" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded">Voltar para o Login</button>
-    </div>
-    <p id="verify-feedback" class="text-center mt-4 h-5"></p>
-  </div>
-</div>
      <div>
   <label for="password" class="block text-gray-400">Senha</label>
   <div class="relative">
@@ -50,6 +34,22 @@
 </div>
     </form>
   <p id="auth-feedback" class="text-center mt-4 hidden"></p>
+  </div>
+</div>
+<div id="verify-email-container" class="fixed inset-0 bg-gray-900 z-50 flex items-center justify-center hidden">
+  <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-sm text-center">
+    <h2 class="text-2xl font-bold text-yellow-400 mb-4">Verifique seu E-mail</h2>
+    <p class="text-gray-300 mb-6">
+      Enviamos um link de verificação para <strong id="verification-email-display" class="text-white"></strong>. Por favor, clique no link para ativar sua conta.
+    </p>
+    <p class="text-sm text-gray-400 mb-6">
+      (Se não encontrar, verifique sua caixa de spam)
+    </p>
+    <div class="flex flex-col gap-3">
+      <button id="resend-verification-button" class="w-full bg-custom-blue text-white font-bold py-2 rounded hover:bg-blue-600">Reenviar E-mail</button>
+      <button id="back-to-login-button" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 rounded">Voltar para o Login</button>
+    </div>
+    <p id="verify-feedback" class="text-center mt-4 h-5"></p>
   </div>
 </div>
     <div id="app" class="flex-1 flex flex-col hidden">
