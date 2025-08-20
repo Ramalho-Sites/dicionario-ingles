@@ -274,57 +274,58 @@ window.addEventListener('click', (e) => {
     categoryListbox.classList.add('hidden');
   }
 });
-// --- Formulários ---
-formAddWord.addEventListener('submit', async (e) => { // A palavra 'async' é essencial
+// ▼▼▼ SUBSTITUA O LISTENER 'submit' DO formAddWord POR ESTE ▼▼▼
+
+formAddWord.addEventListener('submit', async (e) => {
   e.preventDefault();
   const wordValue = inputWord.value.trim();
   const meaningValue = inputMeaning.value.trim();
-  
+
   document.getElementById('word-error').classList.toggle('hidden', !!wordValue);
   document.getElementById('meaning-error').classList.toggle('hidden', !!meaningValue);
 
- // ... (código anterior) ...
+  if (!wordValue || !meaningValue) return;
 
-if (!wordValue || !meaningValue) return;
+  if (isDuplicate(words, wordValue)) {
+    showAlert(`A palavra "${wordValue}" já existe no seu dicionário.`, "Palavra duplicada");
+    return;
+  }
 
-// VERIFICAÇÃO DE DUPLICIDADE
-// -------------------------------------------------------------
-if (isDuplicate(words, wordValue)) {
-  showAlert(`A palavra "${wordValue}" já existe no seu dicionário.`, "Palavra duplicada");
-  return;
-}
-// -------------------------------------------------------------
+  const newWord = {
+    word: wordValue,
+    meaning: meaningValue,
+    context: inputContext.value.trim(),
+    image: inputImage.value.trim(),
+    category: inputCategorySearch.value.trim() || 'Sem Categoria',
+  };
 
-const newWord = {
-  word: wordValue,
-  meaning: meaningValue,
-  context: inputContext.value.trim(),
-  image: inputImage.value.trim(),
-  category: inputCategorySearch.value.trim() || 'Sem Categoria',
-};
+  try {
+    const categoryName = newWord.category;
+    // Garante que a categoria exista na coleção 'categories'
+    if (categoryName !== 'Sem Categoria' && !isDuplicate(categories, categoryName)) {
+      await addDoc(collection(db, "categories"), {
+        name: categoryName,
+        userId: currentUser.uid
+      });
+    }
 
-try {
-  await addWord(newWord);
+    await addWord(newWord);
 
-// ... (restante do código) ...
-    
-    // 2. SÓ DEPOIS que a palavra foi salva com sucesso, o código continua.
     formAddWord.reset();
     inputCategorySearch.value = '';
     hideForm();
     
-    // 3. Mostra o modal de sucesso.
     document.getElementById('modal-word-added').classList.remove('hidden');
 
   } catch (error) {
     console.error("Erro ao adicionar palavra: ", error);
-    alert("Ocorreu um erro ao salvar a palavra. Verifique sua conexão e tente novamente.");
+    showAlert("Ocorreu um erro ao salvar a palavra. Verifique sua conexão e tente novamente.");
   }
 });
-document.getElementById('btn-close-word-added-modal').addEventListener('click', () => {
-  document.getElementById('modal-word-added').classList.add('hidden');
-});
-document.getElementById('form-edit-word').addEventListener('submit', (e) => {
+
+// ▼▼▼ SUBSTITUA O LISTENER 'submit' DO 'form-edit-word' POR ESTE ▼▼▼
+
+document.getElementById('form-edit-word').addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = e.target;
   const wordId = form.querySelector('#edit-id').value;
@@ -335,18 +336,40 @@ document.getElementById('form-edit-word').addEventListener('submit', (e) => {
     image: form.querySelector('#edit-image').value.trim(),
     category: form.querySelector('#edit-category').value.trim() || 'Sem Categoria',
   };
-   if (!updatedData.word || !updatedData.meaning) {
-        showAlert("Palavra e significado são obrigatórios."); // <-- LINHA NOVA
-        return;
+
+  if (!updatedData.word || !updatedData.meaning) {
+    showAlert("Palavra e significado são obrigatórios.");
+    return;
+  }
+
+  const originalWord = words.find(w => w.id === wordId);
+  if (originalWord && updatedData.word !== originalWord.word && isDuplicate(words, updatedData.word, originalWord.word)) {
+    showAlert(`A palavra "${updatedData.word}" já existe no seu dicionário.`, "Palavra duplicada");
+    return;
+  }
+
+  try {
+    const categoryName = updatedData.category;
+    // Garante que a categoria exista na coleção 'categories'
+    if (categoryName !== 'Sem Categoria' && !isDuplicate(categories, categoryName)) {
+      await addDoc(collection(db, "categories"), {
+        name: categoryName,
+        userId: currentUser.uid
+      });
     }
-    const originalWord = words.find(w => w.id === wordId);
-if (originalWord && updatedData.word !== originalWord.word && isDuplicate(words, updatedData.word, originalWord.word)) {
-  showAlert(`A palavra "${updatedData.word}" já existe no seu dicionário.`, "Palavra duplicada");
-  return;
-}
-  updateWord(wordId, updatedData);
-  document.getElementById('modal-edit-word').classList.add('hidden');
+
+    await updateWord(wordId, updatedData);
+    document.getElementById('modal-edit-word').classList.add('hidden');
+
+  } catch (error) {
+    console.error("Erro ao atualizar palavra: ", error);
+    showAlert("Ocorreu um erro ao salvar as alterações.");
+  }
 });
+
+// ▲▲▲ FIM DO BLOCO DE SUBSTITUIÇÃO ▲▲▲
+
+
 // Adicione esta função junto com showPage, renderLearnedWords, etc.
 function showAlert(message, title = "Atenção") {
     alertTitle.textContent = title;
@@ -604,70 +627,48 @@ btnCreateCategory.addEventListener('click', async () => {
     });
 
 
+// ▼▼▼ SUBSTITUA O LISTENER 'click' DO btnSaveCategory POR ESTE ▼▼▼
+
 btnSaveCategory.addEventListener('click', async () => {
   const newName = inputEditCategoryName.value.trim();
-  const oldName = currentCategoryToEdit; // Guarda o nome antigo antes de ser limpo
+  const oldName = currentCategoryToEdit;
 
-  // 1. Validação inicial
   if (!newName || !oldName || newName === oldName) {
     modalEditCategory.classList.add('hidden');
     return;
   }
-  
-  // 2. Verifica se a nova categoria já existe na lista local
+
   const newCategoryAlreadyExists = isDuplicate(categories, newName);
 
   try {
-    // 3. Atualiza todas as palavras que usavam a categoria antiga
-    //    (Busca no Firestore para garantir que todas sejam atualizadas)
-    const wordsToUpdateQuery = query(
-      collection(db, "palavras"),
-      where("userId", "==", currentUser.uid),
-      where("category", "==", oldName)
-    );
-    const wordsSnapshot = await getDocs(wordsToUpdateQuery);
-    
-    const updatePromises = [];
-    wordsSnapshot.forEach(docSnap => {
-      updatePromises.push(updateDoc(docSnap.ref, { category: newName }));
-    });
-    
-    // Espera todas as palavras serem atualizadas de uma só vez (mais eficiente)
+    // Atualiza todas as palavras que usavam a categoria antiga
+    const wordsQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid), where("category", "==", oldName));
+    const wordsSnapshot = await getDocs(wordsQuery);
+    const updatePromises = wordsSnapshot.docs.map(docSnap => updateDoc(docSnap.ref, { category: newName }));
     await Promise.all(updatePromises);
 
-    // 4. Encontra e deleta o documento da categoria ANTIGA da coleção 'categories'
-    const oldCategoryQuery = query(
-      collection(db, "categories"),
-      where("userId", "==", currentUser.uid),
-      where("name", "==", oldName)
-    );
+    // Encontra e deleta o documento da categoria ANTIGA
+    const oldCategoryQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid), where("name", "==", oldName));
     const oldCategorySnapshot = await getDocs(oldCategoryQuery);
-    
-    const deletePromises = [];
-    oldCategorySnapshot.forEach(docSnap => {
-      deletePromises.push(deleteDoc(docSnap.ref));
-    });
-    
+    const deletePromises = oldCategorySnapshot.docs.map(docSnap => deleteDoc(docSnap.ref));
     await Promise.all(deletePromises);
 
-    // 5. Se a nova categoria NÃO existia antes, cria um novo documento para ela
+    // Se a nova categoria NÃO existia, cria um novo documento para ela
     if (!newCategoryAlreadyExists) {
-      await addDoc(collection(db, "categories"), {
-        name: newName,
-        userId: currentUser.uid
-      });
+      await addDoc(collection(db, "categories"), { name: newName, userId: currentUser.uid });
     }
 
-    // 6. Feedback para o usuário e limpeza da UI
     showAlert(`Categoria "${oldName}" foi renomeada para "${newName}".`, "Sucesso!");
     modalEditCategory.classList.add('hidden');
     currentCategoryToEdit = null;
 
   } catch (error) {
     console.error("Erro ao renomear categoria:", error);
-    showAlert("Ocorreu um erro ao renomear a categoria. Tente novamente.", "Erro");
+    showAlert("Ocorreu um erro ao renomear a categoria.", "Erro");
   }
 });
+
+// ▲▲▲ FIM DO BLOCO DE SUBSTITUIÇÃO ▲▲▲
 
 
 
@@ -677,23 +678,45 @@ btnDeleteCategory.addEventListener('click', () => {
   wordIdToDelete = '__CATEGORY__' + currentCategoryToEdit;
 });
 
+// ▼▼▼ SUBSTITUA O LISTENER 'click' DO btnConfirmDelete POR ESTE ▼▼▼
+
 btnConfirmDelete.addEventListener('click', async () => {
   if (!wordIdToDelete) return;
 
-  if (wordIdToDelete.startsWith('__CATEGORY__')) {
-    const categoryName = wordIdToDelete.replace('__CATEGORY__', '');
-    const updates = words.filter(w => w.category === categoryName);
-    for (const word of updates) {
-      await updateWord(word.id, { category: 'Sem Categoria' });
+  try {
+    if (wordIdToDelete.startsWith('__CATEGORY__')) {
+      const categoryName = wordIdToDelete.replace('__CATEGORY__', '');
+      
+      // Move todas as palavras para "Sem Categoria"
+      const wordsQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid), where("category", "==", categoryName));
+      const wordsSnapshot = await getDocs(wordsQuery);
+      const updatePromises = wordsSnapshot.docs.map(docSnap => updateDoc(docSnap.ref, { category: 'Sem Categoria' }));
+      await Promise.all(updatePromises);
+
+      // Deleta a categoria da coleção 'categories'
+      const categoryQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid), where("name", "==", categoryName));
+      const categorySnapshot = await getDocs(categoryQuery);
+      const deletePromises = categorySnapshot.docs.map(docSnap => deleteDoc(docSnap.ref));
+      await Promise.all(deletePromises);
+      
+      showAlert(`Categoria "${categoryName}" deletada.`, "Sucesso");
+
+    } else {
+      // Lógica para deletar uma única palavra (continua a mesma)
+      await deleteWord(wordIdToDelete);
     }
-  } else {
-    await deleteWord(wordIdToDelete);
+  } catch(error) {
+    console.error("Erro ao deletar:", error);
+    showAlert("Ocorreu um erro durante a exclusão.");
   }
 
+  // Limpa e fecha os modais
   document.getElementById('modal-edit-word').classList.add('hidden');
   confirmModal.classList.add('hidden');
   wordIdToDelete = null;
 });
+
+// ▲▲▲ FIM DO BLOCO DE SUBSTITUIÇÃO ▲▲▲
 
 clearSearchButton?.addEventListener('click', () => {
   searchLearnedInput.value = "";
