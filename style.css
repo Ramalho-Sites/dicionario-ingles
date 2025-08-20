@@ -34,3 +34,8 @@
       width: 75%;
       transition-duration: .8s;
     }
+
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      filter: invert(0.8) brightness(1.2); /* Deixa o ícone claro e visível no fundo escuro */
+    }

@@ -69,6 +69,9 @@ const modalAlert = document.getElementById('modal-alert');
 const alertTitle = document.getElementById('alert-title');
 const alertMessage = document.getElementById('alert-message');
 const btnCloseAlert = document.getElementById('btn-close-alert');
+const dateFilterContainer = document.getElementById('date-filter-container');
+const dateFilterInput = document.getElementById('date-filter-input');
+const clearDateFilter = document.getElementById('clear-date-filter');
 
 let words = [];
 let categories = [];
@@ -78,6 +81,7 @@ let unsubscribeFromWords = null;
 let currentSort = "alphabetical";
 let wordIdToDelete = null;
 let currentCategoryToEdit = null;
+let selectedDateFilter = null;
 
 // ===============================================================
 // 3. LÓGICA DE AUTENTICAÇÃO
@@ -499,47 +503,62 @@ window.addEventListener('resize', updateSidebarState);
 navButtons.forEach(btn => { btn.addEventListener('click', () => showPage(btn.dataset.page)); });
 
 // --- Renderização e Modais ---
+// ▼▼▼ COLE ESTA NOVA FUNÇÃO NO LUGAR DA ANTIGA ▼▼▼
 function renderLearnedWords(searchTerm = "") {
   if (!learnedWordsContainer) return;
-  let processedWords = words.filter(word =>
-    word.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    word.meaning?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    word.context?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  // AONDE MUDAR: Dentro da função `renderLearnedWords`
+  
+  let processedWords = [...words]; // Cria uma cópia para não modificar o array original
 
-// A ordenação deve ser feita AQUI, antes do agrupamento.
-if (currentSort === "date") {
-  // Ordena do mais recente para o mais antigo.
-  processedWords.sort((a, b) => {
-    // Garante que palavras sem data sejam tratadas.
-    const dateA = a.createdAt?.seconds || 0;
-    const dateB = b.createdAt?.seconds || 0;
-    return dateB - dateA;
-  });
-} else {
-  // Ordenação alfabética (A-Z).
-  processedWords.sort((a, b) => a.word.localeCompare(b.word));
-}
+  // 1. FILTRAGEM POR DATA (se houver)
+  if (selectedDateFilter) {
+    const filterDate = new Date(selectedDateFilter + 'T00:00:00'); // Adiciona T00:00:00 para evitar problemas de fuso
+    processedWords = processedWords.filter(word => {
+      if (!word.createdAt || !word.createdAt.seconds) return false;
+      const wordDate = new Date(word.createdAt.seconds * 1000);
+      
+      // Compara ano, mês e dia para garantir que a data seja a mesma, ignorando a hora
+      return wordDate.getFullYear() === filterDate.getFullYear() &&
+             wordDate.getMonth() === filterDate.getMonth() &&
+             wordDate.getDate() === filterDate.getDate();
+    });
+  }
 
-// O agrupamento por categoria vem logo em seguida.
-const grouped = processedWords.reduce((acc, w) => {
-  const cat = w.category || 'Sem Categoria';
-  if (!acc[cat]) { acc[cat] = []; }
-  acc[cat].push(w);
-  return acc;
-}, {});
+  // 2. FILTRAGEM POR TERMO DE BUSCA (depois da data)
+  if (searchTerm) {
+      processedWords = processedWords.filter(word =>
+        word.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        word.meaning?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        word.context?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+  }
+
+  // 3. ORDENAÇÃO (com base no que não é filtro de data)
+  if (currentSort === "date") {
+    processedWords.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  } else {
+    processedWords.sort((a, b) => a.word.localeCompare(b.word));
+  }
+
+  // 4. AGRUPAMENTO E RENDERIZAÇÃO
+  const grouped = processedWords.reduce((acc, w) => {
+    const cat = w.category || 'Sem Categoria';
+    if (!acc[cat]) { acc[cat] = []; }
+    acc[cat].push(w);
+    return acc;
+  }, {});
+  
   let categoryOrder;
-if (currentSort === 'alphabetical') {
-  // Ordena as categorias alfabeticamente.
-  categoryOrder = Object.keys(grouped).sort();
-} else { 
-  categoryOrder = [...new Set(processedWords.map(w => w.category || 'Sem Categoria'))];
-}
+  if (currentSort === 'alphabetical') {
+    categoryOrder = Object.keys(grouped).sort();
+  } else { 
+    categoryOrder = [...new Set(processedWords.map(w => w.category || 'Sem Categoria'))];
+  }
+  
   if (processedWords.length === 0) {
-    learnedWordsContainer.innerHTML = `<p class="text-center text-gray-400">Nenhuma palavra encontrada.</p>`;
+    learnedWordsContainer.innerHTML = `<p class="text-center text-gray-400">Nenhuma palavra encontrada para os filtros aplicados.</p>`;
     return;
   }
+  
   learnedWordsContainer.innerHTML = categoryOrder.map(cat => {
     const wordsInCategory = grouped[cat];
     return `
@@ -564,6 +583,7 @@ if (currentSort === 'alphabetical') {
     `;
   }).join('');
 }
+// ▲▲▲ FIM DA NOVA FUNÇÃO ▲▲▲
 
 function openModalWordDetails(wordId) {
   const word = words.find(w => w.id === wordId);
@@ -779,10 +799,48 @@ clearSearchButton?.addEventListener('click', () => {
   searchLearnedInput.focus();
 });
 
+// ▼▼▼ COLE ESTE NOVO BLOCO NO LUGAR DO ANTIGO ▼▼▼
 sortLearnedSelect?.addEventListener('change', (e) => {
-  currentSort = e.target.value;
+  const selection = e.target.value;
+  
+  if (selection === 'by-date') {
+    // Mostra o calendário e define a data de hoje como padrão se estiver vazio
+    dateFilterContainer.classList.remove('hidden');
+    if (!dateFilterInput.value) {
+        const today = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+        dateFilterInput.value = today;
+        selectedDateFilter = today;
+    }
+  } else {
+    // Esconde o calendário e limpa o filtro de data
+    dateFilterContainer.classList.add('hidden');
+    selectedDateFilter = null;
+    dateFilterInput.value = '';
+    currentSort = selection;
+  }
+  
   renderLearnedWords(searchLearnedInput.value);
 });
+
+// Adiciona o listener para quando o usuário escolhe uma data no calendário
+dateFilterInput?.addEventListener('input', (e) => {
+    selectedDateFilter = e.target.value;
+    renderLearnedWords(searchLearnedInput.value);
+});
+
+// Adiciona o listener para o botão de limpar o filtro de data
+clearDateFilter?.addEventListener('click', () => {
+    dateFilterContainer.classList.add('hidden');
+    selectedDateFilter = null;
+    dateFilterInput.value = '';
+    
+    // Volta a ordenação para o padrão (A-Z)
+    sortLearnedSelect.value = 'alphabetical';
+    currentSort = 'alphabetical';
+
+    renderLearnedWords(searchLearnedInput.value);
+});
+// ▲▲▲ FIM DO NOVO BLOCO ▲▲▲
 
 searchLearnedInput?.addEventListener('input', (e) => {
   renderLearnedWords(e.target.value);

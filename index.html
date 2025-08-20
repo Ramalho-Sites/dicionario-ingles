@@ -283,7 +283,6 @@
             Palavras Aprendidas
    <!-- 🔄 Seletor de ordenação + campo de pesquisa -->
 <div class="flex flex-wrap items-center justify-between gap-4 mt-0 mb-3">
-  <!-- Campo de busca menor e mais compacto -->
   <div class="relative w-full max-w-xs">
     <input
       type="text"
@@ -303,7 +302,6 @@
     </button>
   </div>
 
-  <!-- Seletor de ordenação compacto -->
   <div class="flex items-center gap-2 text-sm">
     <label for="sort-learned" class="text-gray-400">Ordenar:</label>
     <select
@@ -312,8 +310,21 @@
     >
       <option value="alphabetical">A-Z</option>
       <option value="date">Mais recente</option>
+      <option value="by-date">Por data específica</option>
     </select>
   </div>
+</div>
+
+<div id="date-filter-container" class="hidden flex items-center gap-3 text-sm mb-4">
+    <label for="date-filter-input" class="text-gray-400">Selecione o dia:</label>
+    <input 
+      type="date" 
+      id="date-filter-input"
+      class="bg-gray-700 text-gray-200 border border-gray-600 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-custom-blue"
+    >
+    <button id="clear-date-filter" class="text-xs text-gray-400 hover:text-white" title="Limpar filtro de data">
+      <i class="fas fa-times"></i> Limpar
+    </button>
 </div>
           </h2>
           <div id="learned-words-container" class="space-y-10">
