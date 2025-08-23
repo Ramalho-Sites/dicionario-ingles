@@ -640,7 +640,7 @@ function openModalWordDetails(wordId) {
   btnSpeak.addEventListener('click', () => {
   const utterance = new SpeechSynthesisUtterance(word.word);
     utterance.lang = 'en-US';
-    utterance.rate = 0.7;
+    utterance.rate = 0.6;
     window.speechSynthesis.speak(utterance);
   });
 
@@ -710,7 +710,7 @@ learnedWordsContainer.addEventListener('click', (e) => {
     const wordToSpeak = actionTarget.dataset.wordText;
     const utterance = new SpeechSynthesisUtterance(wordToSpeak);
     utterance.lang = 'en-US';
-    utterance.rate = 0.7;
+    utterance.rate = 0.6;
     window.speechSynthesis.speak(utterance);
   } 
   
