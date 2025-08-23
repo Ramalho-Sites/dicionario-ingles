@@ -658,13 +658,38 @@ function renderLearnedWords(searchTerm = "") {
 function openModalWordDetails(wordId) {
   const word = words.find(w => w.id === wordId);
   if (!word) return;
-  modalWordTitle.textContent = word.word;
+
+  modalWordTitle.innerHTML = `
+    <span class="mr-3">${word.word}</span>
+    <button id="btn-speak-word" title="Ouvir pronúncia" class="text-gray-400 hover:text-white focus:outline-none text-xl">
+        <i class="fas fa-volume-up"></i>
+    </button>
+  `;
+
+  // O conteúdo do modal continua o mesmo
   modalWordContent.innerHTML = `
     ${word.image ? `<img src="${word.image}" alt="Imagem de ${word.word}" class="w-full max-h-60 object-cover rounded-md mb-4">` : ''}
     <p><strong class="font-semibold text-custom-blue">Significado:</strong><br>${word.meaning.replace(/\n/g, '<br>')}</p>
     ${word.context ? `<p class="mt-2"><strong class="font-semibold text-custom-blue">Contexto/Exemplo:</strong><br>${word.context.replace(/\n/g, '<br>')}</p>` : ''}
     <p class="mt-2 text-sm text-gray-400"><strong>Categoria:</strong> ${word.category || 'Nenhuma'}</p>
   `;
+
+  // --- MODIFICAÇÃO 2: Adiciona a lógica para "falar" a palavra ---
+  // Capturamos o botão que acabamos de criar.
+  const btnSpeak = document.getElementById('btn-speak-word');
+  
+  // Adicionamos o evento de clique a ele.
+  btnSpeak.addEventListener('click', () => {
+    // Cria uma instância de "fala" com a palavra desejada.
+    const utterance = new SpeechSynthesisUtterance(word.word);
+    
+    // Define o idioma para inglês americano (você pode ajustar para 'en-GB' para britânico).
+    utterance.lang = 'en-US';
+    
+    // Pede à API do navegador para falar o texto.
+    window.speechSynthesis.speak(utterance);
+  });
+
   modalWordDetails.classList.remove('hidden');
 }
 
