@@ -713,8 +713,10 @@ document.getElementById('btn-cancel-edit').addEventListener('click', () => {
 btnCloseModal.addEventListener('click', () => {
   modalWordDetails.classList.add('hidden');
 });
+document.getElementById('btn-close-word-added-modal').addEventListener('click', () => {
+    document.getElementById('modal-word-added').classList.add('hidden');
+});
 
-// CÓDIGO NOVO (PARA COLAR NO LUGAR DO ANTIGO)
 learnedWordsContainer.addEventListener('click', (e) => {
   const target = e.target;
   const action = target.closest('[data-action]')?.dataset.action;
