@@ -864,27 +864,22 @@ clearSearchButton?.addEventListener('click', () => {
 });
 
 sortLearnedSelect?.addEventListener('change', (e) => {
-  paginationState = {}; 
+  paginationState = {}; // Reinicia a paginação
   const selection = e.target.value;
 
-  if (selection === 'alphabetical' || selection === 'date') {
-      currentSort = selection;
-
-      if (selectedDateFilter) {
-        selectedDateFilter = null;
-        dateFilterInput.value = '';
-        dateFilterContainer.classList.add('hidden');
-      }
-  }
+  dateFilterContainer.classList.add('hidden');
+  selectedDateFilter = null;
 
   if (selection === 'by-date') {
-      dateFilterContainer.classList.remove('hidden');
- 
-      if (!dateFilterInput.value) {
-          const today = new Date().toISOString().split('T')[0];
-          dateFilterInput.value = today;
-          selectedDateFilter = today;
-      }
+
+    dateFilterContainer.classList.remove('hidden');
+    if (!dateFilterInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateFilterInput.value = today;
+    }
+    selectedDateFilter = dateFilterInput.value;
+  } else {
+    currentSort = selection;
   }
   
   renderLearnedWords(searchLearnedInput.value);
@@ -896,13 +891,11 @@ dateFilterInput?.addEventListener('input', (e) => {
     renderLearnedWords(searchLearnedInput.value);
 });
 
-
 clearDateFilter?.addEventListener('click', () => {
     dateFilterContainer.classList.add('hidden');
     selectedDateFilter = null;
     dateFilterInput.value = '';
     
-
     sortLearnedSelect.value = 'alphabetical';
     currentSort = 'alphabetical';
 
