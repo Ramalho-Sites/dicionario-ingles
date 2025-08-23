@@ -1,5 +1,5 @@
 // ===============================================================
-// 1. CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE
+// 1. CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE BACKCUP
 // ===============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendEmailVerification, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
