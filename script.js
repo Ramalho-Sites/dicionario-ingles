@@ -639,9 +639,8 @@ function openModalWordDetails(wordId) {
   const btnSpeak = document.getElementById('btn-speak-word');
   btnSpeak.addEventListener('click', () => {
   const utterance = new SpeechSynthesisUtterance(word.word);
-
     utterance.lang = 'en-US';
-    
+    utterance.rate = 0.7;
     window.speechSynthesis.speak(utterance);
   });
 
