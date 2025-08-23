@@ -72,6 +72,8 @@ const btnCloseAlert = document.getElementById('btn-close-alert');
 const dateFilterContainer = document.getElementById('date-filter-container');
 const dateFilterInput = document.getElementById('date-filter-input');
 const clearDateFilter = document.getElementById('clear-date-filter');
+const wordsPerPage = 20;
+let paginationState = {};
 
 let words = [];
 let categories = [];
@@ -528,7 +530,6 @@ window.addEventListener('resize', updateSidebarState);
 navButtons.forEach(btn => { btn.addEventListener('click', () => showPage(btn.dataset.page)); });
 
 // --- Renderização e Modais ---
-// ▼▼▼ COLE ESTA NOVA FUNÇÃO NO LUGAR DA ANTIGA ▼▼▼
 function renderLearnedWords(searchTerm = "") {
   if (!learnedWordsContainer) return;
   
@@ -572,6 +573,13 @@ function renderLearnedWords(searchTerm = "") {
     return acc;
   }, {});
   
+  // Garante que o estado da paginação seja resetado a cada nova renderização com filtros
+  Object.keys(grouped).forEach(cat => {
+      if (paginationState[cat] === undefined) {
+          paginationState[cat] = 1; // Começa na página 1
+      }
+  });
+  
   let categoryOrder;
   if (currentSort === 'alphabetical') {
     categoryOrder = Object.keys(grouped).sort();
@@ -586,6 +594,43 @@ function renderLearnedWords(searchTerm = "") {
   
   learnedWordsContainer.innerHTML = categoryOrder.map(cat => {
     const wordsInCategory = grouped[cat];
+    const totalWords = wordsInCategory.length;
+    
+    // Lógica de Paginação
+    const currentPage = paginationState[cat] || 1;
+    const totalPages = Math.ceil(totalWords / wordsPerPage);
+    const startIndex = (currentPage - 1) * wordsPerPage;
+    const endIndex = startIndex + wordsPerPage;
+    const paginatedWords = wordsInCategory.slice(startIndex, endIndex);
+
+    // Gera os botões de paginação
+    let paginationControls = '';
+    if (totalPages > 1) {
+      paginationControls = `
+        <div class="flex justify-between items-center mt-3 text-sm">
+          <button 
+            data-action="paginate" 
+            data-category="${cat}" 
+            data-direction="prev" 
+            ${currentPage === 1 ? 'disabled' : ''}
+            class="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Anterior
+          </button>
+          <span class="text-gray-400">Página ${currentPage} de ${totalPages}</span>
+          <button 
+            data-action="paginate" 
+            data-category="${cat}" 
+            data-direction="next" 
+            ${currentPage === totalPages ? 'disabled' : ''}
+            class="px-3 py-1 bg-gray-700 rounded hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Próximo
+          </button>
+        </div>
+      `;
+    }
+
     return `
       <div class="space-y-3">
         <h3 class="text-xl font-extrabold text-custom-blue flex items-center gap-2">
@@ -595,7 +640,7 @@ function renderLearnedWords(searchTerm = "") {
           </button>
         </h3>
         <ul class="space-y-1">
-          ${wordsInCategory.map(w => `
+          ${paginatedWords.map(w => `
             <li data-word-id="${w.id}" data-action="details" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center cursor-pointer">
               <span class="flex-1">${w.word}</span>
               <button data-word-id="${w.id}" data-action="edit" class="ml-4 p-2 text-gray-400 hover:text-white">
@@ -604,11 +649,11 @@ function renderLearnedWords(searchTerm = "") {
             </li>
           `).join('')}
         </ul>
+        ${paginationControls}
       </div>
     `;
   }).join('');
 }
-// ▲▲▲ FIM DA NOVA FUNÇÃO ▲▲▲
 
 function openModalWordDetails(wordId) {
   const word = words.find(w => w.id === wordId);
@@ -669,9 +714,13 @@ btnCloseModal.addEventListener('click', () => {
   modalWordDetails.classList.add('hidden');
 });
 
+// CÓDIGO NOVO (PARA COLAR NO LUGAR DO ANTIGO)
 learnedWordsContainer.addEventListener('click', (e) => {
   const target = e.target;
   const action = target.closest('[data-action]')?.dataset.action;
+
+  if (!action) return;
+
   const wordId = target.closest('[data-word-id]')?.dataset.wordId;
   const category = target.closest('[data-category]')?.dataset.category;
 
@@ -681,6 +730,19 @@ learnedWordsContainer.addEventListener('click', (e) => {
     currentCategoryToEdit = category;
     inputEditCategoryName.value = currentCategoryToEdit;
     modalEditCategory.classList.remove('hidden');
+  } 
+  // A parte adicionada é esta aqui:
+  else if (action === 'paginate') {
+    const direction = target.dataset.direction;
+    const cat = target.dataset.category;
+
+    if (direction === 'next') {
+      paginationState[cat]++;
+    } else if (direction === 'prev') {
+      paginationState[cat]--;
+    }
+
+    renderLearnedWords(searchLearnedInput.value);
   }
 });
 
@@ -826,6 +888,7 @@ clearSearchButton?.addEventListener('click', () => {
 
 // ▼▼▼ COLE ESTE NOVO BLOCO NO LUGAR DO ANTIGO ▼▼▼
 sortLearnedSelect?.addEventListener('change', (e) => {
+  paginationState = {};
   const selection = e.target.value;
   
   if (selection === 'by-date') {
