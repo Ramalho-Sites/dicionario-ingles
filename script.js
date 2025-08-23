@@ -710,6 +710,7 @@ learnedWordsContainer.addEventListener('click', (e) => {
     const wordToSpeak = actionTarget.dataset.wordText;
     const utterance = new SpeechSynthesisUtterance(wordToSpeak);
     utterance.lang = 'en-US';
+    utterance.rate = 0.7;
     window.speechSynthesis.speak(utterance);
   } 
   
