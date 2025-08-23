@@ -2,7 +2,7 @@
 // 1. CONFIGURAÇÃO E INICIALIZAÇÃO DO FIREBASE
 // ===============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendEmailVerification } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, sendEmailVerification, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, where, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
 import { firebaseConfig } from './firebase-config.js';
@@ -177,10 +177,6 @@ document.getElementById('back-to-login-button').addEventListener('click', () => 
   signOut(auth);
 });
 
-// ▲▲▲ FIM DO BLOCO ▲▲▲
-
-// ▼▼▼ SUBSTITUA O LISTENER 'click' DO registerButton POR ESTE ▼▼▼
-
 registerButton.addEventListener('click', async (e) => {
   e.preventDefault();
   const email = document.getElementById('email').value;
@@ -209,9 +205,38 @@ registerButton.addEventListener('click', async (e) => {
   }
 });
 
-// ▲▲▲ FIM DO BLOCO ▲▲▲
-
 logoutButton.addEventListener('click', () => { signOut(auth); });
+
+// ▼▼▼ ADICIONE ESTE BLOCO NO SEU SCRIPT ▼▼▼
+document.getElementById('forgot-password-button').addEventListener('click', async () => {
+  const emailInput = document.getElementById('email');
+  const email = emailInput.value;
+  const feedback = document.getElementById('auth-feedback');
+
+  if (!email) {
+    feedback.textContent = "Digite seu e-mail para redefinir a senha.";
+    feedback.className = 'text-center mt-4 text-yellow-400';
+    emailInput.focus(); // Foca no campo de e-mail
+    return;
+  }
+
+  feedback.textContent = "Enviando link...";
+  feedback.className = 'text-center mt-4 text-gray-400';
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    feedback.textContent = "✅ Link enviado! Verifique sua caixa de e-mail (e spam).";
+    feedback.className = 'text-center mt-4 text-green-500';
+  } catch (error) {
+    if (error.code === 'auth/user-not-found') {
+      feedback.textContent = "❌ E-mail não encontrado.";
+    } else {
+      feedback.textContent = "Ocorreu um erro. Tente novamente.";
+    }
+    feedback.className = 'text-center mt-4 text-red-500';
+  }
+});
+// ▲▲▲ FIM DO BLOCO ▲▲▲
 
 // ===============================================================
 // 4. LÓGICA DA BASE DE DADOS (FIRESTORE)
