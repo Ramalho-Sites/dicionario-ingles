@@ -88,18 +88,15 @@ let selectedDateFilter = null;
 // ===============================================================
 // 3. LÓGICA DE AUTENTICAÇÃO
 // ===============================================================
-// ▼▼▼ SUBSTITUA A FUNÇÃO onAuthStateChanged INTEIRA POR ESTA ▼▼▼
 
 onAuthStateChanged(auth, (user) => {
-  // Pega a nova tela de verificação
   const verifyEmailContainer = document.getElementById('verify-email-container');
 
   if (user) {
     if (user.emailVerified) {
-      // --- CASO 1: Usuário logado E VERIFICADO ---
       currentUser = user;
       authContainer.classList.add('hidden');
-      verifyEmailContainer.classList.add('hidden'); // Esconde a tela de verificação
+      verifyEmailContainer.classList.add('hidden');
       appContainer.classList.remove('hidden');
       
       userEmailDisplay.textContent = currentUser.email;
@@ -107,16 +104,14 @@ onAuthStateChanged(auth, (user) => {
       corrigirPalavrasAntigasSemData();
 
     } else {
-      // --- CASO 2: Usuário logado, MAS NÃO VERIFICADO ---
       currentUser = null;
       authContainer.classList.add('hidden');
       appContainer.classList.add('hidden');
-      verifyEmailContainer.classList.remove('hidden'); // Mostra a tela de verificação
+      verifyEmailContainer.classList.remove('hidden');
       
       document.getElementById('verification-email-display').textContent = user.email;
     }
   } else {
-    // --- CASO 3: Ninguém logado ---
     currentUser = null;
     if (unsubscribeFromWords) unsubscribeFromWords();
     
@@ -128,7 +123,6 @@ onAuthStateChanged(auth, (user) => {
     renderLearnedWords();
   }
 });
-// ▼▼▼ COLE ESTE BLOCO DE CÓDIGO AQUI ▼▼▼
 
 document.getElementById("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -139,7 +133,6 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
 
   try {
     await signInWithEmailAndPassword(auth, email, password);
-    // A função onAuthStateChanged cuidará de mostrar a tela certa (app ou verificação)
   } catch (error) {
     if (error.code === 'auth/invalid-login-credentials' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
       authFeedback.textContent = "❌ Email ou senha inválidos.";
@@ -150,13 +143,6 @@ document.getElementById("login-form").addEventListener("submit", async (e) => {
   }
 });
 
-// ▲▲▲ FIM DO BLOCO ▲▲▲
-
-// ▲▲▲ FIM DO BLOCO ▲▲▲
-
-// ▼▼▼ ADICIONE ESTE NOVO BLOCO DE CÓDIGO ▼▼▼
-
-// --- Listeners para a tela de Verificação de E-mail ---
 document.getElementById('resend-verification-button').addEventListener('click', async () => {
   const feedbackEl = document.getElementById('verify-feedback');
   feedbackEl.textContent = 'Enviando...';
@@ -189,7 +175,7 @@ registerButton.addEventListener('click', async (e) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     await sendEmailVerification(userCredential.user);
     
-    // Desloga o usuário para forçá-lo a verificar o e-mail antes de entrar
+
     await signOut(auth);
 
     authFeedback.textContent = "✅ Conta criada! Verifique seu e-mail para ativá-la.";
@@ -209,7 +195,7 @@ registerButton.addEventListener('click', async (e) => {
 
 logoutButton.addEventListener('click', () => { signOut(auth); });
 
-// ▼▼▼ ADICIONE ESTE BLOCO NO SEU SCRIPT ▼▼▼
+
 document.getElementById('forgot-password-button').addEventListener('click', async () => {
   const emailInput = document.getElementById('email');
   const email = emailInput.value;
@@ -218,7 +204,7 @@ document.getElementById('forgot-password-button').addEventListener('click', asyn
   if (!email) {
     feedback.textContent = "Digite seu e-mail para redefinir a senha.";
     feedback.className = 'text-center mt-4 text-yellow-400';
-    emailInput.focus(); // Foca no campo de e-mail
+    emailInput.focus();
     return;
   }
 
@@ -238,28 +224,23 @@ document.getElementById('forgot-password-button').addEventListener('click', asyn
     feedback.className = 'text-center mt-4 text-red-500';
   }
 });
-// ▲▲▲ FIM DO BLOCO ▲▲▲
 
 // ===============================================================
 // 4. LÓGICA DA BASE DE DADOS (FIRESTORE)
 // ===============================================================
-// APAGUE sua função loadData atual e COLE esta no lugar
 function loadData() {
     if (!currentUser) return;
 
-    // Cancela "ouvintes" antigos para não acumular
+
     if (unsubscribeFromWords) unsubscribeFromWords();
     let unsubscribeFromCategories;
     if (unsubscribeFromCategories) unsubscribeFromCategories();
 
-    // Ouve em tempo real as PALAVRAS
     const wordsQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid));
     unsubscribeFromWords = onSnapshot(wordsQuery, (snapshot) => {
         words = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderLearnedWords(searchLearnedInput.value);
     });
-
-    // Ouve em tempo real as CATEGORIAS
     const categoriesQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid));
     unsubscribeFromCategories = onSnapshot(categoriesQuery, (snapshot) => {
         categories = snapshot.docs.map(doc => doc.data().name).sort();
@@ -341,12 +322,10 @@ function renderCategorySuggestions(searchTerm) {
   categoryListbox.classList.remove('hidden');
 }
 
-// 1. Mostra sugestões ao digitar
 inputCategorySearch.addEventListener('input', () => {
   renderCategorySuggestions(inputCategorySearch.value);
 });
 
-// 2. Preenche o campo ao clicar na sugestão
 categoryListbox.addEventListener('click', (e) => {
   if (e.target.tagName === 'LI') {
     inputCategorySearch.value = e.target.textContent.trim();
@@ -354,13 +333,11 @@ categoryListbox.addEventListener('click', (e) => {
   }
 });
 
-// 3. (Bônus) Esconde a lista ao clicar fora dela
 window.addEventListener('click', (e) => {
   if (!inputCategorySearch.contains(e.target) && !categoryListbox.contains(e.target)) {
     categoryListbox.classList.add('hidden');
   }
 });
-// ▼▼▼ SUBSTITUA O LISTENER 'submit' DO formAddWord POR ESTE ▼▼▼
 
 formAddWord.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -387,7 +364,6 @@ formAddWord.addEventListener('submit', async (e) => {
 
   try {
     const categoryName = newWord.category;
-    // Garante que a categoria exista na coleção 'categories'
     if (categoryName !== 'Sem Categoria' && !isDuplicate(categories, categoryName)) {
       await addDoc(collection(db, "categories"), {
         name: categoryName,
@@ -408,8 +384,6 @@ formAddWord.addEventListener('submit', async (e) => {
     showAlert("Ocorreu um erro ao salvar a palavra. Verifique sua conexão e tente novamente.");
   }
 });
-
-// ▼▼▼ SUBSTITUA O LISTENER 'submit' DO 'form-edit-word' POR ESTE ▼▼▼
 
 document.getElementById('form-edit-word').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -436,7 +410,6 @@ document.getElementById('form-edit-word').addEventListener('submit', async (e) =
 
   try {
     const categoryName = updatedData.category;
-    // Garante que a categoria exista na coleção 'categories'
     if (categoryName !== 'Sem Categoria' && !isDuplicate(categories, categoryName)) {
       await addDoc(collection(db, "categories"), {
         name: categoryName,
@@ -453,10 +426,6 @@ document.getElementById('form-edit-word').addEventListener('submit', async (e) =
   }
 });
 
-// ▲▲▲ FIM DO BLOCO DE SUBSTITUIÇÃO ▲▲▲
-
-
-// Adicione esta função junto com showPage, renderLearnedWords, etc.
 function showAlert(message, title = "Atenção") {
     alertTitle.textContent = title;
     alertMessage.textContent = message;
@@ -468,7 +437,6 @@ function showForm() { formAddWord.classList.remove('hidden'); btnShowForm.classL
 btnShowForm.addEventListener('click', showForm);
 btnDiscard.addEventListener('click', hideForm);
 
-// --- Sidebar e Navegação ---
 function updateSidebarState() {
     const isDesktop = window.innerWidth >= 768;
     mainContent.classList.remove('ml-20', 'ml-64');
@@ -514,7 +482,6 @@ function showPage(page) {
     btn.classList.toggle('text-custom-blue', !isSelected);
   });
 
-  // 🧼 Fecha o modal de categoria ao trocar de tela
   modalCategory.classList.add('hidden');
 
   if (window.innerWidth < 768) {
@@ -529,27 +496,23 @@ overlay.addEventListener('click', toggleSidebar);
 window.addEventListener('resize', updateSidebarState);
 navButtons.forEach(btn => { btn.addEventListener('click', () => showPage(btn.dataset.page)); });
 
-// --- Renderização e Modais ---
 function renderLearnedWords(searchTerm = "") {
   if (!learnedWordsContainer) return;
   
-  let processedWords = [...words]; // Cria uma cópia para não modificar o array original
+  let processedWords = [...words]; 
 
-  // 1. FILTRAGEM POR DATA (se houver)
   if (selectedDateFilter) {
-    const filterDate = new Date(selectedDateFilter + 'T00:00:00'); // Adiciona T00:00:00 para evitar problemas de fuso
+    const filterDate = new Date(selectedDateFilter + 'T00:00:00');
     processedWords = processedWords.filter(word => {
       if (!word.createdAt || !word.createdAt.seconds) return false;
       const wordDate = new Date(word.createdAt.seconds * 1000);
       
-      // Compara ano, mês e dia para garantir que a data seja a mesma, ignorando a hora
       return wordDate.getFullYear() === filterDate.getFullYear() &&
              wordDate.getMonth() === filterDate.getMonth() &&
              wordDate.getDate() === filterDate.getDate();
     });
   }
 
-  // 2. FILTRAGEM POR TERMO DE BUSCA (depois da data)
   if (searchTerm) {
       processedWords = processedWords.filter(word =>
         word.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -558,14 +521,13 @@ function renderLearnedWords(searchTerm = "") {
       );
   }
 
-  // 3. ORDENAÇÃO (com base no que não é filtro de data)
   if (currentSort === "date") {
     processedWords.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
   } else {
     processedWords.sort((a, b) => a.word.localeCompare(b.word));
   }
 
-  // 4. AGRUPAMENTO E RENDERIZAÇÃO
+
   const grouped = processedWords.reduce((acc, w) => {
     const cat = w.category || 'Sem Categoria';
     if (!acc[cat]) { acc[cat] = []; }
@@ -573,10 +535,9 @@ function renderLearnedWords(searchTerm = "") {
     return acc;
   }, {});
   
-  // Garante que o estado da paginação seja resetado a cada nova renderização com filtros
   Object.keys(grouped).forEach(cat => {
       if (paginationState[cat] === undefined) {
-          paginationState[cat] = 1; // Começa na página 1
+          paginationState[cat] = 1; 
       }
   });
   
@@ -596,14 +557,12 @@ function renderLearnedWords(searchTerm = "") {
     const wordsInCategory = grouped[cat];
     const totalWords = wordsInCategory.length;
     
-    // Lógica de Paginação
     const currentPage = paginationState[cat] || 1;
     const totalPages = Math.ceil(totalWords / wordsPerPage);
     const startIndex = (currentPage - 1) * wordsPerPage;
     const endIndex = startIndex + wordsPerPage;
     const paginatedWords = wordsInCategory.slice(startIndex, endIndex);
 
-    // Gera os botões de paginação
     let paginationControls = '';
     if (totalPages > 1) {
       paginationControls = `
@@ -630,11 +589,6 @@ function renderLearnedWords(searchTerm = "") {
         </div>
       `;
     }
-
-    // Arquivo: script.js (dentro da função renderLearnedWords)
-
-// ...
-
     return `
       <div class="space-y-3">
         <h3 class="text-xl font-extrabold text-custom-blue flex items-center gap-2">
@@ -675,7 +629,6 @@ function openModalWordDetails(wordId) {
     </button>
   `;
 
-  // O conteúdo do modal continua o mesmo
   modalWordContent.innerHTML = `
     ${word.image ? `<img src="${word.image}" alt="Imagem de ${word.word}" class="w-full max-h-60 object-cover rounded-md mb-4">` : ''}
     <p><strong class="font-semibold text-custom-blue">Significado:</strong><br>${word.meaning.replace(/\n/g, '<br>')}</p>
@@ -683,19 +636,12 @@ function openModalWordDetails(wordId) {
     <p class="mt-2 text-sm text-gray-400"><strong>Categoria:</strong> ${word.category || 'Nenhuma'}</p>
   `;
 
-  // --- MODIFICAÇÃO 2: Adiciona a lógica para "falar" a palavra ---
-  // Capturamos o botão que acabamos de criar.
   const btnSpeak = document.getElementById('btn-speak-word');
-  
-  // Adicionamos o evento de clique a ele.
   btnSpeak.addEventListener('click', () => {
-    // Cria uma instância de "fala" com a palavra desejada.
-    const utterance = new SpeechSynthesisUtterance(word.word);
-    
-    // Define o idioma para inglês americano (você pode ajustar para 'en-GB' para britânico).
+  const utterance = new SpeechSynthesisUtterance(word.word);
+
     utterance.lang = 'en-US';
     
-    // Pede à API do navegador para falar o texto.
     window.speechSynthesis.speak(utterance);
   });
 
@@ -715,7 +661,6 @@ function openEditModal(wordId) {
   modal.classList.remove('hidden');
 }
 
-// --- Listeners de Eventos (Declarados uma única vez) ---
 togglePassword.addEventListener('click', () => {
   const isPassword = passwordInput.type === 'password';
   passwordInput.type = isPassword ? 'text' : 'password';
@@ -751,7 +696,6 @@ document.getElementById('btn-close-word-added-modal').addEventListener('click', 
     document.getElementById('modal-word-added').classList.add('hidden');
 });
 
-// Arquivo: script.js
 
 learnedWordsContainer.addEventListener('click', (e) => {
   const target = e.target;
@@ -763,14 +707,12 @@ learnedWordsContainer.addEventListener('click', (e) => {
   const wordId = target.closest('[data-word-id]')?.dataset.wordId;
   const category = target.closest('[data-category]')?.dataset.category;
 
-  // --- NOVA LÓGICA PARA A PRONÚNCIA ---
   if (action === 'speak') {
     const wordToSpeak = actionTarget.dataset.wordText;
     const utterance = new SpeechSynthesisUtterance(wordToSpeak);
     utterance.lang = 'en-US';
     window.speechSynthesis.speak(utterance);
   } 
-  // --- FIM DA NOVA LÓGICA ---
   
   else if (action === 'details') { 
     openModalWordDetails(wordId); 
@@ -802,7 +744,7 @@ btnCancelEditCategory.addEventListener('click', () => {
   currentCategoryToEdit = null;
 });
 
-// SUBSTITUA O LISTENER DO BOTÃO CRIAR CATEGORIA POR ESTE
+
 btnCreateCategory.addEventListener('click', async () => {
   const newCatName = inputCategorySearch.value.trim();
   if (!newCatName) {
@@ -810,13 +752,10 @@ btnCreateCategory.addEventListener('click', async () => {
     return;
   }
   
-  // VERIFICAÇÃO DE DUPLICIDADE
-  // -------------------------------------------------------------
   if (isDuplicate(categories, newCatName)) {
     showAlert(`A categoria "${newCatName}" já existe.`, "Nome duplicado");
     return;
   }
-  // -------------------------------------------------------------
 
   try {
     await addDoc(collection(db, "categories"), {
@@ -839,9 +778,6 @@ btnCreateCategory.addEventListener('click', async () => {
       modalCategory.classList.add('hidden');
     });
 
-
-// ▼▼▼ SUBSTITUA O LISTENER 'click' DO btnSaveCategory POR ESTE ▼▼▼
-
 btnSaveCategory.addEventListener('click', async () => {
   const newName = inputEditCategoryName.value.trim();
   const oldName = currentCategoryToEdit;
@@ -854,19 +790,19 @@ btnSaveCategory.addEventListener('click', async () => {
   const newCategoryAlreadyExists = isDuplicate(categories, newName);
 
   try {
-    // Atualiza todas as palavras que usavam a categoria antiga
+
     const wordsQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid), where("category", "==", oldName));
     const wordsSnapshot = await getDocs(wordsQuery);
     const updatePromises = wordsSnapshot.docs.map(docSnap => updateDoc(docSnap.ref, { category: newName }));
     await Promise.all(updatePromises);
 
-    // Encontra e deleta o documento da categoria ANTIGA
+
     const oldCategoryQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid), where("name", "==", oldName));
     const oldCategorySnapshot = await getDocs(oldCategoryQuery);
     const deletePromises = oldCategorySnapshot.docs.map(docSnap => deleteDoc(docSnap.ref));
     await Promise.all(deletePromises);
 
-    // Se a nova categoria NÃO existia, cria um novo documento para ela
+
     if (!newCategoryAlreadyExists) {
       await addDoc(collection(db, "categories"), { name: newName, userId: currentUser.uid });
     }
@@ -881,17 +817,12 @@ btnSaveCategory.addEventListener('click', async () => {
   }
 });
 
-// ▲▲▲ FIM DO BLOCO DE SUBSTITUIÇÃO ▲▲▲
-
-
-
 btnDeleteCategory.addEventListener('click', () => {
   modalEditCategory.classList.add('hidden');
   confirmModal.classList.remove('hidden');
   wordIdToDelete = '__CATEGORY__' + currentCategoryToEdit;
 });
 
-// ▼▼▼ SUBSTITUA O LISTENER 'click' DO btnConfirmDelete POR ESTE ▼▼▼
 
 btnConfirmDelete.addEventListener('click', async () => {
   if (!wordIdToDelete) return;
@@ -900,13 +831,11 @@ btnConfirmDelete.addEventListener('click', async () => {
     if (wordIdToDelete.startsWith('__CATEGORY__')) {
       const categoryName = wordIdToDelete.replace('__CATEGORY__', '');
       
-      // Move todas as palavras para "Sem Categoria"
       const wordsQuery = query(collection(db, "palavras"), where("userId", "==", currentUser.uid), where("category", "==", categoryName));
       const wordsSnapshot = await getDocs(wordsQuery);
       const updatePromises = wordsSnapshot.docs.map(docSnap => updateDoc(docSnap.ref, { category: 'Sem Categoria' }));
       await Promise.all(updatePromises);
 
-      // Deleta a categoria da coleção 'categories'
       const categoryQuery = query(collection(db, "categories"), where("userId", "==", currentUser.uid), where("name", "==", categoryName));
       const categorySnapshot = await getDocs(categoryQuery);
       const deletePromises = categorySnapshot.docs.map(docSnap => deleteDoc(docSnap.ref));
@@ -915,7 +844,6 @@ btnConfirmDelete.addEventListener('click', async () => {
       showAlert(`Categoria "${categoryName}" deletada.`, "Sucesso");
 
     } else {
-      // Lógica para deletar uma única palavra (continua a mesma)
       await deleteWord(wordIdToDelete);
     }
   } catch(error) {
@@ -923,13 +851,11 @@ btnConfirmDelete.addEventListener('click', async () => {
     showAlert("Ocorreu um erro durante a exclusão.");
   }
 
-  // Limpa e fecha os modais
   document.getElementById('modal-edit-word').classList.add('hidden');
   confirmModal.classList.add('hidden');
   wordIdToDelete = null;
 });
 
-// ▲▲▲ FIM DO BLOCO DE SUBSTITUIÇÃO ▲▲▲
 
 clearSearchButton?.addEventListener('click', () => {
   searchLearnedInput.value = "";
@@ -938,18 +864,12 @@ clearSearchButton?.addEventListener('click', () => {
 });
 
 sortLearnedSelect?.addEventListener('change', (e) => {
-  paginationState = {}; // Reinicia a paginação a cada nova ordenação
+  paginationState = {}; 
   const selection = e.target.value;
 
-  // --- LÓGICA CORRIGIDA ---
-
-  // 1. Define o método de ordenação (A-Z ou Mais Recente)
-  // Se o usuário escolher um método de ordenação principal, nós atualizamos o estado.
   if (selection === 'alphabetical' || selection === 'date') {
       currentSort = selection;
-      
-      // Ao trocar a ordenação principal, limpamos o filtro de data específico,
-      // pois a intenção é ver todas as palavras novamente.
+
       if (selectedDateFilter) {
         selectedDateFilter = null;
         dateFilterInput.value = '';
@@ -957,11 +877,9 @@ sortLearnedSelect?.addEventListener('change', (e) => {
       }
   }
 
-  // 2. Controla a exibição do filtro de data
-  // Se o usuário quiser filtrar por um dia, apenas mostramos o calendário.
   if (selection === 'by-date') {
       dateFilterContainer.classList.remove('hidden');
-      // Define a data de hoje se nenhuma estiver selecionada
+ 
       if (!dateFilterInput.value) {
           const today = new Date().toISOString().split('T')[0];
           dateFilterInput.value = today;
@@ -969,29 +887,28 @@ sortLearnedSelect?.addEventListener('change', (e) => {
       }
   }
   
-  // Finalmente, renderiza as palavras com a ordenação e/ou filtro corretos
   renderLearnedWords(searchLearnedInput.value);
 });
 
-// Adiciona o listener para quando o usuário escolhe uma data no calendário
+
 dateFilterInput?.addEventListener('input', (e) => {
     selectedDateFilter = e.target.value;
     renderLearnedWords(searchLearnedInput.value);
 });
 
-// Adiciona o listener para o botão de limpar o filtro de data
+
 clearDateFilter?.addEventListener('click', () => {
     dateFilterContainer.classList.add('hidden');
     selectedDateFilter = null;
     dateFilterInput.value = '';
     
-    // Volta a ordenação para o padrão (A-Z)
+
     sortLearnedSelect.value = 'alphabetical';
     currentSort = 'alphabetical';
 
     renderLearnedWords(searchLearnedInput.value);
 });
-// ▲▲▲ FIM DO NOVO BLOCO ▲▲▲
+
 
 searchLearnedInput?.addEventListener('input', (e) => {
   renderLearnedWords(e.target.value);
@@ -1006,7 +923,6 @@ window.addEventListener('click', (e) => {
     profileMenu.classList.add('hidden');
   }
 });
-//BACKcup
 // ===============================================================
 // 6. INICIALIZAÇÃO DA APLICAÇÃO
 // ===============================================================
