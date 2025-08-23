@@ -631,6 +631,10 @@ function renderLearnedWords(searchTerm = "") {
       `;
     }
 
+    // Arquivo: script.js (dentro da função renderLearnedWords)
+
+// ...
+
     return `
       <div class="space-y-3">
         <h3 class="text-xl font-extrabold text-custom-blue flex items-center gap-2">
@@ -639,29 +643,17 @@ function renderLearnedWords(searchTerm = "") {
             <i class="fas fa-pen"></i>
           </button>
         </h3>
-        // Arquivo: script.js (dentro da função renderLearnedWords)
-
-// ... (início da função)
         <ul class="space-y-1">
           ${paginatedWords.map(w => `
             <li data-word-id="${w.id}" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center group">
-              
-              {/* Clicar no nome da palavra ainda abre os detalhes */}
               <span data-action="details" class="flex-1 cursor-pointer">${w.word}</span>
-
-              {/* Div para agrupar os botões de ação */}
               <div class="flex items-center">
-                
-                {/* NOVO: Botão de Pronúncia */}
                 <button data-word-text="${w.word}" data-action="speak" class="p-2 text-gray-400 hover:text-white" title="Ouvir pronúncia">
                     <i class="fas fa-volume-up"></i>
                 </button>
-
-                {/* Botão de Editar (já existente) */}
                 <button data-word-id="${w.id}" data-action="edit" class="p-2 text-gray-400 hover:text-white" title="Editar palavra">
                     <i class="fas fa-pen"></i>
                 </button>
-
               </div>
             </li>
           `).join('')}
