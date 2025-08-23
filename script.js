@@ -640,14 +640,22 @@ function renderLearnedWords(searchTerm = "") {
           </button>
         </h3>
         <ul class="space-y-1">
-          ${paginatedWords.map(w => `
-            <li data-word-id="${w.id}" data-action="details" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center cursor-pointer">
-              <span class="flex-1">${w.word}</span>
-              <button data-word-id="${w.id}" data-action="edit" class="ml-4 p-2 text-gray-400 hover:text-white">
-                <i class="fas fa-pen"></i>
-              </button>
-            </li>
-          `).join('')}
+          // SUBSTITUA PELO CÓDIGO ABAIXO:
+${paginatedWords.map(w => `
+  <li data-word-id="${w.id}" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center">
+    <span data-action="details" class="flex-1 cursor-pointer">${w.word}</span>
+
+    <div class="flex items-center">
+      <button data-word="${w.word}" data-action="speak" class="p-2 text-gray-400 hover:text-white" title="Ouvir pronúncia">
+        <i class="fas fa-volume-up"></i>
+      </button>
+
+      <button data-word-id="${w.id}" data-action="edit" class="ml-2 p-2 text-gray-400 hover:text-white" title="Editar">
+        <i class="fas fa-pen"></i>
+      </button>
+    </div>
+  </li>
+`).join('')}
         </ul>
         ${paginationControls}
       </div>
@@ -742,6 +750,7 @@ document.getElementById('btn-close-word-added-modal').addEventListener('click', 
     document.getElementById('modal-word-added').classList.add('hidden');
 });
 
+// SUBSTITUA PELO CÓDIGO ABAIXO:
 learnedWordsContainer.addEventListener('click', (e) => {
   const target = e.target;
   const action = target.closest('[data-action]')?.dataset.action;
@@ -752,13 +761,22 @@ learnedWordsContainer.addEventListener('click', (e) => {
   const category = target.closest('[data-category]')?.dataset.category;
 
   if (action === 'details') { openModalWordDetails(wordId); } 
-  else if (action === 'edit') { openEditModal(wordId); } 
+  else if (action === 'edit') { openEditModal(wordId); }
   else if (action === 'edit-category') {
     currentCategoryToEdit = category;
     inputEditCategoryName.value = currentCategoryToEdit;
     modalEditCategory.classList.remove('hidden');
-  } 
-  // A parte adicionada é esta aqui:
+  }
+  // --- LÓGICA DE PRONÚNCIA ADICIONADA AQUI ---
+  else if (action === 'speak') {
+    const wordToSpeak = target.closest('[data-word]').dataset.word;
+    if (wordToSpeak) {
+        const utterance = new SpeechSynthesisUtterance(wordToSpeak);
+        utterance.lang = 'en-US';
+        window.speechSynthesis.speak(utterance);
+    }
+  }
+  // --- FIM DA ADIÇÃO ---
   else if (action === 'paginate') {
     const direction = target.dataset.direction;
     const cat = target.dataset.category;
@@ -913,27 +931,39 @@ clearSearchButton?.addEventListener('click', () => {
   searchLearnedInput.focus();
 });
 
-// ▼▼▼ COLE ESTE NOVO BLOCO NO LUGAR DO ANTIGO ▼▼▼
 sortLearnedSelect?.addEventListener('change', (e) => {
-  paginationState = {};
+  paginationState = {}; // Reinicia a paginação a cada nova ordenação
   const selection = e.target.value;
-  
+
+  // --- LÓGICA CORRIGIDA ---
+
+  // 1. Define o método de ordenação (A-Z ou Mais Recente)
+  // Se o usuário escolher um método de ordenação principal, nós atualizamos o estado.
+  if (selection === 'alphabetical' || selection === 'date') {
+      currentSort = selection;
+      
+      // Ao trocar a ordenação principal, limpamos o filtro de data específico,
+      // pois a intenção é ver todas as palavras novamente.
+      if (selectedDateFilter) {
+        selectedDateFilter = null;
+        dateFilterInput.value = '';
+        dateFilterContainer.classList.add('hidden');
+      }
+  }
+
+  // 2. Controla a exibição do filtro de data
+  // Se o usuário quiser filtrar por um dia, apenas mostramos o calendário.
   if (selection === 'by-date') {
-    // Mostra o calendário e define a data de hoje como padrão se estiver vazio
-    dateFilterContainer.classList.remove('hidden');
-    if (!dateFilterInput.value) {
-        const today = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
-        dateFilterInput.value = today;
-        selectedDateFilter = today;
-    }
-  } else {
-    // Esconde o calendário e limpa o filtro de data
-    dateFilterContainer.classList.add('hidden');
-    selectedDateFilter = null;
-    dateFilterInput.value = '';
-    currentSort = selection;
+      dateFilterContainer.classList.remove('hidden');
+      // Define a data de hoje se nenhuma estiver selecionada
+      if (!dateFilterInput.value) {
+          const today = new Date().toISOString().split('T')[0];
+          dateFilterInput.value = today;
+          selectedDateFilter = today;
+      }
   }
   
+  // Finalmente, renderiza as palavras com a ordenação e/ou filtro corretos
   renderLearnedWords(searchLearnedInput.value);
 });
 
