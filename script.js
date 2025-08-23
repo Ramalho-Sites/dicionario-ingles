@@ -640,7 +640,6 @@ function renderLearnedWords(searchTerm = "") {
           </button>
         </h3>
         <ul class="space-y-1">
-          // SUBSTITUA PELO CÓDIGO ABAIXO:
 ${paginatedWords.map(w => `
   <li data-word-id="${w.id}" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center">
     <span data-action="details" class="flex-1 cursor-pointer">${w.word}</span>
@@ -749,8 +748,6 @@ btnCloseModal.addEventListener('click', () => {
 document.getElementById('btn-close-word-added-modal').addEventListener('click', () => {
     document.getElementById('modal-word-added').classList.add('hidden');
 });
-
-// SUBSTITUA PELO CÓDIGO ABAIXO:
 learnedWordsContainer.addEventListener('click', (e) => {
   const target = e.target;
   const action = target.closest('[data-action]')?.dataset.action;
