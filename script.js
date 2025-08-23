@@ -639,22 +639,32 @@ function renderLearnedWords(searchTerm = "") {
             <i class="fas fa-pen"></i>
           </button>
         </h3>
+        // Arquivo: script.js (dentro da função renderLearnedWords)
+
+// ... (início da função)
         <ul class="space-y-1">
-${paginatedWords.map(w => `
-  <li data-word-id="${w.id}" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center">
-    <span data-action="details" class="flex-1 cursor-pointer">${w.word}</span>
+          ${paginatedWords.map(w => `
+            <li data-word-id="${w.id}" class="rounded-md px-3 py-2 hover:bg-[rgb(92,130,255)] flex justify-between items-center group">
+              
+              {/* Clicar no nome da palavra ainda abre os detalhes */}
+              <span data-action="details" class="flex-1 cursor-pointer">${w.word}</span>
 
-    <div class="flex items-center">
-      <button data-word="${w.word}" data-action="speak" class="p-2 text-gray-400 hover:text-white" title="Ouvir pronúncia">
-        <i class="fas fa-volume-up"></i>
-      </button>
+              {/* Div para agrupar os botões de ação */}
+              <div class="flex items-center">
+                
+                {/* NOVO: Botão de Pronúncia */}
+                <button data-word-text="${w.word}" data-action="speak" class="p-2 text-gray-400 hover:text-white" title="Ouvir pronúncia">
+                    <i class="fas fa-volume-up"></i>
+                </button>
 
-      <button data-word-id="${w.id}" data-action="edit" class="ml-2 p-2 text-gray-400 hover:text-white" title="Editar">
-        <i class="fas fa-pen"></i>
-      </button>
-    </div>
-  </li>
-`).join('')}
+                {/* Botão de Editar (já existente) */}
+                <button data-word-id="${w.id}" data-action="edit" class="p-2 text-gray-400 hover:text-white" title="Editar palavra">
+                    <i class="fas fa-pen"></i>
+                </button>
+
+              </div>
+            </li>
+          `).join('')}
         </ul>
         ${paginationControls}
       </div>
@@ -748,35 +758,42 @@ btnCloseModal.addEventListener('click', () => {
 document.getElementById('btn-close-word-added-modal').addEventListener('click', () => {
     document.getElementById('modal-word-added').classList.add('hidden');
 });
+
+// Arquivo: script.js
+
 learnedWordsContainer.addEventListener('click', (e) => {
   const target = e.target;
-  const action = target.closest('[data-action]')?.dataset.action;
+  const actionTarget = target.closest('[data-action]');
+  const action = actionTarget?.dataset.action;
 
   if (!action) return;
 
   const wordId = target.closest('[data-word-id]')?.dataset.wordId;
   const category = target.closest('[data-category]')?.dataset.category;
 
-  if (action === 'details') { openModalWordDetails(wordId); } 
-  else if (action === 'edit') { openEditModal(wordId); }
+  // --- NOVA LÓGICA PARA A PRONÚNCIA ---
+  if (action === 'speak') {
+    const wordToSpeak = actionTarget.dataset.wordText;
+    const utterance = new SpeechSynthesisUtterance(wordToSpeak);
+    utterance.lang = 'en-US';
+    window.speechSynthesis.speak(utterance);
+  } 
+  // --- FIM DA NOVA LÓGICA ---
+  
+  else if (action === 'details') { 
+    openModalWordDetails(wordId); 
+  } 
+  else if (action === 'edit') { 
+    openEditModal(wordId); 
+  } 
   else if (action === 'edit-category') {
     currentCategoryToEdit = category;
     inputEditCategoryName.value = currentCategoryToEdit;
     modalEditCategory.classList.remove('hidden');
-  }
-  // --- LÓGICA DE PRONÚNCIA ADICIONADA AQUI ---
-  else if (action === 'speak') {
-    const wordToSpeak = target.closest('[data-word]').dataset.word;
-    if (wordToSpeak) {
-        const utterance = new SpeechSynthesisUtterance(wordToSpeak);
-        utterance.lang = 'en-US';
-        window.speechSynthesis.speak(utterance);
-    }
-  }
-  // --- FIM DA ADIÇÃO ---
+  } 
   else if (action === 'paginate') {
-    const direction = target.dataset.direction;
-    const cat = target.dataset.category;
+    const direction = actionTarget.dataset.direction;
+    const cat = actionTarget.dataset.category;
 
     if (direction === 'next') {
       paginationState[cat]++;
