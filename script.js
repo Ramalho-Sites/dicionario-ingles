@@ -11,22 +11,16 @@ import {
   updateDoc, deleteDoc, onSnapshot, serverTimestamp, getDocs
 } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 import { firebaseConfig } from './firebase-config.js';
+import { GEMINI_API_KEY, PEXELS_API_KEY } from './config.js'; // ← chaves seguras
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
 // ════════════════════════════════════════════════
-// GEMINI CONFIG — 100% gratuito, 1500 req/dia
-// ➤ Crie sua chave GRÁTIS em: https://aistudio.google.com/apikey
+// GEMINI CONFIG
 // ════════════════════════════════════════════════
-const GEMINI_API_KEY = 'AIzaSyB7630IGfz2WarldnhhaIRmzf472B53TY0';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
-// ════════════════════════════════════════════════
-// PEXELS CONFIG — 100% gratuito, sem limite diário
-// ════════════════════════════════════════════════
-const PEXELS_API_KEY = 'IHfe8yODYm4XCZwB9aQGWkvwLvVlnQ1hyFgPJinwBkQXx9Ok7ZftkqcA';
 
 // ════════════════════════════════════════════════
 // 2. ELEMENTS
@@ -256,7 +250,7 @@ inputImage?.addEventListener('input', () => {
 });
 
 // ════════════════════════════════════════════════
-// 5. AI GENERATION — Google Gemini (gratuito, sem CORS)
+// 5. AI GENERATION — Google Gemini
 // ════════════════════════════════════════════════
 function normalizeContext(ctx) {
   if (!ctx) return '';
