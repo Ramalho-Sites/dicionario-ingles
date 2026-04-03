@@ -51,7 +51,7 @@ exports.geminiContext = functions
     if (!user) return;
 
     // ✅ LENDO A CHAVE AQUI DENTRO (Garante que já foi carregada)
-    const GEMINI_KEY = functions.config().gemini?.key;
+    const GEMINI_KEY = process.env.GEMINI_KEY;
 
     if (!GEMINI_KEY) {
       return res.status(500).json({ error: "Chave Gemini não configurada no servidor." });
@@ -123,7 +123,7 @@ exports.pexelsImage = functions
     if (!user) return;
 
     // ✅ LENDO A CHAVE AQUI DENTRO TAMBÉM
-    const PEXELS_KEY = functions.config().pexels?.key;
+    const PEXELS_KEY = process.env.PEXELS_KEY;
 
     if (!PEXELS_KEY) {
       return res.status(500).json({ error: "Chave Pexels não configurada no servidor." });
