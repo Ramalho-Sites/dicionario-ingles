@@ -18,7 +18,10 @@ const auth = getAuth(app);
 const db   = getFirestore(app);
 
 // CLOUD FUNCTIONS URLs
-const isLocal = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+const isLocal =
+  location.hostname === "localhost" ||
+  location.hostname === "127.0.0.1" ||
+  location.hostname === "";
 
 const FUNCTIONS_BASE = isLocal
   ? "http://localhost:5001/my-dictionary-7a591/us-central1"
