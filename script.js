@@ -217,17 +217,9 @@ document.addEventListener('click', e => {
 // ════════════════════════════════════════════════
 async function fetchPexelsImages(word) {
   try {
-    const token = await getIdToken();
-
-    const res = await fetch(`${CF_PEXELS}?query=${encodeURIComponent(word)}`, {
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
-    });
-
-    const data = await res.json();
+    // Usamos a helper callFunction que criamos no topo do arquivo!
+    const data = await callFunction(CF_PEXELS, { query: word });
     return data.photos || [];
-
   } catch (err) {
     console.error("Pexels via Cloud Function:", err);
     return [];
