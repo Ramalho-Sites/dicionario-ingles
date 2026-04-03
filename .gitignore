@@ -2,5 +2,3 @@
 node_modules/
 .idea/
 # Arquivos com chaves secretas — NUNCA commitar
-config.js
-firebase-config.js

@@ -2,10 +2,10 @@
 
 Este é um projeto **Web App** focado em acelerar o aprendizado de vocabulário em inglês. Sua metodologia central é o "estudo ativo", que exige a busca e o salvamento intencional de palavras para solidificar o conhecimento.
 
-![Demo do Projeto](readme/tela-inicial.png)
-![Demo do Projeto](readme/add-word.png)
-![Demo do Projeto](readme/palavras-aprendidas.png)
-![Demo do Projeto](readme/palavras-feitas.png)
+![Demo do Projeto](readme/Tela-inicial.png)
+![Demo do Projeto](readme/Add-word.png)
+![Demo do Projeto](readme/Palavras-aprendidas.png)
+![Demo do Projeto](readme/Palavras-feitas.png)
 
 
 ### 🔗 Acesse o Site: [Clique aqui para começar a buscar e salvar palavras!](https://ramalho-sites.github.io/dicionario-ingles/)

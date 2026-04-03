@@ -11,16 +11,45 @@ import {
   updateDoc, deleteDoc, onSnapshot, serverTimestamp, getDocs
 } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 import { firebaseConfig } from './firebase-config.js';
-import { GEMINI_API_KEY, PEXELS_API_KEY } from './config.js'; // ← chaves seguras
+// ✅ config.js REMOVIDO — chaves agora vivem apenas no servidor Firebase
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// ════════════════════════════════════════════════
-// GEMINI CONFIG
-// ════════════════════════════════════════════════
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+// CLOUD FUNCTIONS URLs
+const isLocal = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+
+const FUNCTIONS_BASE = isLocal
+  ? "http://localhost:5001/my-dictionary-7a591/us-central1"
+  : "https://us-central1-my-dictionary-7a591.cloudfunctions.net";
+
+const CF_GEMINI = `${FUNCTIONS_BASE}/geminiContext`;
+const CF_PEXELS = `${FUNCTIONS_BASE}/pexelsImage`;
+// ── Helper: busca o ID token do usuário logado para autenticar nas functions ──
+async function getIdToken() {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Usuário não autenticado.");
+  return user.getIdToken();
+}
+
+// ── Helper: POST autenticado para uma Cloud Function ──────────────────────────
+async function callFunction(url, body) {
+  const token = await getIdToken();
+  const res   = await fetch(url, {
+    method:  "POST",
+    headers: {
+      "Content-Type":  "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+    throw new Error(err.error || `Erro ${res.status}`);
+  }
+  return res.json();
+}
 
 // ════════════════════════════════════════════════
 // 2. ELEMENTS
@@ -181,17 +210,25 @@ document.addEventListener('click', e => {
 
 // ════════════════════════════════════════════════
 // 4. PEXELS IMAGE AUTO-FETCH
+// ✅ ALTERADO: agora chama a Cloud Function pexelsImage
 // ════════════════════════════════════════════════
 async function fetchPexelsImages(word) {
   try {
-    const res = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(word)}&per_page=5&orientation=landscape`,
-      { headers: { Authorization: PEXELS_API_KEY } }
-    );
-    if (!res.ok) return [];
+    const token = await getIdToken();
+
+    const res = await fetch(`${CF_PEXELS}?query=${encodeURIComponent(word)}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
     const data = await res.json();
-    return (data.photos || []).map(p => p.src.large);
-  } catch { return []; }
+    return data.photos || [];
+
+  } catch (err) {
+    console.error("Pexels via Cloud Function:", err);
+    return [];
+  }
 }
 
 function applyImagePreview(url) {
@@ -250,7 +287,8 @@ inputImage?.addEventListener('input', () => {
 });
 
 // ════════════════════════════════════════════════
-// 5. AI GENERATION — Google Gemini
+// 5. AI GENERATION — Google Gemini via Cloud Function
+// ✅ ALTERADO: agora chama a Cloud Function geminiContext
 // ════════════════════════════════════════════════
 function normalizeContext(ctx) {
   if (!ctx) return '';
@@ -266,43 +304,9 @@ function normalizeContext(ctx) {
   return String(ctx);
 }
 
+// ✅ generateWordContext agora é uma chamada ao proxy — sem GEMINI_API_KEY no browser
 async function generateWordContext(word) {
-  const prompt = `Você é um especialista em ensino de inglês para brasileiros.
-
-Para a palavra em inglês "${word}", forneça:
-
-1. Significado em português: objetivo e claro, máximo 2 linhas. Comece com o tipo gramatical entre parênteses — ex: "(substantivo)" ou "(verbo)". Se a palavra tiver múltiplos significados comuns, liste até 3 dos mais usados, numerados.
-
-2. Tradução direta: apenas a(s) palavra(s) em português mais usadas para traduzir "${word}". Ex: "escuro, sombrio" ou "correr, fluir". Máximo 5 palavras.
-
-3. Exemplos de uso: crie até 3 exemplos (um por significado principal). O campo "context" deve ser UMA ÚNICA STRING com os exemplos separados por \\n\\n. Cada exemplo ocupa duas linhas:
-🇺🇸 frase em inglês de 10 a 18 palavras, concreta e do cotidiano real
-🇧🇷 tradução em português da frase acima
-
-4. Categoria em português: escolha a mais específica — Substantivo, Verbo, Adjetivo, Advérbio, Phrasal Verb, Expressão Idiomática, Negócios, Tecnologia, Cotidiano, Acadêmico, Gíria, Viagens, Saúde, Finanças.
-
-Responda SOMENTE com JSON puro, sem markdown, sem texto extra. O campo context DEVE ser uma string, nunca um array:
-{"meaning":"...","translation":"...","context":"🇺🇸 exemplo1 em inglês\\n🇧🇷 tradução1\\n\\n🇺🇸 exemplo2 em inglês\\n🇧🇷 tradução2","category":"..."}`;
-
-  const res = await fetch(GEMINI_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
-    })
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Gemini erro ${res.status}: ${err}`);
-  }
-
-  const data = await res.json();
-  const raw  = data.candidates[0].content.parts[0].text
-    .replace(/```json|```/g, '')
-    .trim();
-  return JSON.parse(raw);
+  return callFunction(CF_GEMINI, { word });
 }
 
 generateAIBtn?.addEventListener('click', async () => {
@@ -329,7 +333,7 @@ generateAIBtn?.addEventListener('click', async () => {
     if (r.category) { inputCatSearch.value = r.category; flashField(inputCatSearch); }
   } catch (e) {
     console.error('Erro IA:', e);
-    showAlert('Não foi possível gerar o contexto. Verifique sua chave Gemini em: https://aistudio.google.com/apikey', 'Erro na IA');
+    showAlert('Não foi possível gerar o contexto. Tente novamente em instantes.', 'Erro na IA');
   } finally {
     generateAIBtn.disabled = false;
     aiBtnText.textContent  = 'Gerar com IA';
