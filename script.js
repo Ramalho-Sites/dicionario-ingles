@@ -11,7 +11,6 @@ import {
   updateDoc, deleteDoc, onSnapshot, serverTimestamp, getDocs
 } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 import { firebaseConfig } from './firebase-config.js';
-// ✅ config.js REMOVIDO — chaves agora vivem apenas no servidor Firebase
 
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -29,14 +28,16 @@ const FUNCTIONS_BASE = isLocal
 
 const CF_GEMINI = `${FUNCTIONS_BASE}/geminiContext`;
 const CF_PEXELS = `${FUNCTIONS_BASE}/pexelsImage`;
-// ── Helper: busca o ID token do usuário logado para autenticar nas functions ──
+const CF_STORY  = `${FUNCTIONS_BASE}/generateStory`;
+
+// ── Helper: busca o ID token do usuário logado ──
 async function getIdToken() {
   const user = auth.currentUser;
   if (!user) throw new Error("Usuário não autenticado.");
   return user.getIdToken();
 }
 
-// ── Helper: POST autenticado para uma Cloud Function ──────────────────────────
+// ── Helper: POST autenticado para uma Cloud Function ──
 async function callFunction(url, body) {
   const token = await getIdToken();
   const res   = await fetch(url, {
@@ -140,9 +141,12 @@ let suggestTimer    = null;
 let pexelsResults   = [];
 let pexelsIndex     = 0;
 let currentImageUrl = '';
+let aiRegister      = '';
+let aiFalseCognate  = null;
+let storySelected   = new Set();
 
 // ════════════════════════════════════════════════
-// 3. WORD AUTOCOMPLETE — Datamuse (free, no key needed)
+// 3. WORD AUTOCOMPLETE — Datamuse
 // ════════════════════════════════════════════════
 inputWord?.addEventListener('input', () => {
   clearTimeout(suggestTimer);
@@ -213,11 +217,9 @@ document.addEventListener('click', e => {
 
 // ════════════════════════════════════════════════
 // 4. PEXELS IMAGE AUTO-FETCH
-// ✅ ALTERADO: agora chama a Cloud Function pexelsImage
 // ════════════════════════════════════════════════
 async function fetchPexelsImages(word) {
   try {
-    // Usamos a helper callFunction que criamos no topo do arquivo!
     const data = await callFunction(CF_PEXELS, { query: word });
     return data.photos || [];
   } catch (err) {
@@ -282,8 +284,7 @@ inputImage?.addEventListener('input', () => {
 });
 
 // ════════════════════════════════════════════════
-// 5. AI GENERATION — Google Gemini via Cloud Function
-// ✅ ALTERADO: agora chama a Cloud Function geminiContext
+// 5. AI GENERATION — Gemini via Cloud Function
 // ════════════════════════════════════════════════
 function normalizeContext(ctx) {
   if (!ctx) return '';
@@ -299,7 +300,6 @@ function normalizeContext(ctx) {
   return String(ctx);
 }
 
-// ✅ generateWordContext agora é uma chamada ao proxy — sem GEMINI_API_KEY no browser
 async function generateWordContext(word) {
   return callFunction(CF_GEMINI, { word });
 }
@@ -326,6 +326,11 @@ generateAIBtn?.addEventListener('click', async () => {
       flashField(inputContext);
     }
     if (r.category) { inputCatSearch.value = r.category; flashField(inputCatSearch); }
+
+    // ── Fase 1: registro e falso cognato ──
+    aiRegister     = r.register     || 'Neutro';
+    aiFalseCognate = r.falseCognate || { is: false, explanation: '' };
+
   } catch (e) {
     console.error('Erro IA:', e);
     showAlert('Não foi possível gerar o contexto. Tente novamente em instantes.', 'Erro na IA');
@@ -447,6 +452,7 @@ function loadData() {
     snap => {
       words = snap.docs.map(d=>({id:d.id,...d.data()}));
       renderWords(); renderChips(); updateStats(); updateHomeStats();
+      renderStorySelector();
     }
   );
   onSnapshot(
@@ -495,6 +501,7 @@ window.addEventListener('click', e => {
 // 9. FORM
 // ════════════════════════════════════════════════
 btnShowForm.addEventListener('click', () => {
+  $('story-panel')?.classList.add('hidden');
   formAddWord.classList.remove('hidden');
   btnShowForm.classList.add('hidden');
   setTimeout(() => formAddWord.scrollIntoView({behavior:'smooth',block:'start'}), 50);
@@ -506,6 +513,8 @@ discardBtn.addEventListener('click', () => {
   clearImagePreview();
   pexelsResults=[];
   hideSuggestions();
+  aiRegister = '';
+  aiFalseCognate = null;
   formAddWord.classList.add('hidden');
   btnShowForm.classList.remove('hidden');
 });
@@ -544,7 +553,16 @@ formAddWord.addEventListener('submit', async e => {
   try {
     if (cat!=='Sem Categoria'&&!isDup(categories,cat))
       await addDoc(collection(db,'categories'),{name:cat,userId:currentUser.uid});
-    await addWord({word,meaning,context:inputContext.value.trim(),image:imageUrl,category:cat});
+    await addWord({
+      word, meaning,
+      context:      inputContext.value.trim(),
+      image:        imageUrl,
+      category:     cat,
+      register:     aiRegister || 'Neutro',
+      falseCognate: aiFalseCognate || { is: false, explanation: '' }
+    });
+    aiRegister     = '';
+    aiFalseCognate = null;
     formAddWord.reset();
     inputCatSearch.value='';
     clearImagePreview();
@@ -648,16 +666,32 @@ function speakWord(word){const u=new SpeechSynthesisUtterance(word);u.lang='en-U
 function openDetails(wid){
   const w=words.find(x=>x.id===wid); if(!w)return;
   modalTitle.innerHTML=`<span>${w.word}</span><button id="btn-speak-word" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0"><i class="fas fa-volume-up"></i></button>`;
+
   const parts = (w.meaning||'').split('\n\n🔤 ');
   const meaningHtml = parts[0].replace(/\n/g,'<br>');
   const translationHtml = parts[1] ? `<div><strong>Tradução</strong>${parts[1]}</div>` : '';
   const ctxText = normalizeContext(w.context);
+
+  // Registro de uso
+  const regMap = { 'Formal':'formal','Informal':'informal','Gíria':'giria','Técnico':'tecnico','Neutro':'neutro' };
+  const regClass = regMap[w.register] || 'neutro';
+  const registerHtml = w.register
+    ? `<div style="margin-top:8px"><span class="register-badge register-${regClass}">${w.register}</span></div>`
+    : '';
+
+  // Falso cognato
+  const falseCognateHtml = w.falseCognate?.is
+    ? `<div class="false-cognate-warn"><i class="fas fa-exclamation-triangle"></i><div><strong>Falso Cognato! </strong>${w.falseCognate.explanation}</div></div>`
+    : '';
+
   modalContent.innerHTML=`
     ${w.image?`<img src="${w.image}" alt="${w.word}">`:''}
-    <div><strong>Significado</strong>${meaningHtml}</div>
+    ${falseCognateHtml}
+    <div><strong>Significado</strong>${meaningHtml}${registerHtml}</div>
     ${translationHtml}
     ${ctxText?`<div><strong>Exemplos</strong>${ctxText.replace(/\n/g,'<br>')}</div>`:''}
     <div style="font-size:11px;color:var(--faint)"><strong>Categoria</strong>${w.category||'—'}</div>`;
+
   $('btn-speak-word').addEventListener('click',()=>speakWord(w.word));
   modalDetails.classList.remove('hidden');
 }
@@ -754,6 +788,103 @@ dateInput?.addEventListener('input',e=>{dateFilter=e.target.value;renderWords(se
 clearDateBtn?.addEventListener('click',()=>{dateContainer.classList.add('hidden');dateFilter=null;dateInput.value='';sortSel.value='alphabetical';currentSort='alphabetical';renderWords(searchInput.value);});
 
 // ════════════════════════════════════════════════
-// 14. INIT
+// 14. STORY MODE
+// ════════════════════════════════════════════════
+const storyPanel  = $('story-panel');
+const btnGenStory = $('btn-gen-story');
+
+function renderStorySelector() {
+  const sel = $('story-selector');
+  if (!sel) return;
+  if (!words.length) {
+    sel.innerHTML = '<p class="story-empty">Adicione palavras ao dicionário para usar o Modo História.</p>';
+    updateStoryBar(); return;
+  }
+  const sorted = [...words].sort((a,b) => a.word.localeCompare(b.word));
+  sel.innerHTML = sorted.map(w =>
+    `<button class="story-chip ${storySelected.has(w.id)?'selected':''}" data-wid="${w.id}">
+      ${w.word}
+      ${w.category&&w.category!=='Sem Categoria'?`<span class="story-chip-cat">${w.category}</span>`:''}
+    </button>`
+  ).join('');
+  sel.querySelectorAll('.story-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const wid = chip.dataset.wid;
+      if (storySelected.has(wid)) {
+        storySelected.delete(wid); chip.classList.remove('selected');
+      } else if (storySelected.size < 5) {
+        storySelected.add(wid); chip.classList.add('selected');
+      } else {
+        showAlert('Você pode selecionar no máximo 5 palavras.', 'Limite atingido'); return;
+      }
+      updateStoryBar();
+    });
+  });
+  updateStoryBar();
+}
+
+function updateStoryBar() {
+  const count   = storySelected.size;
+  const countEl = $('story-sel-count');
+  if (countEl) countEl.textContent = count === 0
+    ? 'Nenhuma palavra selecionada'
+    : `${count} palavra${count!==1?'s':''} selecionada${count!==1?'s':''} ${count>=2?'✓':'(mínimo 2)'}`;
+  if (btnGenStory) btnGenStory.disabled = count < 2;
+}
+
+$('btn-show-story')?.addEventListener('click', () => {
+  formAddWord.classList.add('hidden');
+  btnShowForm.classList.remove('hidden');
+  storySelected.clear();
+  $('story-output')?.classList.add('hidden');
+  renderStorySelector();
+  storyPanel?.classList.remove('hidden');
+  setTimeout(() => storyPanel?.scrollIntoView({ behavior:'smooth', block:'start' }), 50);
+});
+
+$('btn-close-story')?.addEventListener('click', () => {
+  storyPanel?.classList.add('hidden');
+  storySelected.clear();
+});
+
+btnGenStory?.addEventListener('click', async () => {
+  const selectedNames = [...storySelected]
+    .map(id => words.find(w => w.id === id)?.word).filter(Boolean);
+
+  const loadingEl = $('story-loading');
+  const outputEl  = $('story-output');
+
+  loadingEl?.classList.remove('hidden');
+  outputEl?.classList.add('hidden');
+  btnGenStory.disabled = true;
+
+  try {
+    const r = await callFunction(CF_STORY, { words: selectedNames });
+    outputEl.innerHTML = `
+      <div class="story-card">
+        <div class="story-card-header">
+          <span class="story-card-title">${r.title||''}</span>
+          <span class="story-card-title-pt">${r.titlePt||''}</span>
+        </div>
+        <div class="story-en">${(r.story||'').replace(/\n/g,'<br>')}</div>
+        <div class="story-divider"><span>Tradução em Português</span></div>
+        <div class="story-pt">${(r.storyPt||'').replace(/\n/g,'<br>')}</div>
+        <div class="story-words-used">
+          <span>Palavras usadas:</span>
+          ${(r.wordsUsed||selectedNames).map(w=>`<span class="story-word-badge">${w}</span>`).join('')}
+        </div>
+      </div>`;
+    outputEl?.classList.remove('hidden');
+  } catch (err) {
+    console.error('Story error:', err);
+    showAlert('Não foi possível gerar a história. Tente novamente.', 'Erro');
+  } finally {
+    loadingEl?.classList.add('hidden');
+    if (storySelected.size >= 2) btnGenStory.disabled = false;
+  }
+});
+
+// ════════════════════════════════════════════════
+// 15. INIT
 // ════════════════════════════════════════════════
 showPage('home');

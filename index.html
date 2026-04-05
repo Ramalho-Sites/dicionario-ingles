@@ -109,7 +109,10 @@
           <p class="eyebrow"><span class="eyebrow-dot"></span>Dicionário Pessoal</p>
           <h2 class="hero-h">Adicione uma palavra,<br/><em>aprenda para sempre.</em></h2>
           <p class="hero-p">Digite em inglês — a IA gera contexto, exemplo e categoria automaticamente.</p>
-          <button id="btn-show-form" class="btn-p hero-cta"><i class="fas fa-plus"></i> Nova palavra</button>
+          <div class="hero-actions">
+            <button id="btn-show-form" class="btn-p hero-cta"><i class="fas fa-plus"></i> Nova palavra</button>
+            <button id="btn-show-story" class="btn-o hero-cta"><i class="fas fa-book-open"></i> Modo História</button>
+          </div>
         </div>
 
         <!-- ADD WORD FORM -->
@@ -127,7 +130,6 @@
             <div class="field flex-1" style="position:relative">
               <label>Palavra em inglês <span class="req">*</span></label>
               <input type="text" id="input-word" placeholder="Ex: resilience" autocomplete="off" />
-              <!-- Autocomplete dropdown -->
               <ul id="word-suggestions" class="wsug-box hidden"></ul>
               <p id="word-error" class="err hidden">Insira uma palavra.</p>
             </div>
@@ -162,11 +164,10 @@
                 <ul id="category-listbox" class="cat-drop hidden"></ul>
               </div>
 
-              <!-- IMAGE FIELD — com preview e botões -->
+              <!-- IMAGE FIELD -->
               <div class="field flex-1">
                 <label>Imagem <span class="ai-tag">AUTO</span></label>
 
-                <!-- Preview (hidden until image loaded) -->
                 <div class="img-preview-wrap hidden" id="img-preview-wrap">
                   <img id="image-preview" src="" alt="preview" class="img-preview hidden" />
                   <div class="img-actions">
@@ -179,13 +180,11 @@
                   </div>
                 </div>
 
-                <!-- Loading spinner -->
                 <div id="image-loading" class="img-loading hidden">
                   <div class="ai-dots"><span></span><span></span><span></span></div>
                   <span>Buscando imagem...</span>
                 </div>
 
-                <!-- Manual URL input -->
                 <div id="manual-image-wrap">
                   <input type="url" id="input-image" placeholder="Cole uma URL ou use a IA →" />
                   <p id="image-error" class="err hidden">URL inválida.</p>
@@ -198,6 +197,32 @@
             <button type="submit" class="btn-p">Adicionar Palavra</button>
           </div>
         </form>
+
+        <!-- STORY MODE PANEL -->
+        <div id="story-panel" class="wform hidden" style="margin:0 24px 32px">
+          <div class="wform-head">
+            <div>
+              <h3 class="wform-title">
+                <i class="fas fa-book-open" style="color:var(--ai);margin-right:8px"></i>
+                Modo História <span class="ai-tag">IA</span>
+              </h3>
+              <p class="wform-sub">Selecione 2 a 5 palavras — a IA escreve uma mini história usando todas elas</p>
+            </div>
+            <button id="btn-close-story" class="wform-x"><i class="fas fa-times"></i></button>
+          </div>
+          <div id="story-selector" class="story-selector"></div>
+          <div class="story-actions">
+            <span id="story-sel-count" class="story-sel-count">Nenhuma palavra selecionada</span>
+            <button id="btn-gen-story" class="btn-ai" disabled>
+              <i class="fas fa-wand-magic-sparkles"></i> Gerar História
+            </button>
+          </div>
+          <div id="story-loading" class="ai-bar hidden" style="margin-top:12px">
+            <div class="ai-dots"><span></span><span></span><span></span></div>
+            <span>Escrevendo sua história...</span>
+          </div>
+          <div id="story-output" class="hidden"></div>
+        </div>
 
         <!-- STATS SECTION -->
         <div class="stats-section" id="stats-section">
