@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -77,8 +77,14 @@
       <div class="nav-pills" id="nav-pills">
         <button data-page="home" class="pill pill-active"><i class="fas fa-home"></i><span>Início</span></button>
         <button data-page="learned" class="pill"><i class="fas fa-layer-group"></i><span>Dicionário</span></button>
+        <button data-page="favorites" class="pill"><i class="fas fa-star"></i><span>Favoritos</span></button>
       </div>
       <div class="nav-right">
+        <!-- THEME TOGGLE -->
+        <button id="theme-toggle" class="theme-btn" title="Alternar tema">
+          <i class="fas fa-sun theme-icon-light"></i>
+          <i class="fas fa-moon theme-icon-dark"></i>
+        </button>
         <button id="profile-toggle" class="user-chip">
           <div class="user-avatar"><i class="fas fa-user"></i></div>
           <span id="user-email" class="user-em"></span>
@@ -93,6 +99,14 @@
     <div id="mob-drawer" class="mob-drawer hidden">
       <button data-page="home" class="mob-pill mob-pill-active"><i class="fas fa-home"></i> Início</button>
       <button data-page="learned" class="mob-pill"><i class="fas fa-layer-group"></i> Dicionário</button>
+      <button data-page="favorites" class="mob-pill"><i class="fas fa-star"></i> Favoritos</button>
+      <div class="mob-divider"></div>
+      <!-- THEME TOGGLE MOBILE -->
+      <button id="mob-theme-toggle" class="mob-pill">
+        <i class="fas fa-sun theme-icon-light"></i>
+        <i class="fas fa-moon theme-icon-dark"></i>
+        <span id="mob-theme-label">Modo claro</span>
+      </button>
       <div class="mob-divider"></div>
       <span class="mob-email" id="mob-email-display"></span>
       <button id="mob-logout" class="mob-pill mob-red"><i class="fas fa-sign-out-alt"></i> Sair</button>
@@ -155,6 +169,21 @@
               <label>Exemplo de uso <span class="ai-tag">IA</span></label>
               <textarea id="input-context" rows="2" placeholder="Frase de exemplo em inglês..."></textarea>
             </div>
+
+            <!-- CEFR LEVEL -->
+            <div class="field">
+              <label>Nível CEFR <span class="ai-tag">OPCIONAL</span></label>
+              <div class="cefr-picker" id="cefr-picker">
+                <button type="button" class="cefr-btn" data-level="A1">A1</button>
+                <button type="button" class="cefr-btn" data-level="A2">A2</button>
+                <button type="button" class="cefr-btn" data-level="B1">B1</button>
+                <button type="button" class="cefr-btn" data-level="B2">B2</button>
+                <button type="button" class="cefr-btn" data-level="C1">C1</button>
+                <button type="button" class="cefr-btn" data-level="C2">C2</button>
+              </div>
+              <input type="hidden" id="input-cefr" value="" />
+            </div>
+
             <div class="frow">
               <div class="field flex-1">
                 <label>Categoria <span class="ai-tag">IA</span></label>
@@ -273,7 +302,7 @@
         <div class="search-row">
           <div class="search-box">
             <i class="fas fa-search si"></i>
-            <input type="text" id="search-learned" placeholder="Pesquisar palavra..." autocomplete="off" />
+            <input type="text" id="search-learned" placeholder="Pesquisar palavra, significado..." autocomplete="off" />
             <button id="clear-search" class="cx"><i class="fas fa-times"></i></button>
           </div>
           <select id="sort-learned" class="sort-sel">
@@ -282,13 +311,64 @@
             <option value="by-date">Por data</option>
           </select>
         </div>
-        <div id="date-filter-container" class="date-row hidden">
-          <label>Dia:</label>
-          <input type="date" id="date-filter-input" />
-          <button id="clear-date-filter" class="link-sm">× Limpar</button>
+
+        <!-- SMART FILTERS ROW -->
+        <div class="smart-filters-row" id="smart-filters-row">
+          <!-- Date filter (existing, moved here) -->
+          <div id="date-filter-container" class="date-row hidden">
+            <label>Dia:</label>
+            <input type="date" id="date-filter-input" />
+            <button id="clear-date-filter" class="link-sm">× Limpar</button>
+          </div>
+          <!-- CEFR filter -->
+          <div class="cefr-filter-wrap">
+            <span class="filter-label"><i class="fas fa-graduation-cap"></i> Nível:</span>
+            <div class="cefr-filter-chips" id="cefr-filter-chips">
+              <button class="cefr-filter-chip active" data-level="all">Todos</button>
+              <button class="cefr-filter-chip" data-level="A1">A1</button>
+              <button class="cefr-filter-chip" data-level="A2">A2</button>
+              <button class="cefr-filter-chip" data-level="B1">B1</button>
+              <button class="cefr-filter-chip" data-level="B2">B2</button>
+              <button class="cefr-filter-chip" data-level="C1">C1</button>
+              <button class="cefr-filter-chip" data-level="C2">C2</button>
+            </div>
+          </div>
         </div>
+
         <div id="chips-bar" class="chips-bar"></div>
         <div id="learned-words-container" class="words-area"></div>
+      </div>
+    </section>
+
+    <!-- ── FAVORITES ── -->
+    <section id="page-favorites" class="page hidden">
+      <div class="dict-wrap">
+        <div class="dict-top">
+          <div>
+            <h2 class="dict-h"><i class="fas fa-star" style="color:var(--warn);font-size:24px;margin-right:10px"></i>Favoritos</h2>
+            <p id="fav-stats" class="dict-stats-txt"></p>
+          </div>
+        </div>
+        <div class="search-row">
+          <div class="search-box">
+            <i class="fas fa-search si"></i>
+            <input type="text" id="search-favorites" placeholder="Pesquisar favoritos..." autocomplete="off" />
+            <button id="clear-search-fav" class="cx"><i class="fas fa-times"></i></button>
+          </div>
+          <!-- CEFR filter for favorites -->
+          <div class="cefr-filter-wrap" style="flex-shrink:0">
+            <div class="cefr-filter-chips" id="cefr-filter-chips-fav">
+              <button class="cefr-filter-chip active" data-level="all">Todos</button>
+              <button class="cefr-filter-chip" data-level="A1">A1</button>
+              <button class="cefr-filter-chip" data-level="A2">A2</button>
+              <button class="cefr-filter-chip" data-level="B1">B1</button>
+              <button class="cefr-filter-chip" data-level="B2">B2</button>
+              <button class="cefr-filter-chip" data-level="C1">C1</button>
+              <button class="cefr-filter-chip" data-level="C2">C2</button>
+            </div>
+          </div>
+        </div>
+        <div id="favorites-container" class="words-area fav-grid"></div>
       </div>
     </section>
 
@@ -307,6 +387,18 @@
       <div class="field"><label>Exemplo</label><textarea id="edit-context" rows="2"></textarea></div>
       <div class="field"><label>Imagem (URL)</label><input id="edit-image" type="url" /></div>
       <div class="field"><label>Categoria</label><input id="edit-category" type="text" /></div>
+      <div class="field">
+        <label>Nível CEFR</label>
+        <div class="cefr-picker" id="cefr-picker-edit">
+          <button type="button" class="cefr-btn" data-level="A1">A1</button>
+          <button type="button" class="cefr-btn" data-level="A2">A2</button>
+          <button type="button" class="cefr-btn" data-level="B1">B1</button>
+          <button type="button" class="cefr-btn" data-level="B2">B2</button>
+          <button type="button" class="cefr-btn" data-level="C1">C1</button>
+          <button type="button" class="cefr-btn" data-level="C2">C2</button>
+        </div>
+        <input type="hidden" id="edit-cefr" value="" />
+      </div>
       <div class="mfoot split">
         <button type="button" id="btn-delete-word" class="btn-danger"><i class="fas fa-trash-alt"></i> Deletar</button>
         <div style="display:flex;gap:8px">

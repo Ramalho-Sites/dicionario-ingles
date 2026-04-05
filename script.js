@@ -30,14 +30,12 @@ const CF_GEMINI = `${FUNCTIONS_BASE}/geminiContext`;
 const CF_PEXELS = `${FUNCTIONS_BASE}/pexelsImage`;
 const CF_STORY  = `${FUNCTIONS_BASE}/generateStory`;
 
-// ── Helper: busca o ID token do usuário logado ──
 async function getIdToken() {
   const user = auth.currentUser;
   if (!user) throw new Error("Usuário não autenticado.");
   return user.getIdToken();
 }
 
-// ── Helper: POST autenticado para uma Cloud Function ──
 async function callFunction(url, body) {
   const token = await getIdToken();
   const res   = await fetch(url, {
@@ -76,7 +74,9 @@ const mobDrawer      = $('mob-drawer');
 const mobLogout      = $('mob-logout');
 const pageHome       = $('page-home');
 const pageLearned    = $('page-learned');
+const pageFavorites  = $('page-favorites');
 const wordsContainer = $('learned-words-container');
+const favContainer   = $('favorites-container');
 const searchInput    = $('search-learned');
 const clearSearchBtn = $('clear-search');
 const sortSel        = $('sort-learned');
@@ -125,7 +125,37 @@ const manualImgWrap  = $('manual-image-wrap');
 
 const allNavBtns = document.querySelectorAll('[data-page]');
 
-// State
+// ════════════════════════════════════════════════
+// 3. THEME (Dark / Light) — localStorage persisted
+// ════════════════════════════════════════════════
+const themeToggle    = $('theme-toggle');
+const mobThemeToggle = $('mob-theme-toggle');
+const mobThemeLabel  = $('mob-theme-label');
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('md-theme', theme);
+  const isDark = theme === 'dark';
+  if (mobThemeLabel) mobThemeLabel.textContent = isDark ? 'Modo claro' : 'Modo escuro';
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+// Init theme from localStorage on load
+;(function initTheme() {
+  const saved = localStorage.getItem('md-theme') || 'dark';
+  applyTheme(saved);
+})();
+
+themeToggle?.addEventListener('click', toggleTheme);
+mobThemeToggle?.addEventListener('click', () => { toggleTheme(); mobDrawer?.classList.add('hidden'); });
+
+// ════════════════════════════════════════════════
+// 4. STATE
+// ════════════════════════════════════════════════
 const PER_PAGE = 20;
 let words           = [];
 let categories      = [];
@@ -136,6 +166,8 @@ let wordToDelete    = null;
 let categoryToEdit  = null;
 let dateFilter      = null;
 let activeCatFilter = 'all';
+let activeCefrFilter = 'all';    // NEW
+let activeFavCefrFilter = 'all'; // NEW
 let pagination      = {};
 let suggestTimer    = null;
 let pexelsResults   = [];
@@ -144,9 +176,64 @@ let currentImageUrl = '';
 let aiRegister      = '';
 let aiFalseCognate  = null;
 let storySelected   = new Set();
+let selectedCefr    = '';        // NEW — form
+let selectedCefrEdit = '';       // NEW — edit modal
 
 // ════════════════════════════════════════════════
-// 3. WORD AUTOCOMPLETE — Datamuse
+// 5. CEFR PICKER (form + edit modal)
+// ════════════════════════════════════════════════
+function initCefrPicker(pickerId, hiddenId, onSelect) {
+  const picker = $(pickerId);
+  if (!picker) return;
+  picker.querySelectorAll('.cefr-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const level = btn.dataset.level;
+      const isActive = btn.classList.contains('active');
+      picker.querySelectorAll('.cefr-btn').forEach(b => b.classList.remove('active'));
+      if (!isActive) {
+        btn.classList.add('active');
+        if (hiddenId) $(hiddenId).value = level;
+        onSelect(level);
+      } else {
+        if (hiddenId) $(hiddenId).value = '';
+        onSelect('');
+      }
+    });
+  });
+}
+
+function setCefrPicker(pickerId, hiddenId, value) {
+  const picker = $(pickerId);
+  if (!picker) return;
+  picker.querySelectorAll('.cefr-btn').forEach(b => b.classList.remove('active'));
+  if (value) {
+    const btn = picker.querySelector(`[data-level="${value}"]`);
+    if (btn) btn.classList.add('active');
+  }
+  if (hiddenId) $(hiddenId).value = value || '';
+}
+
+initCefrPicker('cefr-picker', 'input-cefr', v => { selectedCefr = v; });
+initCefrPicker('cefr-picker-edit', 'edit-cefr', v => { selectedCefrEdit = v; });
+
+// CEFR filter chips — Dictionary page
+function initCefrFilterChips(chipBarId, onFilter) {
+  const bar = $(chipBarId);
+  if (!bar) return;
+  bar.querySelectorAll('.cefr-filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      bar.querySelectorAll('.cefr-filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      onFilter(chip.dataset.level);
+    });
+  });
+}
+
+initCefrFilterChips('cefr-filter-chips', v => { activeCefrFilter = v; pagination = {}; renderWords(searchInput?.value || ''); });
+initCefrFilterChips('cefr-filter-chips-fav', v => { activeFavCefrFilter = v; renderFavorites($('search-favorites')?.value || ''); });
+
+// ════════════════════════════════════════════════
+// 6. WORD AUTOCOMPLETE — Datamuse
 // ════════════════════════════════════════════════
 inputWord?.addEventListener('input', () => {
   clearTimeout(suggestTimer);
@@ -174,12 +261,9 @@ inputWord?.addEventListener('keydown', e => {
   }
 });
 
-// ── Auto-busca imagem ao sair do campo de palavra ──
 inputWord?.addEventListener('change', () => {
   const word = inputWord.value.trim();
-  if (word && !currentImageUrl) {
-    autoFetchImage(word);
-  }
+  if (word && !currentImageUrl) autoFetchImage(word);
 });
 
 async function fetchSuggestions(prefix) {
@@ -224,11 +308,10 @@ document.addEventListener('click', e => {
 });
 
 // ════════════════════════════════════════════════
-// 4. PEXELS IMAGE AUTO-FETCH
+// 7. PEXELS IMAGE AUTO-FETCH
 // ════════════════════════════════════════════════
 async function fetchPexelsImages(word) {
   try {
-    // FIX: Cloud Function espera { word }, não { query }
     const data = await callFunction(CF_PEXELS, { word });
     return data.photos || [];
   } catch (err) {
@@ -260,10 +343,8 @@ function clearImagePreview() {
   if (manualImgWrap)  manualImgWrap.classList.remove('hidden');
 }
 
-// ── FIX: valida a palavra antes de buscar imagem ──
 async function autoFetchImage(word) {
   if (!word || word.trim() === '') return;
-
   imageLoadingEl?.classList.remove('hidden');
   pexelsResults = await fetchPexelsImages(word.trim());
   pexelsIndex   = 0;
@@ -295,7 +376,7 @@ inputImage?.addEventListener('input', () => {
 });
 
 // ════════════════════════════════════════════════
-// 5. AI GENERATION — Gemini via Cloud Function
+// 8. AI GENERATION — Gemini via Cloud Function
 // ════════════════════════════════════════════════
 function normalizeContext(ctx) {
   if (!ctx) return '';
@@ -338,7 +419,12 @@ generateAIBtn?.addEventListener('click', async () => {
     }
     if (r.category) { inputCatSearch.value = r.category; flashField(inputCatSearch); }
 
-    // ── Fase 1: registro e falso cognato ──
+    // CEFR level from AI
+    if (r.cefrLevel) {
+      setCefrPicker('cefr-picker', 'input-cefr', r.cefrLevel);
+      selectedCefr = r.cefrLevel;
+    }
+
     aiRegister     = r.register     || 'Neutro';
     aiFalseCognate = r.falseCognate || { is: false, explanation: '' };
 
@@ -359,7 +445,7 @@ function flashField(el) {
 }
 
 // ════════════════════════════════════════════════
-// 6. AUTH
+// 9. AUTH
 // ════════════════════════════════════════════════
 onAuthStateChanged(auth, user => {
   if (user?.emailVerified) {
@@ -453,7 +539,7 @@ togglePwBtn.addEventListener('click', () => {
 });
 
 // ════════════════════════════════════════════════
-// 7. FIRESTORE
+// 10. FIRESTORE
 // ════════════════════════════════════════════════
 function loadData() {
   if (!currentUser) return;
@@ -463,7 +549,8 @@ function loadData() {
     snap => {
       words = snap.docs.map(d=>({id:d.id,...d.data()}));
       renderWords(); renderChips(); updateStats(); updateHomeStats();
-      renderStorySelector();
+      renderStorySelector(); renderFavorites();
+      updateFavStats();
     }
   );
   onSnapshot(
@@ -485,14 +572,40 @@ async function fixOldWords() {
 }
 
 // ════════════════════════════════════════════════
-// 8. NAV
+// 11. FAVORITES — toggle star, Firestore field
+// ════════════════════════════════════════════════
+async function toggleFavorite(wordId) {
+  const w = words.find(x => x.id === wordId);
+  if (!w) return;
+  try {
+    await updateWord(wordId, { favorite: !w.favorite });
+    // Optimistic UI
+    w.favorite = !w.favorite;
+    renderWords(searchInput?.value || '');
+    renderFavorites($('search-favorites')?.value || '');
+    updateFavStats();
+  } catch {
+    showAlert('Erro ao atualizar favorito.');
+  }
+}
+
+function updateFavStats() {
+  const count = words.filter(w => w.favorite).length;
+  const el = $('fav-stats');
+  if (el) el.textContent = `${count} palavra${count !== 1 ? 's' : ''} favoritada${count !== 1 ? 's' : ''}`;
+}
+
+// ════════════════════════════════════════════════
+// 12. NAV
 // ════════════════════════════════════════════════
 function showPage(page) {
-  pageHome.classList.toggle('hidden', page!=='home');
-  pageLearned.classList.toggle('hidden', page!=='learned');
-  document.querySelectorAll('.pill').forEach(b => b.classList.toggle('pill-active', b.dataset.page===page));
-  document.querySelectorAll('.mob-pill[data-page]').forEach(b => b.classList.toggle('mob-pill-active', b.dataset.page===page));
+  pageHome.classList.toggle('hidden', page !== 'home');
+  pageLearned.classList.toggle('hidden', page !== 'learned');
+  pageFavorites.classList.toggle('hidden', page !== 'favorites');
+  document.querySelectorAll('.pill').forEach(b => b.classList.toggle('pill-active', b.dataset.page === page));
+  document.querySelectorAll('.mob-pill[data-page]').forEach(b => b.classList.toggle('mob-pill-active', b.dataset.page === page));
   mobDrawer?.classList.add('hidden');
+  if (page === 'favorites') renderFavorites($('search-favorites')?.value || '');
 }
 
 allNavBtns.forEach(b => b.addEventListener('click', () => showPage(b.dataset.page)));
@@ -509,7 +622,7 @@ window.addEventListener('click', e => {
 });
 
 // ════════════════════════════════════════════════
-// 9. FORM
+// 13. FORM
 // ════════════════════════════════════════════════
 btnShowForm.addEventListener('click', () => {
   $('story-panel')?.classList.add('hidden');
@@ -520,12 +633,14 @@ btnShowForm.addEventListener('click', () => {
 
 discardBtn.addEventListener('click', () => {
   formAddWord.reset();
-  inputCatSearch.value='';
+  inputCatSearch.value = '';
   clearImagePreview();
-  pexelsResults=[];
+  pexelsResults = [];
   hideSuggestions();
   aiRegister = '';
   aiFalseCognate = null;
+  selectedCefr = '';
+  setCefrPicker('cefr-picker', 'input-cefr', '');
   formAddWord.classList.add('hidden');
   btnShowForm.classList.remove('hidden');
 });
@@ -569,11 +684,15 @@ formAddWord.addEventListener('submit', async e => {
       context:      inputContext.value.trim(),
       image:        imageUrl,
       category:     cat,
+      cefrLevel:    selectedCefr || '',
       register:     aiRegister || 'Neutro',
-      falseCognate: aiFalseCognate || { is: false, explanation: '' }
+      falseCognate: aiFalseCognate || { is: false, explanation: '' },
+      favorite:     false
     });
     aiRegister     = '';
     aiFalseCognate = null;
+    selectedCefr   = '';
+    setCefrPicker('cefr-picker', 'input-cefr', '');
     formAddWord.reset();
     inputCatSearch.value='';
     clearImagePreview();
@@ -585,7 +704,7 @@ formAddWord.addEventListener('submit', async e => {
 });
 
 // ════════════════════════════════════════════════
-// 10. STATS & CHIPS
+// 14. STATS & CHIPS
 // ════════════════════════════════════════════════
 function updateStats() {
   if (!dictStats) return;
@@ -626,7 +745,7 @@ function renderChips() {
   }).join('');
   chipsBar.querySelectorAll('.chip').forEach(c=>{
     c.addEventListener('click',()=>{
-      activeCatFilter=c.dataset.cat; pagination={}; renderWords();
+      activeCatFilter=c.dataset.cat; pagination={}; renderWords(searchInput?.value||'');
       chipsBar.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
       c.classList.add('active');
     });
@@ -634,17 +753,40 @@ function renderChips() {
 }
 
 // ════════════════════════════════════════════════
-// 11. RENDER WORDS
+// 15. CEFR BADGE HELPER
+// ════════════════════════════════════════════════
+const CEFR_COLORS = {
+  A1: 'cefr-a1', A2: 'cefr-a2',
+  B1: 'cefr-b1', B2: 'cefr-b2',
+  C1: 'cefr-c1', C2: 'cefr-c2'
+};
+
+function cefrBadge(level) {
+  if (!level) return '';
+  return `<span class="cefr-badge ${CEFR_COLORS[level] || ''}">${level}</span>`;
+}
+
+// ════════════════════════════════════════════════
+// 16. RENDER WORDS (Dictionary)
 // ════════════════════════════════════════════════
 function renderWords(search='') {
   if (!wordsContainer) return;
   let list=[...words];
   if (activeCatFilter!=='all') list=list.filter(w=>(w.category||'Sem Categoria')===activeCatFilter);
+  if (activeCefrFilter!=='all') list=list.filter(w=>w.cefrLevel===activeCefrFilter);
   if (dateFilter) {
     const d=new Date(dateFilter+'T00:00:00');
     list=list.filter(w=>{ if(!w.createdAt?.seconds)return false; const wd=new Date(w.createdAt.seconds*1000); return wd.getFullYear()===d.getFullYear()&&wd.getMonth()===d.getMonth()&&wd.getDate()===d.getDate(); });
   }
-  if (search) { const s=search.toLowerCase(); list=list.filter(w=>w.word.toLowerCase().includes(s)||w.meaning?.toLowerCase().includes(s)||w.context?.toLowerCase().includes(s)); }
+  if (search) {
+    const s=search.toLowerCase();
+    list=list.filter(w=>
+      w.word.toLowerCase().includes(s)||
+      w.meaning?.toLowerCase().includes(s)||
+      w.context?.toLowerCase().includes(s)||
+      w.category?.toLowerCase().includes(s)
+    );
+  }
   if (currentSort==='date') list.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
   else list.sort((a,b)=>a.word.localeCompare(b.word));
   if (!list.length) { wordsContainer.innerHTML=`<div class="empty"><i class="fas fa-book-open"></i>Nenhuma palavra encontrada.</div>`; return; }
@@ -654,14 +796,15 @@ function renderWords(search='') {
   wordsContainer.innerHTML=catOrder.map(cat=>{
     const cw=grouped[cat],total=cw.length,pg=pagination[cat]||1,pages=Math.ceil(total/PER_PAGE),paged=cw.slice((pg-1)*PER_PAGE,pg*PER_PAGE);
     const pgn=pages>1?`<div class="pgn"><button data-action="pgn" data-cat="${cat}" data-dir="prev" ${pg===1?'disabled':''}>← Anterior</button><span>Página ${pg} de ${pages}</span><button data-action="pgn" data-cat="${cat}" data-dir="next" ${pg===pages?'disabled':''}>Próximo →</button></div>`:'';
-    return `<div class="cat-section"><div class="cat-header"><span class="cat-label">${cat}</span><button class="cat-edit" data-action="edit-cat" data-cat="${cat}" title="Editar categoria"><i class="fas fa-pen"></i></button><span class="cat-count">${total} palavra${total!==1?'s':''}</span></div><ul class="word-list">${paged.map(w=>`<li class="word-row" data-word-id="${w.id}"><span class="wname" data-action="detail">${w.word}</span><div class="w-actions"><button class="wbtn" data-action="speak" data-wtext="${w.word}" title="Ouvir"><i class="fas fa-volume-up"></i></button><button class="wbtn" data-action="edit" title="Editar"><i class="fas fa-pen"></i></button></div></li>`).join('')}</ul>${pgn}</div>`;
+    return `<div class="cat-section"><div class="cat-header"><span class="cat-label">${cat}</span><button class="cat-edit" data-action="edit-cat" data-cat="${cat}" title="Editar categoria"><i class="fas fa-pen"></i></button><span class="cat-count">${total} palavra${total!==1?'s':''}</span></div><ul class="word-list">${paged.map(w=>`<li class="word-row" data-word-id="${w.id}"><span class="wname" data-action="detail">${w.word}</span>${cefrBadge(w.cefrLevel)}<div class="w-actions"><button class="wbtn wbtn-fav ${w.favorite?'is-fav':''}" data-action="fav" title="${w.favorite?'Remover favorito':'Favoritar'}"><i class="${w.favorite?'fas':'far'} fa-star"></i></button><button class="wbtn" data-action="speak" data-wtext="${w.word}" title="Ouvir"><i class="fas fa-volume-up"></i></button><button class="wbtn" data-action="edit" title="Editar"><i class="fas fa-pen"></i></button></div></li>`).join('')}</ul>${pgn}</div>`;
   }).join('');
 }
 
 wordsContainer.addEventListener('click', e=>{
   const el=e.target.closest('[data-action]'); if(!el)return;
   const action=el.dataset.action,row=e.target.closest('[data-word-id]'),wid=row?.dataset.wordId,cat=el.dataset.cat;
-  if(action==='speak')speakWord(el.dataset.wtext);
+  if(action==='fav')toggleFavorite(wid);
+  else if(action==='speak')speakWord(el.dataset.wtext);
   else if(action==='detail')openDetails(wid);
   else if(action==='edit')openEdit(wid);
   else if(action==='edit-cat'){categoryToEdit=cat;editCatInput.value=cat;editCatModal.classList.remove('hidden');}
@@ -669,28 +812,76 @@ wordsContainer.addEventListener('click', e=>{
 });
 
 // ════════════════════════════════════════════════
-// 12. MODALS
+// 17. RENDER FAVORITES
+// ════════════════════════════════════════════════
+function renderFavorites(search='') {
+  if (!favContainer) return;
+  let list = words.filter(w => w.favorite);
+  if (activeFavCefrFilter !== 'all') list = list.filter(w => w.cefrLevel === activeFavCefrFilter);
+  if (search) {
+    const s = search.toLowerCase();
+    list = list.filter(w =>
+      w.word.toLowerCase().includes(s) ||
+      w.meaning?.toLowerCase().includes(s) ||
+      w.category?.toLowerCase().includes(s)
+    );
+  }
+  list.sort((a,b) => a.word.localeCompare(b.word));
+  updateFavStats();
+  if (!list.length) {
+    favContainer.innerHTML = `<div class="empty fav-empty"><i class="far fa-star"></i><p>${words.filter(w=>w.favorite).length === 0 ? 'Nenhuma palavra favoritada ainda.<br><span style="font-size:12px">Clique na estrela ⭐ em qualquer palavra para favoritá-la.</span>' : 'Nenhum favorito encontrado.'}</p></div>`;
+    return;
+  }
+  favContainer.innerHTML = list.map(w => `
+    <div class="fav-card" data-word-id="${w.id}">
+      ${w.image ? `<div class="fav-img-wrap"><img src="${w.image}" alt="${w.word}" class="fav-img" loading="lazy"/></div>` : `<div class="fav-img-placeholder"><i class="fas fa-book-open"></i></div>`}
+      <div class="fav-body">
+        <div class="fav-top">
+          <span class="fav-word" data-action="detail">${w.word}</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            ${cefrBadge(w.cefrLevel)}
+            <button class="wbtn wbtn-fav is-fav" data-action="fav" title="Remover favorito"><i class="fas fa-star"></i></button>
+          </div>
+        </div>
+        <p class="fav-meaning">${(w.meaning||'').split('\n\n🔤')[0].slice(0,90)}${(w.meaning||'').length>90?'…':''}</p>
+        <span class="fav-cat">${w.category||'Sem Categoria'}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+favContainer?.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]'); if (!el) return;
+  const row = e.target.closest('[data-word-id]'), wid = row?.dataset.wordId;
+  if (el.dataset.action === 'fav') toggleFavorite(wid);
+  else if (el.dataset.action === 'detail') openDetails(wid);
+});
+
+// Favorites search
+$('search-favorites')?.addEventListener('input', e => renderFavorites(e.target.value));
+$('clear-search-fav')?.addEventListener('click', () => { $('search-favorites').value = ''; renderFavorites(); $('search-favorites').focus(); });
+
+// ════════════════════════════════════════════════
+// 18. MODALS
 // ════════════════════════════════════════════════
 function showAlert(msg,title='Atenção'){alertTitleEl.textContent=title;alertMsgEl.textContent=msg;modalAlert.classList.remove('hidden');}
 function speakWord(word){const u=new SpeechSynthesisUtterance(word);u.lang='en-US';u.rate=0.6;window.speechSynthesis.speak(u);}
 
 function openDetails(wid){
   const w=words.find(x=>x.id===wid); if(!w)return;
-  modalTitle.innerHTML=`<span>${w.word}</span><button id="btn-speak-word" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0"><i class="fas fa-volume-up"></i></button>`;
+  modalTitle.innerHTML=`<span>${w.word}</span>${cefrBadge(w.cefrLevel)}<button id="btn-speak-word" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0"><i class="fas fa-volume-up"></i></button>`;
 
   const parts = (w.meaning||'').split('\n\n🔤 ');
   const meaningHtml = parts[0].replace(/\n/g,'<br>');
   const translationHtml = parts[1] ? `<div><strong>Tradução</strong>${parts[1]}</div>` : '';
   const ctxText = normalizeContext(w.context);
 
-  // Registro de uso
   const regMap = { 'Formal':'formal','Informal':'informal','Gíria':'giria','Técnico':'tecnico','Neutro':'neutro' };
   const regClass = regMap[w.register] || 'neutro';
   const registerHtml = w.register
     ? `<div style="margin-top:8px"><span class="register-badge register-${regClass}">${w.register}</span></div>`
     : '';
 
-  // Falso cognato
   const falseCognateHtml = w.falseCognate?.is
     ? `<div class="false-cognate-warn"><i class="fas fa-exclamation-triangle"></i><div><strong>Falso Cognato! </strong>${w.falseCognate.explanation}</div></div>`
     : '';
@@ -709,8 +900,14 @@ function openDetails(wid){
 
 function openEdit(wid){
   const w=words.find(x=>x.id===wid); if(!w)return;
-  $('edit-id').value=w.id;$('edit-word').value=w.word;$('edit-meaning').value=w.meaning;
-  $('edit-context').value=w.context||'';$('edit-image').value=w.image||'';$('edit-category').value=w.category||'';
+  $('edit-id').value=w.id;
+  $('edit-word').value=w.word;
+  $('edit-meaning').value=w.meaning;
+  $('edit-context').value=w.context||'';
+  $('edit-image').value=w.image||'';
+  $('edit-category').value=w.category||'';
+  selectedCefrEdit = w.cefrLevel || '';
+  setCefrPicker('cefr-picker-edit', 'edit-cefr', w.cefrLevel || '');
   $('modal-edit-word').classList.remove('hidden');
 }
 
@@ -727,7 +924,14 @@ $('btn-delete-word').addEventListener('click',()=>{wordToDelete=$('edit-id').val
 $('form-edit-word').addEventListener('submit',async e=>{
   e.preventDefault();
   const id=$('edit-id').value;
-  const data={word:$('edit-word').value.trim(),meaning:$('edit-meaning').value.trim(),context:$('edit-context').value.trim(),image:$('edit-image').value.trim(),category:$('edit-category').value.trim()||'Sem Categoria'};
+  const data={
+    word:$('edit-word').value.trim(),
+    meaning:$('edit-meaning').value.trim(),
+    context:$('edit-context').value.trim(),
+    image:$('edit-image').value.trim(),
+    category:$('edit-category').value.trim()||'Sem Categoria',
+    cefrLevel: selectedCefrEdit || ''
+  };
   if(!data.word||!data.meaning){showAlert('Palavra e significado obrigatórios.');return;}
   const orig=words.find(w=>w.id===id);
   if(orig&&data.word!==orig.word&&isDup(words,data.word,orig.word)){showAlert(`"${data.word}" já existe.`,'Duplicada');return;}
@@ -784,7 +988,7 @@ confirmDelBtn.addEventListener('click',async()=>{
 });
 
 // ════════════════════════════════════════════════
-// 13. SEARCH / SORT / DATE
+// 19. SEARCH / SORT / DATE
 // ════════════════════════════════════════════════
 searchInput?.addEventListener('input',e=>{pagination={};renderWords(e.target.value);});
 clearSearchBtn?.addEventListener('click',()=>{searchInput.value='';pagination={};renderWords();searchInput.focus();});
@@ -799,7 +1003,7 @@ dateInput?.addEventListener('input',e=>{dateFilter=e.target.value;renderWords(se
 clearDateBtn?.addEventListener('click',()=>{dateContainer.classList.add('hidden');dateFilter=null;dateInput.value='';sortSel.value='alphabetical';currentSort='alphabetical';renderWords(searchInput.value);});
 
 // ════════════════════════════════════════════════
-// 14. STORY MODE
+// 20. STORY MODE
 // ════════════════════════════════════════════════
 const storyPanel  = $('story-panel');
 const btnGenStory = $('btn-gen-story');
@@ -896,6 +1100,6 @@ btnGenStory?.addEventListener('click', async () => {
 });
 
 // ════════════════════════════════════════════════
-// 15. INIT
+// 21. INIT
 // ════════════════════════════════════════════════
 showPage('home');
