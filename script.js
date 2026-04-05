@@ -228,7 +228,8 @@ document.addEventListener('click', e => {
 // ════════════════════════════════════════════════
 async function fetchPexelsImages(word) {
   try {
-    const data = await callFunction(CF_PEXELS, { query: word });
+    // FIX: Cloud Function espera { word }, não { query }
+    const data = await callFunction(CF_PEXELS, { word });
     return data.photos || [];
   } catch (err) {
     console.error("Pexels via Cloud Function:", err);
