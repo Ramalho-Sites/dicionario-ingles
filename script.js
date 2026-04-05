@@ -174,6 +174,14 @@ inputWord?.addEventListener('keydown', e => {
   }
 });
 
+// ── Auto-busca imagem ao sair do campo de palavra ──
+inputWord?.addEventListener('change', () => {
+  const word = inputWord.value.trim();
+  if (word && !currentImageUrl) {
+    autoFetchImage(word);
+  }
+});
+
 async function fetchSuggestions(prefix) {
   try {
     const res  = await fetch(`https://api.datamuse.com/sug?s=${encodeURIComponent(prefix)}&max=7`);
@@ -251,10 +259,12 @@ function clearImagePreview() {
   if (manualImgWrap)  manualImgWrap.classList.remove('hidden');
 }
 
+// ── FIX: valida a palavra antes de buscar imagem ──
 async function autoFetchImage(word) {
-  if (!word) return;
+  if (!word || word.trim() === '') return;
+
   imageLoadingEl?.classList.remove('hidden');
-  pexelsResults = await fetchPexelsImages(word);
+  pexelsResults = await fetchPexelsImages(word.trim());
   pexelsIndex   = 0;
   imageLoadingEl?.classList.add('hidden');
   if (pexelsResults.length) applyImagePreview(pexelsResults[0]);
