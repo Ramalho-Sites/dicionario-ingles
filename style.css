@@ -397,21 +397,22 @@ html, body {
   display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;
 }
 .cefr-filter-wrap {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  width: 100%;
 }
 .filter-label {
   font-size: 11px; font-weight: 600; color: var(--muted);
   text-transform: uppercase; letter-spacing: .5px; white-space: nowrap;
-  display: flex; align-items: center; gap: 5px;
+  display: flex; align-items: center; gap: 5px; flex-shrink: 0;
 }
 .cefr-filter-chips {
-  display: flex; gap: 6px; flex-wrap: wrap;
+  display: flex; gap: 5px; flex-wrap: wrap; flex: 1;
 }
 .cefr-filter-chip {
-  padding: 4px 11px; border-radius: 20px;
+  padding: 5px 12px; border-radius: 20px;
   border: 1px solid var(--border); background: var(--input-bg);
   color: var(--muted); font-family: var(--ff); font-size: 11px; font-weight: 700;
-  cursor: pointer; transition: all .15s; letter-spacing: .5px;
+  cursor: pointer; transition: all .15s; letter-spacing: .5px; white-space: nowrap;
 }
 .cefr-filter-chip:hover { border-color: var(--acc); color: var(--acc); background: var(--acc-dim); }
 .cefr-filter-chip.active { background: var(--acc); color: #fff; border-color: var(--acc); box-shadow: 0 2px 8px var(--acc-glow); }
@@ -579,13 +580,16 @@ html, body {
 /* ════════════════════════════════════════════════
    DICTIONARY PAGE
 ════════════════════════════════════════════════ */
-.dict-wrap { max-width: 760px; margin: 0 auto }
+.dict-wrap { max-width: 760px; margin: 0 auto; width: 100%; }
 #page-learned.page, #page-favorites.page { padding-top: 48px }
 .dict-top { margin-bottom: 28px }
 .dict-h { font-family: var(--fd); font-size: 32px; font-weight: 900; color: var(--text); letter-spacing: -.8px; display: flex; align-items: center; }
 .dict-stats-txt { font-size: 13px; color: var(--muted); margin-top: 4px }
-.search-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-.search-box { position: relative; flex: 1; }
+.search-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.search-box { position: relative; flex: 1; min-width: 0; }
 .si { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--faint); font-size: 12px; pointer-events: none; }
 .search-box input {
   background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--r);
@@ -600,7 +604,7 @@ html, body {
   padding: 10px 14px; color: var(--text); font-family: var(--ff); font-size: 13px;
   outline: none; cursor: pointer; flex-shrink: 0;
 }
-.date-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.date-row { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
 .date-row input[type="date"] {
   background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--r);
   padding: 8px 12px; color: var(--text); font-family: var(--ff); font-size: 13px; outline: none;
@@ -678,6 +682,16 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6) brigh
 /* ════════════════════════════════════════════════
    FAVORITES PAGE — Card Grid
 ════════════════════════════════════════════════ */
+
+/* Favorites: stack search + CEFR chips vertically, full width */
+#page-favorites .search-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+#page-favorites .search-box { width: 100%; }
+#page-favorites .cefr-filter-wrap { width: 100%; }
+
 .fav-grid {
   display: grid !important;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -858,27 +872,75 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6) brigh
    RESPONSIVE
 ════════════════════════════════════════════════ */
 @media (max-width: 768px) {
+  /* Nav */
   .nav-pills, .nav-right { display: none }
   .mob-ham { display: flex }
-  .page { padding: 40px 16px 60px }
-  .dict-h { font-size: 26px }
-  .hero-p, .hero-cta { font-size: 14px }
-  .w-actions { opacity: 1 }
-  .user-em { display: none }
-  .stats-grid { grid-template-columns: repeat(2,minmax(0,1fr)) }
+  .theme-btn { display: none }
+
+  /* Pages - proper padding on all sides */
+  .page {
+    padding: 32px 16px 60px;
+    max-width: 100%;
+  }
+
+  /* Home hero */
+  .hero { padding: 48px 0 40px; min-height: unset; }
+  .hero-h { font-size: clamp(26px, 7vw, 38px); }
+  .hero-p { font-size: 14px; }
+  .hero-cta { font-size: 14px; }
+  .hero-actions { gap: 8px; }
+
+  /* Form */
+  .wform { margin: 0 0 24px; }
+  .word-ai-row { flex-direction: column; align-items: stretch; }
+  .word-ai-row .btn-ai { width: 100%; justify-content: center; height: 44px; }
+
+  /* Stats */
+  .stats-section { padding: 0 0 48px; }
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .recent-meaning { display: none }
-  .wform { margin: 0 0 32px }
-  .stats-section { padding: 0 0 48px }
-  .hero-actions { gap: 8px }
+
+  /* Dictionary */
+  .dict-h { font-size: 24px; }
+  .dict-top { margin-bottom: 20px; }
+
+  /* Search row: on mobile dict page, keep as row but ensure full width for search */
+  #page-learned .search-row { flex-wrap: wrap; }
+  #page-learned .search-box { flex: 1; min-width: 0; }
+  #page-learned .sort-sel { flex-shrink: 0; }
+
+  /* Favorites search: already column, ensure full width */
+  #page-favorites .search-row { gap: 8px; }
+
+  /* CEFR filter chips: full width, wrap nicely */
+  .cefr-filter-wrap { gap: 6px; }
+  .cefr-filter-chips { gap: 5px; }
+  .cefr-filter-chip { padding: 5px 10px; font-size: 11px; }
+
+  /* Category chips bar */
+  .chips-bar { gap: 6px; margin-bottom: 16px; }
+  .chip { padding: 5px 10px; font-size: 11px; }
+
+  /* Words list */
+  .w-actions { opacity: 1 }
+
+  /* Favorites grid: 2 columns on mobile */
+  .fav-grid { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+
+  /* Story */
   .story-selector { max-height: 160px }
   .story-actions { flex-wrap: wrap }
-  .fav-grid { grid-template-columns: 1fr 1fr !important; }
-  .cefr-filter-wrap { gap: 6px }
-  .theme-btn { display: none }
 }
-@media (max-width: 400px) {
+
+@media (max-width: 480px) {
+  /* Even smaller phones: single column favorites */
   .fav-grid { grid-template-columns: 1fr !important; }
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wform { padding: 20px 16px; }
+  .cefr-picker { gap: 4px; }
+  .cefr-btn { padding: 5px 9px; font-size: 11px; }
 }
+
 @media (min-width: 769px) {
   .mob-ham, .mob-drawer { display: none !important }
 }
