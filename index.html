@@ -18,28 +18,31 @@
   <div class="orb orb-a"></div>
   <div class="orb orb-b"></div>
   <div class="auth-card">
-    <div class="auth-mark"><i class="fas fa-book-open"></i></div>
-    <h1 class="auth-heading">My Dictionary</h1>
-    <p class="auth-sub">Vocabulário inteligente com IA</p>
-    <form id="login-form" novalidate>
-      <div class="field"><label>Email</label>
-        <input type="email" id="email" placeholder="seu@email.com" required />
-      </div>
-      <div class="field"><label>Senha</label>
-        <div class="pw-wrap">
-          <input type="password" id="password" placeholder="••••••••" required />
-          <button type="button" id="toggle-password"><i class="fas fa-eye"></i></button>
-        </div>
-      </div>
-      <button type="button" id="forgot-password-button" class="link-sm">Esqueci minha senha</button>
-      <div class="auth-btns">
-        <button id="login-button" type="submit" class="btn-p w-full">Entrar</button>
-        <button id="register-button" type="button" class="btn-o w-full">Criar conta</button>
-      </div>
-    </form>
-    <p id="auth-feedback" class="fb hidden"></p>
+  <div class="auth-mark"><i class="fas fa-book-open"></i></div>
+  <h1 class="auth-heading">My Dictionary</h1>
+  <p class="auth-sub">Vocabulário inteligente com IA</p>
+
+  <div class="auth-tabs">
+    <button type="button" class="auth-tab auth-tab--active" id="tab-login">Entrar</button>
+    <button type="button" class="auth-tab" id="tab-register">Criar conta</button>
   </div>
-</div>
+
+  <form id="login-form" novalidate>
+    <div class="field"><label>Email</label>
+      <input type="email" id="email" placeholder="seu@email.com" required />
+    </div>
+    <div class="field"><label>Senha</label>
+      <div class="pw-wrap">
+        <input type="password" id="password" placeholder="••••••••" required />
+        <button type="button" id="toggle-password"><i class="fas fa-eye"></i></button>
+      </div>
+    </div>
+    <button type="button" id="forgot-password-button" class="link-sm">Esqueci minha senha</button>
+    <button id="login-button" type="submit" class="btn-p w-full" style="margin-top:16px">Entrar</button>
+  </form>
+  <p id="auth-feedback" class="fb hidden"></p>
+</div> 
+</div> 
 
 <!-- ═══════════════ VERIFY EMAIL ═══════════════ -->
 <div id="verify-email-container" class="auth-screen hidden">

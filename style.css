@@ -944,3 +944,20 @@ input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6) brigh
 @media (min-width: 769px) {
   .mob-ham, .mob-drawer { display: none !important }
 }
+.auth-tabs {
+  display: flex;
+  background: var(--input-bg);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 24px;
+}
+.auth-tab {
+  flex: 1; padding: 8px; border: none; background: none;
+  border-radius: 7px; font-family: var(--ff); font-size: 14px;
+  font-weight: 500; color: var(--muted); cursor: pointer; transition: all .2s;
+}
+.auth-tab--active {
+  background: var(--acc); color: #fff;
+  box-shadow: 0 2px 8px var(--acc-glow);
+}

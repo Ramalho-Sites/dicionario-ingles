@@ -443,10 +443,34 @@ function flashField(el) {
   el.style.boxShadow   = '0 0 0 3px var(--ai-dim)';
   setTimeout(() => { el.style.borderColor=''; el.style.boxShadow=''; }, 2500);
 }
-
 // ════════════════════════════════════════════════
 // 9. AUTH
 // ════════════════════════════════════════════════
+let authMode = 'login';
+
+const tabLogin    = $('tab-login');
+const tabRegister = $('tab-register');
+const loginBtn    = $('login-button');
+const forgotBtn   = $('forgot-password-button');
+
+tabLogin?.addEventListener('click', () => {
+  authMode = 'login';
+  tabLogin.classList.add('auth-tab--active');
+  tabRegister.classList.remove('auth-tab--active');
+  loginBtn.textContent = 'Entrar';
+  forgotBtn.style.display = 'block';
+  authFb.classList.add('hidden');
+});
+
+tabRegister?.addEventListener('click', () => {
+  authMode = 'register';
+  tabRegister.classList.add('auth-tab--active');
+  tabLogin.classList.remove('auth-tab--active');
+  loginBtn.textContent = 'Criar conta';
+  forgotBtn.style.display = 'none';
+  authFb.classList.add('hidden');
+});
+
 onAuthStateChanged(auth, user => {
   if (user?.emailVerified) {
     currentUser = user;
@@ -478,53 +502,58 @@ onAuthStateChanged(auth, user => {
 $('login-form').addEventListener('submit', async e => {
   e.preventDefault();
   authFb.classList.add('hidden');
-  try {
-    await signInWithEmailAndPassword(auth, $('email').value, pwInput.value);
-  } catch (err) {
-    setFb(authFb, ['auth/invalid-login-credentials','auth/user-not-found','auth/wrong-password'].includes(err.code)
-      ? '❌ Email ou senha inválidos.' : 'Erro ao entrar.', 'red');
+
+  if (authMode === 'register') {
+    try {
+      const c = await createUserWithEmailAndPassword(auth, $('email').value, pwInput.value);
+      await sendEmailVerification(c.user);
+      // Não chama signOut — onAuthStateChanged detecta email não verificado e mostra verify screen
+    } catch (err) {
+      setFb(authFb,
+        err.code === 'auth/email-already-in-use' ? '❌ Este e-mail já possui uma conta.' :
+        err.code === 'auth/weak-password'         ? '❌ Senha muito curta. Use ao menos 6 caracteres.' :
+        err.code === 'auth/invalid-email'         ? '❌ E-mail inválido.' :
+        '❌ Erro ao criar conta. Tente novamente.', 'red');
+    }
+  } else {
+    try {
+      await signInWithEmailAndPassword(auth, $('email').value, pwInput.value);
+    } catch (err) {
+      const credErr = ['auth/invalid-login-credentials','auth/user-not-found','auth/wrong-password','auth/invalid-credential'];
+      setFb(authFb,
+        credErr.includes(err.code) ? '❌ E-mail ou senha incorretos. Não tem conta? Clique em "Criar conta".' :
+        err.code === 'auth/invalid-email' ? '❌ E-mail inválido.' :
+        err.code === 'auth/too-many-requests' ? '❌ Muitas tentativas. Aguarde alguns minutos.' :
+        '❌ Erro ao entrar. Tente novamente.', 'red');
+    }
   }
 });
 
 $('resend-verification-button').addEventListener('click', async () => {
   const fb = $('verify-feedback');
-  fb.textContent='Enviando...'; fb.style.color='var(--muted)';
+  fb.textContent = 'Enviando...'; fb.style.color = 'var(--muted)';
   try {
-    if (auth.currentUser) { await sendEmailVerification(auth.currentUser); setFb(fb,'✅ Reenviado!','ok'); }
-  } catch { setFb(fb,'❌ Tente em instantes.','red'); }
-  setTimeout(()=>fb.textContent='',5000);
+    if (auth.currentUser) { await sendEmailVerification(auth.currentUser); setFb(fb, '✅ Reenviado! Verifique também o spam.', 'ok'); }
+  } catch { setFb(fb, '❌ Tente em instantes.', 'red'); }
+  setTimeout(() => fb.textContent = '', 6000);
 });
 
 $('back-to-login-button').addEventListener('click', () => signOut(auth));
 
-registerBtn.addEventListener('click', async () => {
-  authFb.classList.add('hidden');
+forgotBtn.addEventListener('click', async () => {
+  const email = $('email').value;
+  if (!email) { setFb(authFb, '❌ Digite seu e-mail primeiro.', 'warn'); return; }
+  setFb(authFb, 'Enviando link...', 'muted');
   try {
-    const c = await createUserWithEmailAndPassword(auth, $('email').value, pwInput.value);
-    await sendEmailVerification(c.user);
-    await signOut(auth);
-    setFb(authFb,'✅ Conta criada! Verifique seu e-mail.','ok');
+    await sendPasswordResetEmail(auth, email);
+    setFb(authFb, '✅ Link enviado! Verifique sua caixa de entrada e o spam.', 'ok');
   } catch (e) {
-    setFb(authFb,
-      e.code==='auth/email-already-in-use' ? 'Email já registrado.' :
-      e.code==='auth/weak-password' ? 'Senha com mínimo 6 caracteres.' : 'Erro ao criar conta.','red');
+    setFb(authFb, e.code === 'auth/user-not-found' ? '❌ Nenhuma conta com este e-mail.' : '❌ Erro ao enviar.', 'red');
   }
 });
 
 logoutBtn.addEventListener('click', () => signOut(auth));
 if (mobLogout) mobLogout.addEventListener('click', () => signOut(auth));
-
-$('forgot-password-button').addEventListener('click', async () => {
-  const email = $('email').value;
-  if (!email) { setFb(authFb,'Digite seu e-mail.','warn'); return; }
-  setFb(authFb,'Enviando link...','muted');
-  try {
-    await sendPasswordResetEmail(auth, email);
-    setFb(authFb,'✅ Link enviado! Verifique sua caixa de entrada.','ok');
-  } catch (e) {
-    setFb(authFb, e.code==='auth/user-not-found'?'❌ E-mail não encontrado.':'Erro.','red');
-  }
-});
 
 function setFb(el, msg, type) {
   el.textContent = msg;
@@ -533,9 +562,9 @@ function setFb(el, msg, type) {
 }
 
 togglePwBtn.addEventListener('click', () => {
-  const isPw = pwInput.type==='password';
+  const isPw = pwInput.type === 'password';
   pwInput.type = isPw ? 'text' : 'password';
-  togglePwBtn.innerHTML = `<i class="fas ${isPw?'fa-eye-slash':'fa-eye'}"></i>`;
+  togglePwBtn.innerHTML = `<i class="fas ${isPw ? 'fa-eye-slash' : 'fa-eye'}"></i>`;
 });
 
 // ════════════════════════════════════════════════
