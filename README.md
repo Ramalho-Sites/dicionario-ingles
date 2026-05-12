@@ -8,7 +8,7 @@ Este é um projeto **Web App** focado em acelerar o aprendizado de vocabulário 
 ![Demo do Projeto](readme/Palavras-feitas.png)
 
 
-### 🔗 Acesse o Site: [Clique aqui para começar a buscar e salvar palavras!](https://ramalho-sites.github.io/dicionario-ingles/)
+### 🔗 Acesse o Site: [Clique aqui para começar a buscar e salvar palavras!](https://vibe-coding-davi.github.io/dicionario-ingles/)
 
 ---
 
