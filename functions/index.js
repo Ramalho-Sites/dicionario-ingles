@@ -97,7 +97,7 @@ Responda SOMENTE com JSON puro, sem markdown, sem texto extra. O campo context D
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+            generationConfig: { temperature: 0.7, maxOutputTokens: 6000 }
           })
         }
       );
