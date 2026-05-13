@@ -10,10 +10,18 @@ const admin     = require("firebase-admin");
 admin.initializeApp();
 
 // ── Helper: cabeçalhos CORS ──────────────────────────────────────
-const ALLOWED_ORIGIN = "https://ramalho-sites.github.io";
+const ALLOWED_ORIGINS = [
+  "https://vibe-coding-davi.github.io",
+  "https://ramalho-sites.github.io",
+  "http://localhost:5001",
+  "http://127.0.0.1:5501"
+];
 
-function setCors(res) {
-  res.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+function setCors(req, res) {
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.set("Access-Control-Allow-Origin", origin);
+  }
   res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
 }
@@ -41,7 +49,7 @@ async function verifyToken(req, res) {
 exports.geminiContext = functions
   .region("us-central1")
   .https.onRequest(async (req, res) => {
-    setCors(res);
+    setCors(req, res);
 
     if (req.method === "OPTIONS") return res.status(204).send("");
     if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido." });
@@ -116,7 +124,7 @@ Responda SOMENTE com JSON puro, sem markdown, sem texto extra. O campo context D
 exports.pexelsImage = functions
   .region("us-central1")
   .https.onRequest(async (req, res) => {
-    setCors(res);
+    setCors(req, res);
 
     if (req.method === "OPTIONS") return res.status(204).send("");
     if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido." });
@@ -162,7 +170,7 @@ exports.pexelsImage = functions
 exports.generateStory = functions
   .region("us-central1")
   .https.onRequest(async (req, res) => {
-    setCors(res);
+    setCors(req, res);
 
     if (req.method === "OPTIONS") return res.status(204).send("");
     if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido." });
